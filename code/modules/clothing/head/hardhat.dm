@@ -55,7 +55,6 @@
 	icon_state = "hardhat0_orange"
 	item_state = "hardhat0_orange"
 	item_color = "orange"
-	dog_fashion = null
 
 /obj/item/clothing/head/hardhat/red
 	icon_state = "hardhat0_red"
@@ -84,7 +83,6 @@
 	icon_state = "hardhat0_dblue"
 	item_state = "hardhat0_dblue"
 	item_color = "dblue"
-	dog_fashion = null
 
 /obj/item/clothing/head/hardhat/atmos
 	icon_state = "hardhat0_atmos"

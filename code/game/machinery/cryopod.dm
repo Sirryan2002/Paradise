@@ -711,6 +711,14 @@
 /obj/machinery/cryopod/blob_act()
 	return //Sorta gamey, but we don't really want these to be destroyed.
 
+/obj/machinery/cryopod/offstation
+	// Won't announce when used for cryoing.
+	silent = TRUE
+
+/obj/machinery/cryopod/offstation/right
+	orient_right = TRUE
+	icon_state = "body_scanner_0-r"
+
 /obj/machinery/computer/cryopod/robot
 	name = "robotic storage console"
 	desc = "An interface between crew and the robotic storage systems"

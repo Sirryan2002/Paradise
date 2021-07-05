@@ -243,7 +243,8 @@
 	var/hit_reflect_chance = 40
 
 /obj/item/clothing/suit/armor/laserproof/IsReflect()
-	if(prob(hit_reflect_chance))
+	var/mob/living/carbon/human/user = loc
+	if(prob(hit_reflect_chance) && (user.wear_suit == src))
 		return 1
 
 /obj/item/clothing/suit/armor/vest/det_suit
@@ -365,25 +366,69 @@
 		E.Goto(owner, E.move_to_delay, E.minimum_distance)
 		owner.alpha = 0
 		owner.visible_message("<span class='danger'>[owner] is hit by [attack_text] in the chest!</span>") //We pretend to be hit, since blocking it would stop the message otherwise
-		spawn(40)
-			owner.alpha = initial(owner.alpha)
-		return 1
+		addtimer(CALLBACK(owner, /mob/living/.proc/reset_alpha), 4 SECONDS)
+		return TRUE
+
+/mob/living/proc/reset_alpha(mob/living/carbon/human/owner)
+	alpha = initial(alpha)
 
 /obj/item/clothing/suit/armor/reactive/tesla
 	name = "reactive tesla armor"
 
 /obj/item/clothing/suit/armor/reactive/tesla/hit_reaction(mob/living/carbon/human/owner, atom/movable/hitby, attack_text = "the attack", final_block_chance = 0, damage = 0, attack_type = MELEE_ATTACK)
 	if(!active)
-		return 0
-	if(prob(hit_reaction_chance))
-		owner.visible_message("<span class='danger'>The [src] blocks the [attack_text], sending out arcs of lightning!</span>")
+		return FALSE
+	if(reaction_check(hitby))
+		owner.visible_message("<span class='danger'>[src] blocks [attack_text], sending out arcs of lightning!</span>")
 		for(var/mob/living/M in view(6, owner))
 			if(M == owner)
 				continue
 			owner.Beam(M,icon_state="lightning[rand(1, 12)]",icon='icons/effects/effects.dmi',time=5)
 			M.adjustFireLoss(25)
 			playsound(M, 'sound/machines/defib_zap.ogg', 50, 1, -1)
-		return 1
+		disable(rand(2, 5)) // let's not have buckshot set it off 4 times and do 80 burn damage.
+		return TRUE
+
+/obj/item/clothing/suit/armor/reactive/repulse
+	name = "reactive repulse armor"
+	desc = "An experimental suit of armor that violently throws back attackers with the power of a gravitational anomaly core."
+	///How strong the reactive armor is for throwing
+	var/repulse_power = 3
+	/// How far away are we finding things to throw
+	var/repulse_range = 5
+	/// What the sparkles looks like
+	var/sparkle_path = /obj/effect/temp_visual/gravpush
+
+/obj/item/clothing/suit/armor/reactive/repulse/hit_reaction(mob/living/carbon/human/owner, atom/movable/hitby, attack_text = "the attack", final_block_chance = 0, damage = 0, attack_type = MELEE_ATTACK)
+	if(!active)
+		return FALSE
+	if(reaction_check(hitby))
+		owner.visible_message("<span class='danger'>[src] blocks [attack_text], converting the attack into a wave of force!</span>")
+		var/list/thrown_atoms = list()
+		for(var/turf/T in range(repulse_range, owner)) //Done this way so things don't get thrown all around hilariously.
+			for(var/atom/movable/AM in T)
+				thrown_atoms += AM
+
+		for(var/am in thrown_atoms)
+			var/atom/movable/AM = am
+			if(AM == owner || AM.anchored)
+				continue
+
+			var/throw_target = get_edge_target_turf(owner, get_dir(owner, get_step_away(AM, owner)))
+			var/dist_from_user = get_dist(owner, AM)
+			if(dist_from_user == 0)
+				if(isliving(AM))
+					var/mob/living/M = AM
+					M.Weaken(3)
+					to_chat(M, "<span class='userdanger'>You're slammed into the floor by [owner]'s reactive armor!</span>")
+			else
+				new sparkle_path(get_turf(AM), get_dir(owner, AM))
+				if(isliving(AM))
+					var/mob/living/M = AM
+					to_chat(M, "<span class='userdanger'>You're thrown back by [owner]'s reactive armor!</span>")
+				INVOKE_ASYNC(AM, /atom/movable/.proc/throw_at, throw_target, ((clamp((repulse_power - (clamp(dist_from_user - 2, 0, dist_from_user))), 3, repulse_power))), 1) //So stuff gets tossed around at the same time.
+		disable(rand(2, 5))
+		return TRUE
 
 //All of the armor below is mostly unused
 

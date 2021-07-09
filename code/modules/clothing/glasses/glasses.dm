@@ -61,7 +61,7 @@
 				eyes.receive_damage(5)
 
 /obj/item/clothing/glasses/meson
-	name = "Optical Meson Scanner"
+	name = "optical meson scanner"
 	desc = "Used for seeing walls, floors, and stuff through anything."
 	icon_state = "meson"
 	item_state = "meson"
@@ -78,8 +78,8 @@
 		)
 
 /obj/item/clothing/glasses/meson/night
-	name = "Night Vision Optical Meson Scanner"
-	desc = "An Optical Meson Scanner fitted with an amplified visible light spectrum overlay, providing greater visual clarity in darkness."
+	name = "night vision optical meson scanner"
+	desc = "An optical meson scanner fitted with an amplified visible light spectrum overlay, providing greater visual clarity in darkness."
 	icon_state = "nvgmeson"
 	origin_tech = "magnets=4;engineering=5;plasmatech=4"
 	see_in_dark = 8
@@ -102,7 +102,7 @@
 	sharp = 1
 
 /obj/item/clothing/glasses/meson/cyber
-	name = "Eye Replacement Implant"
+	name = "eye replacement implant"
 	desc = "An implanted replacement for a left eye with meson vision capabilities."
 	icon_state = "cybereye-green"
 	item_state = "eyepatch"
@@ -132,7 +132,7 @@
 		return 1
 
 /obj/item/clothing/glasses/science/night
-	name = "Night Vision Science Goggle"
+	name = "night vision science goggles"
 	desc = "Now you can science in darkness."
 	icon_state = "nvpurple"
 	item_state = "glasses"
@@ -141,7 +141,7 @@
 	lighting_alpha = LIGHTING_PLANE_ALPHA_MOSTLY_INVISIBLE //don't render darkness while wearing these
 
 /obj/item/clothing/glasses/janitor
-	name = "Janitorial Goggles"
+	name = "janitorial goggles"
 	desc = "These'll keep the soap out of your eyes."
 	icon_state = "purple"
 	item_state = "glasses"
@@ -151,7 +151,7 @@
 		)
 
 /obj/item/clothing/glasses/night
-	name = "Night Vision Goggles"
+	name = "night vision goggles"
 	desc = "You can totally see in the dark now!"
 	icon_state = "night"
 	item_state = "glasses"
@@ -191,7 +191,7 @@
 		)
 
 /obj/item/clothing/glasses/material
-	name = "Optical Material Scanner"
+	name = "optical material scanner"
 	desc = "Very confusing glasses."
 	icon_state = "material"
 	item_state = "glasses"
@@ -205,7 +205,7 @@
 		)
 
 /obj/item/clothing/glasses/material/cyber
-	name = "Eye Replacement Implant"
+	name = "eye replacement implant"
 	desc = "An implanted replacement for a left eye with material vision capabilities."
 	icon_state = "cybereye-blue"
 	item_state = "eyepatch"
@@ -213,7 +213,7 @@
 	flags_cover = null
 
 /obj/item/clothing/glasses/material/lighting
-	name = "Neutron Goggles"
+	name = "neutron goggles"
 	desc = "These odd glasses use a form of neutron-based imaging to completely negate the effects of light and darkness."
 	origin_tech = null
 	vision_flags = 0
@@ -241,8 +241,8 @@
 	item_state = "hipster_glasses"
 
 /obj/item/clothing/glasses/threedglasses
+	name = "\improper 3D glasses"
 	desc = "A long time ago, people used these glasses to makes images from screens threedimensional."
-	name = "3D glasses"
 	icon_state = "3d"
 	item_state = "3d"
 
@@ -253,7 +253,7 @@
 		)
 
 /obj/item/clothing/glasses/gglasses
-	name = "Green Glasses"
+	name = "green glasses"
 	desc = "Forest green glasses, like the kind you'd wear when hatching a nasty scheme."
 	icon_state = "gglasses"
 	item_state = "gglasses"
@@ -266,8 +266,8 @@
 	prescription_upgradable = 1
 
 /obj/item/clothing/glasses/sunglasses
-	desc = "Strangely ancient technology used to help provide rudimentary eye cover. Enhanced shielding blocks many flashes."
 	name = "sunglasses"
+	desc = "Strangely ancient technology used to help provide rudimentary eye cover. Enhanced shielding blocks many flashes."
 	icon_state = "sun"
 	item_state = "sunglasses"
 	see_in_dark = 1
@@ -282,8 +282,8 @@
 		)
 
 /obj/item/clothing/glasses/sunglasses_fake
-	desc = "Cheap, plastic sunglasses. They don't even have UV protection."
 	name = "cheap sunglasses"
+	desc = "Cheap, plastic sunglasses. They don't even have UV protection."
 	icon_state = "sun"
 	item_state = "sunglasses"
 	see_in_dark = 0
@@ -335,8 +335,8 @@
 	scan_reagents = 1
 
 /obj/item/clothing/glasses/virussunglasses
-	desc = "Strangely ancient technology used to help provide rudimentary eye cover. Enhanced shielding blocks many flashes."
 	name = "sunglasses"
+	desc = "Strangely ancient technology used to help provide rudimentary eye cover. Enhanced shielding blocks many flashes."
 	icon_state = "sun"
 	item_state = "sunglasses"
 	see_in_dark = 1
@@ -350,8 +350,8 @@
 		)
 
 /obj/item/clothing/glasses/sunglasses/lasers
-	desc = "A peculiar set of sunglasses; they have various chips and other panels attached to the sides of the frames."
 	name = "high-tech sunglasses"
+	desc = "A peculiar set of sunglasses; they have various chips and other panels attached to the sides of the frames."
 	flags = NODROP
 
 /obj/item/clothing/glasses/sunglasses/lasers/equipped(mob/user, slot) //grant them laser eyes upon equipping it.
@@ -404,7 +404,7 @@
 	item_state = "bigsunglasses"
 
 /obj/item/clothing/glasses/thermal
-	name = "Optical Thermal Scanner"
+	name = "optical thermal scanner"
 	desc = "Thermals in the shape of glasses."
 	icon_state = "thermal"
 	item_state = "glasses"
@@ -424,25 +424,25 @@
 	..()
 
 /obj/item/clothing/glasses/thermal/monocle
-	name = "Thermoncle"
-	desc = "A monocle thermal."
-	icon_state = "thermoncle"
+	name = "thermonocle"
+	desc = "A thermal monocle."
+	icon_state = "thermonocle"
 	flags_cover = null //doesn't protect eyes because it's a monocle, duh
 
 /obj/item/clothing/glasses/thermal/eyepatch
-	name = "Optical Thermal Eyepatch"
+	name = "optical thermal eyepatch"
 	desc = "An eyepatch with built-in thermal optics"
 	icon_state = "eyepatch"
 	item_state = "eyepatch"
 
 /obj/item/clothing/glasses/thermal/jensen
-	name = "Optical Thermal Implants"
+	name = "optical thermal implant"
 	desc = "A set of implantable lenses designed to augment your vision"
 	icon_state = "thermalimplants"
 	item_state = "syringe_kit"
 
 /obj/item/clothing/glasses/thermal/cyber
-	name = "Eye Replacement Implant"
+	name = "eye replacement implant"
 	desc = "An implanted replacement for a left eye with thermal vision capabilities."
 	icon_state = "cybereye-red"
 	item_state = "eyepatch"

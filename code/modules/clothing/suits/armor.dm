@@ -81,7 +81,7 @@
 	..()
 
 /obj/item/clothing/suit/armor/vest/blueshield
-	name = "blueshield security armor"
+	name = "blueshield's security armor"
 	desc = "An armored vest with the badge of a Blueshield Lieutenant."
 	icon_state = "blueshield"
 	item_state = "blueshield"
@@ -139,7 +139,7 @@
 	sprite_sheets = null
 
 /obj/item/clothing/suit/armor/vest/warden
-	name = "Warden's armored jacket"
+	name = "warden's armored jacket"
 	desc = "An armored jacket with silver rank pips and livery."
 	icon_state = "warden_jacket"
 	item_state = "armor"
@@ -172,7 +172,7 @@
 	item_state = "capspacesuit"
 
 /obj/item/clothing/suit/armor/riot
-	name = "Riot Suit"
+	name = "riot suit"
 	desc = "A suit of armor with heavy padding to protect against melee attacks. Looks like it might impair movement."
 	icon_state = "riot"
 	item_state = "swat_suit"
@@ -223,7 +223,7 @@
 	armor = list("melee" = 20, "bullet" = 10, "laser" = 30, "energy" = 5, "bomb" = 15, "bio" = 0, "rad" = 0, "fire" = 40, "acid" = 50)
 
 /obj/item/clothing/suit/armor/bulletproof
-	name = "Bulletproof Vest"
+	name = "bulletproof vest"
 	desc = "A bulletproof vest that excels in protecting the wearer against traditional projectile weaponry and explosives to a minor extent."
 	icon_state = "bulletproof"
 	item_state = "armor"
@@ -233,7 +233,7 @@
 	put_on_delay = 50
 
 /obj/item/clothing/suit/armor/laserproof
-	name = "Ablative Armor Vest"
+	name = "ablative armor vest"
 	desc = "A vest that excels in protecting the wearer against energy projectiles. Projects an energy field around the user, allowing a chance of energy projectile deflection no matter where on the user it would hit."
 	icon_state = "armor_reflec"
 	item_state = "armor_reflec"
@@ -262,7 +262,8 @@
 	name = "reactive armor"
 	desc = "Doesn't seem to do much for some reason."
 	var/active = FALSE
-	var/emp_d = FALSE
+	/// Is the armor disabled, and prevented from reactivating temporarly?
+	var/disabled = FALSE
 	icon_state = "reactiveoff"
 	item_state = "reactiveoff"
 	blood_overlay_type = "armor"
@@ -273,8 +274,8 @@
 
 /obj/item/clothing/suit/armor/reactive/attack_self(mob/user)
 	active = !(active)
-	if(emp_d)
-		to_chat(user, "<span class='warning'>[src] is disabled from an electromagnetic pulse!</span>")
+	if(disabled)
+		to_chat(user, "<span class='warning'>[src] is disabled and rebooting!</span>")
 		return
 	if(active)
 		to_chat(user, "<span class='notice'>[src] is now active.</span>")
@@ -291,18 +292,39 @@
 		A.UpdateButtonIcon()
 
 /obj/item/clothing/suit/armor/reactive/emp_act(severity)
+	var/emp_power = 5 + (severity-1 ? 0 : 5)
+	disable(emp_power)
+	..()
+
+/obj/item/clothing/suit/armor/reactive/proc/disable(disable_time = 0)
 	active = FALSE
-	emp_d = TRUE
+	disabled = TRUE
 	icon_state = "reactiveoff"
 	item_state = "reactiveoff"
 	if(istype(loc, /mob/living/carbon/human))
 		var/mob/living/carbon/human/C = loc
 		C.update_inv_wear_suit()
-		addtimer(CALLBACK(src, .proc/reboot), 100 / severity)
-	..()
+		addtimer(CALLBACK(src, .proc/reboot), disable_time SECONDS)
 
 /obj/item/clothing/suit/armor/reactive/proc/reboot()
-	emp_d = FALSE
+	disabled = FALSE
+	active = TRUE
+	icon_state = "reactive"
+	item_state = "reactive"
+	if(ishuman(loc))
+		var/mob/living/carbon/human/C = loc
+		C.update_inv_wear_suit()
+
+/obj/item/clothing/suit/armor/reactive/proc/reaction_check(hitby)
+	if(prob(hit_reaction_chance))
+		if(istype(hitby, /obj/item/projectile))
+			var/obj/item/projectile/P = hitby
+			if(istype(P, /obj/item/projectile/ion))
+				return FALSE
+			if(!P.nodamage || P.stun)
+				return TRUE
+		else
+			return TRUE
 
 //When the wearer gets hit, this armor will teleport the user a short distance away (to safety or to more danger, no one knows. That's the fun of it!)
 /obj/item/clothing/suit/armor/reactive/teleport
@@ -313,7 +335,7 @@
 /obj/item/clothing/suit/armor/reactive/teleport/hit_reaction(mob/living/carbon/human/owner, atom/movable/hitby, attack_text = "the attack", final_block_chance = 0, damage = 0, attack_type = MELEE_ATTACK)
 	if(!active)
 		return 0
-	if(prob(hit_reaction_chance))
+	if(reaction_check(hitby))
 		var/mob/living/carbon/human/H = owner
 		owner.visible_message("<span class='danger'>The reactive teleport system flings [H] clear of [attack_text]!</span>")
 		var/list/turfs = new/list()
@@ -333,33 +355,36 @@
 		if(!isturf(picked))
 			return
 		H.forceMove(picked)
-		return 1
-	return 0
+		return TRUE
+	return FALSE
 
 /obj/item/clothing/suit/armor/reactive/fire
 	name = "reactive incendiary armor"
+	desc = "This armor uses the power of a pyro anomaly core to shoot protective jets of fire, in addition to absorbing all damage from fire."
+	heat_protection = UPPER_TORSO | LOWER_TORSO | LEGS | FEET | ARMS | HANDS | HEAD
+	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
 
 /obj/item/clothing/suit/armor/reactive/fire/hit_reaction(mob/living/carbon/human/owner, atom/movable/hitby, attack_text = "the attack", final_block_chance = 0, damage = 0, attack_type = MELEE_ATTACK)
 	if(!active)
-		return 0
-	if(prob(hit_reaction_chance))
-		owner.visible_message("<span class='danger'>The [src] blocks the [attack_text], sending out jets of flame!</span>")
+		return FALSE
+	if(reaction_check(hitby))
+		owner.visible_message("<span class='danger'>[src] blocks [attack_text], sending out jets of flame!</span>")
 		for(var/mob/living/carbon/C in range(6, owner))
 			if(C != owner)
 				C.fire_stacks += 8
 				C.IgniteMob()
-		owner.fire_stacks = -20
-		return 1
-	return 0
+		return TRUE
+	return FALSE
 
 
 /obj/item/clothing/suit/armor/reactive/stealth
 	name = "reactive stealth armor"
+	desc = "This armor uses an anomaly core combined with holographic projectors to make the user invisible temporarly, and make a fake image of the user."
 
 /obj/item/clothing/suit/armor/reactive/stealth/hit_reaction(mob/living/carbon/human/owner, atom/movable/hitby, attack_text = "the attack", final_block_chance = 0, damage = 0, attack_type = MELEE_ATTACK)
 	if(!active)
-		return 0
-	if(prob(hit_reaction_chance))
+		return FALSE
+	if(reaction_check(hitby))
 		var/mob/living/simple_animal/hostile/illusion/escape/E = new(owner.loc)
 		E.Copy_Parent(owner, 50)
 		E.GiveTarget(owner) //so it starts running right away
@@ -374,6 +399,7 @@
 
 /obj/item/clothing/suit/armor/reactive/tesla
 	name = "reactive tesla armor"
+	desc = "This armor uses the power of a flux anomaly core to protect the user in shocking ways."
 
 /obj/item/clothing/suit/armor/reactive/tesla/hit_reaction(mob/living/carbon/human/owner, atom/movable/hitby, attack_text = "the attack", final_block_chance = 0, damage = 0, attack_type = MELEE_ATTACK)
 	if(!active)
@@ -384,7 +410,7 @@
 			if(M == owner)
 				continue
 			owner.Beam(M,icon_state="lightning[rand(1, 12)]",icon='icons/effects/effects.dmi',time=5)
-			M.adjustFireLoss(25)
+			M.adjustFireLoss(20)
 			playsound(M, 'sound/machines/defib_zap.ogg', 50, 1, -1)
 		disable(rand(2, 5)) // let's not have buckshot set it off 4 times and do 80 burn damage.
 		return TRUE
@@ -472,13 +498,13 @@
 	hide_tail_by_species = list("Vox")
 
 /obj/item/clothing/suit/armor/tdome/red
-	name = "Red Thunderdome Armor"
+	name = "red Thunderdome armor"
 	desc = "Armor worn by the red Thunderdome team."
 	icon_state = "tdred"
 	item_state = "tdred"
 
 /obj/item/clothing/suit/armor/tdome/green
-	name = "Green Thunderdome Armor"
+	name = "green Thunderdome armor"
 	desc = "Armor worn by the green Thunderdome team."
 	icon_state = "tdgreen"
 	item_state = "tdgreen"

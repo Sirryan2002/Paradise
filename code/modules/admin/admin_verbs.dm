@@ -137,7 +137,9 @@ GLOBAL_LIST_INIT(admin_verbs_server, list(
 	/client/proc/toggle_antagHUD_restrictions,
 	/client/proc/set_ooc,
 	/client/proc/reset_ooc,
-	/client/proc/set_next_map
+	/client/proc/set_next_map,
+	/client/proc/manage_queue,
+	/client/proc/add_queue_server_bypass
 	))
 GLOBAL_LIST_INIT(admin_verbs_debug, list(
 	/client/proc/cmd_admin_list_open_jobs,
@@ -691,7 +693,7 @@ GLOBAL_LIST_INIT(admin_verbs_ticket, list(
 			return
 
 		var/datum/db_query/rank_read = SSdbcore.NewQuery(
-			"SELECT admin_rank FROM [format_table_name("admin")] WHERE ckey=:ckey",
+			"SELECT admin_rank FROM admin WHERE ckey=:ckey",
 			list("ckey" = ckey)
 		)
 
@@ -717,7 +719,7 @@ GLOBAL_LIST_INIT(admin_verbs_ticket, list(
 				return
 
 			var/datum/db_query/admin_read = SSdbcore.NewQuery(
-				"SELECT ckey, admin_rank, flags FROM [format_table_name("admin")] WHERE ckey=:ckey",
+				"SELECT ckey, admin_rank, flags FROM admin WHERE ckey=:ckey",
 				list("ckey" = ckey)
 			)
 

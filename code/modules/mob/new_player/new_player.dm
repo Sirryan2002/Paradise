@@ -194,7 +194,7 @@
 			observer.name = observer.real_name
 			observer.key = key
 			QDEL_NULL(mind)
-			GLOB.respawnable_list += observer
+			observer.add_to_respawnable_list()
 			qdel(src)
 			return TRUE
 		return FALSE
@@ -258,7 +258,7 @@
 		return 0
 
 	if(GLOB.configuration.jobs.assistant_limit)
-		if(job.title == "Civilian")
+		if(job.title == "Assistant")
 			var/count = 0
 			var/datum/job/officer = SSjobs.GetJob("Security Officer")
 			var/datum/job/warden = SSjobs.GetJob("Warden")
@@ -370,7 +370,6 @@
 		if(!IsAdminJob(rank))
 			GLOB.data_core.manifest_inject(character)
 			AnnounceArrival(character, rank, join_message)
-			AddEmploymentContract(character)
 
 			if(GLOB.summon_guns_triggered)
 				give_guns(character)
@@ -414,13 +413,6 @@
 					if(character.mind.role_alt_title)
 						rank = character.mind.role_alt_title
 					GLOB.global_announcer.autosay("[character.real_name],[rank ? " [rank]," : " visitor," ] [join_message ? join_message : "has arrived on the station"].", "Arrivals Announcement Computer")
-
-/mob/new_player/proc/AddEmploymentContract(mob/living/carbon/human/employee)
-	spawn(30)
-		for(var/C in GLOB.employmentCabinets)
-			var/obj/structure/filingcabinet/employment/employmentCabinet = C
-			if(employmentCabinet.populated)
-				employmentCabinet.addFile(employee)
 
 /mob/new_player/proc/AnnounceCyborg(mob/living/character, rank, join_message)
 	if(SSticker.current_state == GAME_STATE_PLAYING)
@@ -542,7 +534,7 @@
 	var/mob/living/carbon/human/new_character = new(loc)
 	new_character.lastarea = get_area(loc)
 
-	if(SSticker.random_players || appearance_isbanned(new_character))
+	if(SSticker.random_players)
 		client.prefs.active_character.randomise()
 		client.prefs.active_character.real_name = random_name(client.prefs.active_character.gender)
 	client.prefs.active_character.copy_to(new_character)

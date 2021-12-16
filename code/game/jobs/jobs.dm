@@ -1,7 +1,4 @@
 
-GLOBAL_LIST_EMPTY(assistant_occupations)
-
-
 GLOBAL_LIST_INIT(command_positions, list(
 	"Captain",
 	"Head of Personnel",
@@ -76,13 +73,12 @@ GLOBAL_LIST_INIT(security_positions, list(
 	"Warden",
 	"Detective",
 	"Security Officer",
-	"Brig Physician",
 	"Magistrate"
 ))
 
 
-GLOBAL_LIST_INIT(civilian_positions, list(
-	"Civilian"
+GLOBAL_LIST_INIT(assistant_positions, list(
+	"Assistant"
 ))
 
 GLOBAL_LIST_INIT(nonhuman_positions, list(
@@ -96,7 +92,6 @@ GLOBAL_LIST_INIT(whitelisted_positions, list(
 	"Blueshield",
 	"Nanotrasen Representative",
 	"Barber",
-	"Brig Physician"
 ))
 
 
@@ -127,7 +122,7 @@ GLOBAL_LIST_INIT(whitelisted_positions, list(
 
 GLOBAL_LIST_INIT(exp_jobsmap, list(
 	EXP_TYPE_LIVING = list(), // all living mobs
-	EXP_TYPE_CREW = list(titles = command_positions | engineering_positions | medical_positions | science_positions | support_positions | supply_positions | security_positions | civilian_positions | list("AI","Cyborg") | whitelisted_positions), // crew positions
+	EXP_TYPE_CREW = list(titles = command_positions | engineering_positions | medical_positions | science_positions | support_positions | supply_positions | security_positions | assistant_positions | list("AI","Cyborg") | whitelisted_positions), // crew positions
 	EXP_TYPE_SPECIAL = list(), // antags, ERT, etc
 	EXP_TYPE_GHOST = list(), // dead people, observers
 	EXP_TYPE_EXEMPT = list(), // special grandfather setting

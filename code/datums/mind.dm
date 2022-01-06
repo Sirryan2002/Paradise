@@ -23,7 +23,10 @@
 	var/key
 	var/name				//replaces mob/var/original_name
 	var/mob/living/current
-	var/mob/living/original	//TODO: remove.not used in any meaningful way ~Carn. First I'll need to tweak the way silicon-mobs handle minds.
+	/// The original mob's UID. Used for example to see if a silicon with antag status is actually malf. Or just an antag put in a borg
+	var/original_mob_UID
+	/// The original mob's name. Used in Dchat messages
+	var/original_mob_name
 	var/active = 0
 
 	var/memory
@@ -82,8 +85,14 @@
 				qdel(i)
 		antag_datums = null
 	current = null
-	original = null
 	return ..()
+
+/datum/mind/proc/set_original_mob(mob/original)
+	original_mob_name = original.real_name
+	original_mob_UID = original.UID()
+
+/datum/mind/proc/is_original_mob(mob/M)
+	return original_mob_UID == M.UID()
 
 /datum/mind/proc/get_display_key()
 	var/clientKey = current?.client?.get_display_key()
@@ -187,6 +196,20 @@
 		all_objectives += O // Add all mind objectives.
 
 	return all_objectives
+
+/**
+ * Completely remove the given objective from the src mind and it's antag datums.
+ */
+/datum/mind/proc/remove_objective(datum/objective/O)
+	for(var/antag in antag_datums)
+		var/datum/antagonist/A = antag
+		A.objectives -= O
+		A.assigned_targets -= "[O.target]"
+		if(istype(O, /datum/objective/steal))
+			var/datum/objective/steal/S = O
+			A.assigned_targets -= "[S.steal_target]"
+	objectives -= O
+	qdel(O)
 
 /datum/mind/proc/_memory_edit_header(gamemode, list/alt)
 	. = gamemode
@@ -533,29 +556,37 @@
 
 	else if(href_list["obj_edit"] || href_list["obj_add"])
 		var/datum/objective/objective
-		var/objective_pos
+		var/list/objective_pos
 		var/def_value
 
 		if(href_list["obj_edit"])
 			objective = locate(href_list["obj_edit"])
 			if(!objective)
 				return
-			objective_pos = objectives.Find(objective)
+
+			if(objectives.Find(objective))
+				objective_pos = list(objectives.Find(objective), null)
+			else
+				for(var/datum/antagonist/A as anything in antag_datums)
+					if(A.objectives.Find(objective))
+						objective_pos = list(A.objectives.Find(objective), A)
 
 			//Text strings are easy to manipulate. Revised for simplicity.
 			var/temp_obj_type = "[objective.type]"//Convert path into a text string.
-			def_value = copytext(temp_obj_type, 19)//Convert last part of path into an objective keyword.
+			def_value = copytext(temp_obj_type, 18)//Convert last part of path into an objective keyword.
 			if(!def_value)//If it's a custom objective, it will be an empty string.
 				def_value = "custom"
 
-		var/new_obj_type = input("Select objective type:", "Objective type", def_value) as null|anything in list("assassinate", "blood", "debrain", "protect", "prevent", "brig", "hijack", "escape", "survive", "steal", "download", "nuclear", "capture", "absorb", "destroy", "maroon", "identity theft", "custom")
+		var/new_obj_type = input("Select objective type:", "Objective type", def_value) as null|anything in	list(
+			"assassinate", "blood", "debrain", "die", "protect", "prevent", "hijack", "escape", "survive", "steal", "download",
+			"nuclear", "capture", "absorb", "destroy", "maroon", "identity theft", "custom")
 		if(!new_obj_type)
 			return
 
 		var/datum/objective/new_objective = null
 
 		switch(new_obj_type)
-			if("assassinate","protect","debrain", "brig", "maroon")
+			if("assassinate","protect","debrain", "maroon")
 				//To determine what to name the objective in explanation text.
 				var/objective_type_capital = uppertext(copytext(new_obj_type, 1,2))//Capitalize first letter.
 				var/objective_type_text = copytext(new_obj_type, 2)//Leave the rest of the text.
@@ -699,9 +730,12 @@
 			return
 
 		if(objective)
-			objectives -= objective
-			qdel(objective)
-			objectives.Insert(objective_pos, new_objective)
+			remove_objective(objective)
+			if(objective_pos[2])
+				var/datum/antagonist/A = objective_pos[2]
+				A.objectives.Insert(objective_pos[1], new_objective)
+			else
+				objectives.Insert(objective_pos[1], new_objective)
 		else
 			objectives += new_objective
 
@@ -712,18 +746,10 @@
 		var/datum/objective/objective = locate(href_list["obj_delete"])
 		if(!istype(objective))
 			return
-		for(var/antag in antag_datums)
-			var/datum/antagonist/A = antag
-			A.objectives -= objective
-			A.assigned_targets -= "[objective.target]"
-			if(istype(objective, /datum/objective/steal))
-				var/datum/objective/steal/S = objective
-				A.assigned_targets -= "[S.steal_target]"
-		objectives -= objective
 
 		log_admin("[key_name(usr)] has removed one of [key_name(current)]'s objectives: [objective]")
 		message_admins("[key_name_admin(usr)] has removed one of [key_name_admin(current)]'s objectives: [objective]")
-		qdel(objective)
+		remove_objective(objective)
 
 	else if(href_list["obj_completed"])
 		var/datum/objective/objective = locate(href_list["obj_completed"])

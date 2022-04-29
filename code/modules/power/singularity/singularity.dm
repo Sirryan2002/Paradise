@@ -6,6 +6,7 @@
 	anchored = TRUE
 	density = TRUE
 	layer = MASSIVE_OBJ_LAYER
+	flags_2 = IMMUNE_TO_SHUTTLECRUSH_2
 	light_range = 6
 	appearance_flags = LONG_GLIDE
 	var/current_size = 1
@@ -335,10 +336,10 @@
 	var/dir2 = 0
 	var/dir3 = 0
 	switch(direction)
-		if(NORTH||SOUTH)
+		if(NORTH, SOUTH)
 			dir2 = 4
 			dir3 = 8
-		if(EAST||WEST)
+		if(EAST, WEST)
 			dir2 = 1
 			dir3 = 2
 	var/turf/T2 = T
@@ -431,3 +432,16 @@
 	explosion(src.loc,(dist),(dist*2),(dist*4))
 	qdel(src)
 	return(gain)
+
+/obj/singularity/onetile
+	dissipate = FALSE
+	move_self = FALSE
+	grav_pull = TRUE
+
+/obj/singularity/onetile/admin_investigate_setup()
+	return
+
+/obj/singularity/onetile/process()
+	eat()
+	if(prob(1))
+		mezzer()

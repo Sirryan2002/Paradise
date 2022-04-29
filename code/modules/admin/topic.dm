@@ -67,10 +67,6 @@
 				if(!makeVampires())
 					to_chat(usr, "<span class='warning'>Unfortunately there weren't enough candidates available.</span>")
 			if("7")
-				log_admin("[key_name(usr)] has spawned vox raiders.")
-				if(!makeVoxRaiders())
-					to_chat(usr, "<span class='warning'>Unfortunately there weren't enough candidates available.</span>")
-			if("8")
 				log_admin("[key_name(usr)] has spawned an abductor team.")
 				if(!makeAbductorTeam())
 					to_chat(usr, "<span class='warning'>Unfortunately there weren't enough candidates available.</span>")
@@ -915,6 +911,7 @@
 				to_chat(M, "<span class='warning'><big><b>You have been banned by [usr.client.ckey].\nReason: [reason].</b></big></span>")
 				to_chat(M, "<span class='warning'>This is a temporary ban, it will be removed in [mins] minutes.</span>")
 				DB_ban_record(BANTYPE_TEMP, M, mins, reason)
+				add_note(M.ckey, "Banned for [mins] minutes - [reason]", null, usr.ckey, FALSE)
 				if(M.client)
 					M.client.link_forum_account(TRUE)
 				if(GLOB.configuration.url.banappeals_url)
@@ -940,6 +937,7 @@
 				log_admin("[key_name(usr)] has banned [M.ckey].\nReason: [reason]\nThis ban does not expire automatically and must be appealed.")
 				message_admins("<span class='notice'>[key_name_admin(usr)] has banned [M.ckey].\nReason: [reason]\nThis ban does not expire automatically and must be appealed.</span>")
 				DB_ban_record(BANTYPE_PERMA, M, -1, reason)
+				add_note(M.ckey, "Permanently banned - [reason]", null, usr.ckey, FALSE)
 
 				qdel(M.client)
 			if("Cancel")
@@ -2171,19 +2169,36 @@
 			else //robot
 				log_admin("[key_name(usr)] despawned [M] in cryo.")
 				message_admins("[key_name_admin(usr)] despawned [M] in cryo.")
-		else if(cryo_ssd(M))
+		else
+			var/fast_despawn = FALSE
+			if(href_list["fast_despawn"])
+				if(alert(owner, "[M] is an area where players being AFK cryo'd should be despawned immediately. \
+						Do you wish to immediately de-spawn them, or just continue moving them to the cryopod?", "Cryo or De-Spawn", "De-Spawn", "Move to Cryopod") == "De-Spawn")
+					fast_despawn = TRUE
+			if(!cryo_ssd(M))
+				return
+
 			if(human)
 				var/mob/living/carbon/human/H = M
-				log_admin("[key_name(usr)] sent [H.job] [H] to cryo.")
-				message_admins("[key_name_admin(usr)] sent [H.job] [H] to cryo.")
+				var/msg = "[key_name(usr)] [fast_despawn ? "despawned" : "sent"] [H.job] [H] [fast_despawn ? "in" : "to"] cryo."
+				log_admin(msg)
+				message_admins(msg)
 			else
-				log_admin("[key_name(usr)] sent [M] to cryo.")
-				message_admins("[key_name_admin(usr)] sent [M] to cryo.")
+				var/msg = "[key_name(usr)] [fast_despawn ? "despawned" : "sent"] [M] [fast_despawn ? "in" : "to"] cryo."
+				log_admin(msg)
+				message_admins(msg)
+
+			if(fast_despawn)
+				var/obj/machinery/cryopod/P = M.loc // They're already in the cryopod because of `cryo_ssd(M)` above.
+				P.despawn_occupant()
+				return
+
 			if(href_list["cryoafk"]) // Warn them if they are send to storage and are AFK
 				to_chat(M, "<span class='danger'>The admins have moved you to cryo storage for being AFK. Please eject yourself (right click, eject) out of the cryostorage if you want to avoid being despawned.</span>")
 				SEND_SOUND(M, sound('sound/effects/adminhelp.ogg'))
 				if(M.client)
 					window_flash(M.client)
+
 	else if(href_list["FaxReplyTemplate"])
 		if(!check_rights(R_ADMIN))
 			return
@@ -3383,8 +3398,7 @@
 		<li>Total Karma: [C.karmaholder.karma_earned]</li>
 		<li>Spent Karma: [C.karmaholder.karma_spent]</li>
 		<li>Available Karma: [C.karmaholder.karma_earned - C.karmaholder.karma_spent]</li>
-		<li>Unlocked Jobs: [C.karmaholder.unlocked_jobs.Join(", ")]</li>
-		<li>Unlocked Species: [C.karmaholder.unlocked_species.Join(", ")]</li>
+		<li>Unlocked Packages: [C.karmaholder.purchased_packages.Join(", ")]</li>
 		</ul>
 		"}
 

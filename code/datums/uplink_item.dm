@@ -343,7 +343,7 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 
 /datum/uplink_item/jobspecific/bee_briefcase
 	name = "Briefcase Full of Bees"
-	desc = "A seemingly innocent briefcase full of not-so-innocent Syndicate-bred bees. Inject the case with blood to train the bees to ignore the donor(s). It also wirelessly taps into station intercomms to broadcast a message of TERROR."
+	desc = "A seemingly innocent briefcase full of not-so-innocent Syndicate-bred bees. Inject the case with blood to train the bees to ignore the donor(s), WARNING: exotic blood types such as slime jelly do not work. It also wirelessly taps into station intercomms to broadcast a message of TERROR."
 	reference = "BEE"
 	item = /obj/item/bee_briefcase
 	cost = 10
@@ -1056,6 +1056,13 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	reference = "DEPC"
 	item = /obj/item/cartridge/syndicate
 	cost = 6
+	excludefrom = list(/datum/game_mode/nuclear)
+
+/datum/uplink_item/explosives/detomatix/nuclear
+	desc = "When inserted into a personal digital assistant, this cartridge gives you five opportunities to detonate PDAs of crewmembers who have their message feature enabled. The concussive effect from the explosion will knock the recipient out for a short period, and deafen them for longer. It has a chance to detonate your PDA. This version comes with a program to toggle your nuclear shuttle blast doors remotely."
+	item = /obj/item/cartridge/syndicate/nuclear
+	excludefrom = list()
+	gamemodes = list(/datum/game_mode/nuclear)
 
 /datum/uplink_item/explosives/pizza_bomb
 	name = "Pizza Bomb"
@@ -1738,7 +1745,7 @@ GLOBAL_LIST_INIT(uplink_items, subtypesof(/datum/uplink_item))
 	else if(!AT)
 		to_chat(usr, "<span class='warning'>Error: Embedded Syndicate credentials not found.</span>")
 		return
-	else if(mind.changeling || mind.vampire)
+	else if(mind.changeling || mind.has_antag_datum(/datum/antagonist/vampire))
 		to_chat(usr, "<span class='warning'>Error: Embedded Syndicate credentials contain an abnormal signature. Aborting.</span>")
 		return
 

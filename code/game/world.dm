@@ -194,8 +194,14 @@ GLOBAL_LIST_EMPTY(world_topic_handlers)
 	var/s = ""
 
 	if(GLOB.configuration.general.server_name)
-		s += "<b>[GLOB.configuration.general.server_name]</b> &#8212; "
-	s += "<b>[station_name()]</b> "
+		s += "<b>[GLOB.configuration.general.server_name]</b>] &#8212; "
+
+		s += "<b>[station_name()]</b>"
+	else // else so it neatly closes the byond hub initial square bracket even without a server name
+		s += "<b>[station_name()]</b>]"
+
+	if(GLOB.configuration.url.discord_url)
+		s += " (<a href=\"[GLOB.configuration.url.discord_url]\">Discord</a>)"
 
 	if(GLOB.configuration.general.server_tag_line)
 		s += "<br>[GLOB.configuration.general.server_tag_line]"
@@ -206,6 +212,9 @@ GLOBAL_LIST_EMPTY(world_topic_handlers)
 		s += "<br><b>STARTING</b>"
 
 	s += "<br>"
+
+	s += "\["
+
 	var/list/features = list()
 
 	if(!GLOB.enter_allowed)
@@ -276,4 +285,5 @@ GLOBAL_LIST_EMPTY(world_topic_handlers)
 /world/Del()
 	rustg_close_async_http_client() // Close the HTTP client. If you dont do this, youll get phantom threads which can crash DD from memory access violations
 	disable_auxtools_debugger() // Disables the debugger if running. See above comment
+	rustg_redis_disconnect() // Disconnects the redis connection. See above.
 	..()

@@ -150,8 +150,10 @@
 		else
 			do_animate("deny")
 			if(HAS_TRAIT(user, TRAIT_FORCE_DOORS))
-				if(user.mind?.vampire && HAS_TRAIT_FROM(user, TRAIT_FORCE_DOORS, VAMPIRE_TRAIT))
-					if(!user.mind.vampire.bloodusable)
+				var/datum/antagonist/vampire/V = user.mind.has_antag_datum(/datum/antagonist/vampire)
+
+				if(V && HAS_TRAIT_FROM(user, TRAIT_FORCE_DOORS, VAMPIRE_TRAIT))
+					if(!V.bloodusable)
 						REMOVE_TRAIT(user, TRAIT_FORCE_DOORS, VAMPIRE_TRAIT)
 						return
 				if(welded)
@@ -164,8 +166,8 @@
 					visible_message("<span class='danger'>[user] forces the door open!</span>")
 					playsound(loc, "sparks", 100, TRUE, SHORT_RANGE_SOUND_EXTRARANGE)
 					open(TRUE)
-				if(user.mind?.vampire && HAS_TRAIT_FROM(user, TRAIT_FORCE_DOORS, VAMPIRE_TRAIT))
-					user.mind.vampire.bloodusable = max(user.mind.vampire.bloodusable - 5, 0)
+				if(V && HAS_TRAIT_FROM(user, TRAIT_FORCE_DOORS, VAMPIRE_TRAIT))
+					V.bloodusable = max(V.bloodusable - 5, 0)
 
 /obj/machinery/door/attack_ai(mob/user)
 	return attack_hand(user)
@@ -377,6 +379,31 @@
 	if(opacity || heat_proof)
 		return 1
 	return 0
+
+/obj/machinery/door/proc/check_unres() //unrestricted sides. This overlay indicates which directions the player can access even without an ID
+	if(hasPower() && unres_sides)
+		if(unres_sides & NORTH)
+			var/image/I = image(icon='icons/obj/doors/airlocks/station/overlays.dmi', icon_state="unres_n") //layer=src.layer+1
+			I.pixel_y = 32
+			set_light(l_range = 1, l_power = 1, l_color = "#00FF00")
+			add_overlay(I)
+		if(unres_sides & SOUTH)
+			var/image/I = image(icon='icons/obj/doors/airlocks/station/overlays.dmi', icon_state="unres_s") //layer=src.layer+1
+			I.pixel_y = -32
+			set_light(l_range = 1, l_power = 1, l_color = "#00FF00")
+			add_overlay(I)
+		if(unres_sides & EAST)
+			var/image/I = image(icon='icons/obj/doors/airlocks/station/overlays.dmi', icon_state="unres_e") //layer=src.layer+1
+			I.pixel_x = 32
+			set_light(l_range = 1, l_power = 1, l_color = "#00FF00")
+			add_overlay(I)
+		if(unres_sides & WEST)
+			var/image/I = image(icon='icons/obj/doors/airlocks/station/overlays.dmi', icon_state="unres_w") //layer=src.layer+1
+			I.pixel_x = -32
+			set_light(l_range = 1, l_power = 1, l_color = "#00FF00")
+			add_overlay(I)
+	else
+		set_light(0)
 
 /obj/machinery/door/morgue
 	icon = 'icons/obj/doors/doormorgue.dmi'

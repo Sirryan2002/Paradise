@@ -29,10 +29,10 @@
 /obj/item/organ/internal/cyberimp/brain/emp_act(severity)
 	if(!owner || emp_proof)
 		return
-	var/stun_amount = 5 + (severity-1 ? 0 : 5)
-	owner.Stun(stun_amount)
+	var/weaken_time = (5 + (severity - 1 ? 0 : 5)) STATUS_EFFECT_CONSTANT
+	owner.Weaken(weaken_time)
 	to_chat(owner, "<span class='warning'>Your body seizes up!</span>")
-	return stun_amount
+	return weaken_time
 
 
 /obj/item/organ/internal/cyberimp/brain/anti_drop
@@ -69,7 +69,7 @@
 
 		if(!l_hand_obj && !r_hand_obj)
 			to_chat(owner, "<span class='notice'>You are not holding any items, your hands relax...</span>")
-			active = 0
+			active = FALSE
 		else
 			var/msg = 0
 			msg += !l_hand_ignore && l_hand_obj ? 1 : 0
@@ -120,42 +120,35 @@
 		ui_action_click()
 	return ..()
 
-/obj/item/organ/internal/cyberimp/brain/anti_stun
+/obj/item/organ/internal/cyberimp/brain/anti_stam
 	name = "CNS Rebooter implant"
-	desc = "This implant will automatically give you back control over your central nervous system, reducing downtime when stunned. Incompatible with the Neural Jumpstarter."
+	desc = "This implant will automatically give you back control over your central nervous system, reducing downtime when fatigued. Incompatible with the Neural Jumpstarter."
 	implant_color = "#FFFF00"
 	slot = "brain_antistun"
 	origin_tech = "materials=5;programming=4;biotech=5"
-	var/stun_max_amount = 2
+	var/last_stamina_damage = 0
+	var/max_stamina_increment = 40
 
-/obj/item/organ/internal/cyberimp/brain/anti_stun/hardened
-	name = "Hardened CNS Rebooter implant"
-	emp_proof = TRUE
-
-/obj/item/organ/internal/cyberimp/brain/anti_stun/hardened/Initialize(mapload)
-	. = ..()
-	desc += " The implant has been hardened. It is invulnerable to EMPs."
-
-/obj/item/organ/internal/cyberimp/brain/anti_stun/on_life()
+/obj/item/organ/internal/cyberimp/brain/anti_stam/on_life()
 	..()
 	if(crit_fail)
 		return
-	if(owner.stunned > stun_max_amount)
-		owner.SetStunned(stun_max_amount)
-	if(owner.weakened > stun_max_amount)
-		owner.SetWeakened(stun_max_amount)
+	if(last_stamina_damage + max_stamina_increment < owner.getStaminaLoss())
+		owner.setStaminaLoss(last_stamina_damage + max_stamina_increment)
+	last_stamina_damage = owner.getStaminaLoss()
 
-/obj/item/organ/internal/cyberimp/brain/anti_stun/emp_act(severity)
+
+/obj/item/organ/internal/cyberimp/brain/anti_stam/emp_act(severity)
 	..()
 	if(crit_fail || emp_proof)
 		return
 	crit_fail = TRUE
 	addtimer(CALLBACK(src, .proc/reboot), 90 / severity)
 
-/obj/item/organ/internal/cyberimp/brain/anti_stun/proc/reboot()
+/obj/item/organ/internal/cyberimp/brain/anti_stam/proc/reboot()
 	crit_fail = FALSE
 
-/obj/item/organ/internal/cyberimp/brain/anti_stun/hardened
+/obj/item/organ/internal/cyberimp/brain/anti_stam/hardened
 	name = "Hardened CNS Rebooter implant"
 	desc = "A military-grade version of the standard implant, for NT's more elite forces."
 	origin_tech = "materials=6;programming=5;biotech=5"
@@ -174,8 +167,8 @@
 	if(crit_fail)
 		return
 	if(owner.stat == UNCONSCIOUS && cooldown == FALSE)
-		owner.AdjustSleeping(-100, FALSE)
-		owner.AdjustParalysis(-100, FALSE)
+		owner.AdjustSleeping(-200 SECONDS)
+		owner.AdjustParalysis(-200 SECONDS)
 		to_chat(owner, "<span class='notice'>You feel a rush of energy course through your body!</span>")
 		cooldown = TRUE
 		addtimer(CALLBACK(src, .proc/sleepy_timer_end), 50)
@@ -189,7 +182,7 @@
 	if(crit_fail || emp_proof)
 		return
 	crit_fail = TRUE
-	owner.AdjustSleeping(200)
+	owner.AdjustSleeping(400 SECONDS)
 	cooldown = TRUE
 	addtimer(CALLBACK(src, .proc/reboot), 90 / severity)
 
@@ -283,7 +276,7 @@
 		return
 	if(prob(60/severity) && owner)
 		to_chat(owner, "<span class='warning'>Your breathing tube suddenly closes!</span>")
-		owner.AdjustLoseBreath(2)
+		owner.AdjustLoseBreath(4 SECONDS)
 
 //[[[[CHEST]]]]
 /obj/item/organ/internal/cyberimp/chest
@@ -397,6 +390,8 @@
 	reviving = TRUE
 
 /obj/item/organ/internal/cyberimp/chest/reviver/proc/heal()
+	if(QDELETED(owner))
+		return
 	if(prob(90) && owner.getOxyLoss())
 		owner.adjustOxyLoss(-3)
 		revive_cost += 5
@@ -441,7 +436,7 @@
 	var/list/boxed = list(
 		/obj/item/autosurgeon/organ/syndicate/thermal_eyes,
 		/obj/item/autosurgeon/organ/syndicate/xray_eyes,
-		/obj/item/autosurgeon/organ/syndicate/anti_stun,
+		/obj/item/autosurgeon/organ/syndicate/anti_stam,
 		/obj/item/autosurgeon/organ/syndicate/reviver)
 	var/amount = 5
 

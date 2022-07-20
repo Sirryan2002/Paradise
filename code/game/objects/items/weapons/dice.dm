@@ -6,8 +6,7 @@
 	can_hold = list(/obj/item/dice)
 	allow_wrap = FALSE
 
-/obj/item/storage/pill_bottle/dice/New()
-	..()
+/obj/item/storage/pill_bottle/dice/populate_contents()
 	var/special_die = pick("1","2","fudge","00","100")
 	if(special_die == "1")
 		new /obj/item/dice/d1(src)
@@ -203,7 +202,7 @@
 		if(7)
 			//Throw
 			T.visible_message("<span class='userdanger'>Unseen forces throw [user]!</span>")
-			user.Stun(6)
+			user.Stun(12 SECONDS)
 			user.adjustBruteLoss(50)
 			var/throw_dir = GLOB.cardinal
 			var/atom/throw_target = get_edge_target_turf(user, throw_dir)
@@ -385,8 +384,7 @@
 	desc = "ANOTHER ONE!? FUCK!"
 	icon_state = "box"
 
-/obj/item/storage/box/dice/New()
-	..()
+/obj/item/storage/box/dice/populate_contents()
 	new /obj/item/dice/d2(src)
 	new /obj/item/dice/d4(src)
 	new /obj/item/dice/d8(src)

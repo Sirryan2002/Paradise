@@ -35,7 +35,7 @@
 	var/buildstackamount = 1
 	var/framestackamount = 2
 	var/deconstruction_ready = TRUE
-	var/flipped = 0
+	var/flipped = FALSE
 
 /obj/structure/table/Initialize(mapload)
 	. = ..()
@@ -93,7 +93,7 @@
 /obj/structure/table/attack_hand(mob/living/user)
 	..()
 	if(climber)
-		climber.Weaken(2)
+		climber.Weaken(4 SECONDS)
 		climber.visible_message("<span class='warning'>[climber.name] has been knocked off the table", "You've been knocked off the table", "You hear [climber.name] get knocked off the table</span>")
 	else if(Adjacent(user) && user.pulling && user.pulling.pass_flags & PASSTABLE)
 		user.Move_Pulled(src)
@@ -141,7 +141,7 @@
 /**
  * Determines whether a projectile crossing our turf should be stopped.
  * Return FALSE to stop the projectile.
- * 
+ *
  * Arguments:
  * * P - The projectile trying to cross.
  * * from - Where the projectile is located.
@@ -199,7 +199,7 @@
 			to_chat(user, "<span class='warning'>You cannot do this there is \a [blocking_object] in the way!</span>")
 			return FALSE
 		G.affecting.forceMove(get_turf(src))
-		G.affecting.Weaken(2)
+		G.affecting.Weaken(4 SECONDS)
 		item_placed(G.affecting)
 		G.affecting.visible_message("<span class='danger'>[G.assailant] pushes [G.affecting] onto [src].</span>", \
 									"<span class='userdanger'>[G.assailant] pushes [G.affecting] onto [src].</span>")
@@ -230,6 +230,20 @@
 	else
 		return ..()
 
+/obj/structure/table/shove_impact(mob/living/target, mob/living/attacker)
+	if(locate(/obj/structure/table) in get_turf(target))
+		return FALSE
+	if(flipped)
+		return FALSE
+	var/pass_flags_cache = target.pass_flags
+	target.pass_flags |= PASSTABLE
+	if(target.Move(loc))
+		. = TRUE
+		target.Weaken(4 SECONDS)
+		add_attack_logs(attacker, target, "pushed onto [src]", ATKLOG_ALL)
+	else
+		. = FALSE
+	target.pass_flags = pass_flags_cache
 
 /obj/structure/table/screwdriver_act(mob/user, obj/item/I)
 	if(flags & NODECONSTRUCT)
@@ -334,7 +348,7 @@
 	dir = direction
 	if(dir != NORTH)
 		layer = 5
-	flipped = 1
+	flipped = TRUE
 	smoothing_flags = NONE
 	flags |= ON_BORDER
 	for(var/D in list(turn(direction, 90), turn(direction, -90)))
@@ -360,7 +374,7 @@
 	verbs +=/obj/structure/table/verb/do_flip
 
 	layer = initial(layer)
-	flipped = 0
+	flipped = FALSE
 	smoothing_flags = initial(smoothing_flags)
 	flags &= ~ON_BORDER
 	for(var/D in list(turn(dir, 90), turn(dir, -90)))
@@ -438,8 +452,18 @@
 		debris -= AM
 		if(istype(AM, /obj/item/shard))
 			AM.throw_impact(L)
-	L.Weaken(5)
+	L.Weaken(10 SECONDS)
 	qdel(src)
+
+/obj/structure/table/glass/shove_impact(mob/living/target, mob/living/attacker)
+	var/pass_flags_cache = target.pass_flags
+	target.pass_flags |= PASSTABLE
+	if(target.Move(loc)) // moving onto a table smashes it, stunning them
+		. = TRUE
+		add_attack_logs(attacker, target, "pushed onto [src]", ATKLOG_ALL)
+	else
+		. = FALSE
+	target.pass_flags = pass_flags_cache
 
 /obj/structure/table/glass/deconstruct(disassembled = TRUE, wrench_disassembly = 0)
 	if(!(flags & NODECONSTRUCT))
@@ -716,7 +740,7 @@
 /obj/structure/rack/CanPass(atom/movable/mover, turf/target, height=0)
 	if(height==0)
 		return 1
-	if(density == 0) //Because broken racks -Agouri |TODO: SPRITE!|
+	if(!density) //Because broken racks -Agouri |TODO: SPRITE!|
 		return 1
 	if(istype(mover) && mover.checkpass(PASSTABLE))
 		return 1
@@ -761,7 +785,7 @@
 	deconstruct(TRUE)
 
 /obj/structure/rack/attack_hand(mob/living/user)
-	if(user.IsWeakened() || user.resting || user.lying)
+	if(user.IsWeakened())
 		return
 	user.changeNext_move(CLICK_CD_MELEE)
 	user.do_attack_animation(src, ATTACK_EFFECT_KICK)

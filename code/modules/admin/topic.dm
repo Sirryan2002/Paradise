@@ -747,14 +747,15 @@
 							msg = job
 						else
 							msg += ", [job]"
-
-					// Reload their job ban holder (refresh this round)
-					M.client.jbh.reload_jobbans(M.client)
 					add_note(M.ckey, "Banned  from [msg] - [reason]", null, usr.ckey, 0)
 					message_admins("<span class='notice'>[key_name_admin(usr)] banned [key_name_admin(M)] from [msg] for [mins] minutes</span>", 1)
-					to_chat(M, "<span class='warning'><big><b>You have been jobbanned by [usr.client.ckey] from: [msg].</b></big></span>")
-					to_chat(M, "<span class='danger'>The reason is: [reason]</span>")
-					to_chat(M, "<span class='warning'>This jobban will be lifted in [mins] minutes.</span>")
+
+					// Reload their job ban holder (refresh this round)
+					if(M.client)
+						M.client.jbh.reload_jobbans(M.client)
+						to_chat(M, "<span class='warning'><big><b>You have been jobbanned by [usr.client.ckey] from: [msg].</b></big></span>")
+						to_chat(M, "<span class='danger'>The reason is: [reason]</span>")
+						to_chat(M, "<span class='warning'>This jobban will be lifted in [mins] minutes.</span>")
 					href_list["jobban2"] = 1 // lets it fall through and refresh
 					return 1
 				if("No")
@@ -769,14 +770,15 @@
 								msg = job
 							else
 								msg += ", [job]"
-
-						// Reload their job ban holder (refresh this round)
-						M.client.jbh.reload_jobbans(M.client)
 						add_note(M.ckey, "Banned  from [msg] - [reason]", null, usr.ckey, 0)
 						message_admins("<span class='notice'>[key_name_admin(usr)] banned [key_name_admin(M)] from [msg]</span>", 1)
-						to_chat(M, "<span class='warning'><big><b>You have been jobbanned by [usr.client.ckey] from: [msg].</b></big></span>")
-						to_chat(M, "<span class='danger'>The reason is: [reason]</span>")
-						to_chat(M, "<span class='warning'>Jobban can be lifted only upon request.</span>")
+
+						// Reload their job ban holder (refresh this round)
+						if(M.client)
+							M.client.jbh.reload_jobbans(M.client)
+							to_chat(M, "<span class='warning'><big><b>You have been jobbanned by [usr.client.ckey] from: [msg].</b></big></span>")
+							to_chat(M, "<span class='danger'>The reason is: [reason]</span>")
+							to_chat(M, "<span class='warning'>Jobban can be lifted only upon request.</span>")
 						href_list["jobban2"] = 1 // lets it fall through and refresh
 						return 1
 				if("Cancel")
@@ -1131,9 +1133,12 @@
 		M.update_icons()
 
 		//so they black out before warping
-		M.Paralyse(5)
+		if(isliving(M))
+			var/mob/living/L = M
+			L.Paralyse(10 SECONDS)
 		sleep(5)
-		if(!M)	return
+		if(!M)
+			return
 
 		M.loc = prison_cell
 		if(istype(M, /mob/living/carbon/human))
@@ -1257,7 +1262,9 @@
 				I.plane = initial(I.plane)
 				I.dropped(M)
 
-		M.Paralyse(5)
+		if(isliving(M))
+			var/mob/living/L = M
+			L.Paralyse(10 SECONDS)
 		sleep(5)
 		M.loc = pick(GLOB.tdome1)
 		spawn(50)
@@ -1287,7 +1294,9 @@
 				I.plane = initial(I.plane)
 				I.dropped(M)
 
-		M.Paralyse(5)
+		if(isliving(M))
+			var/mob/living/L = M
+			L.Paralyse(10 SECONDS)
 		sleep(5)
 		M.loc = pick(GLOB.tdome2)
 		spawn(50)
@@ -1309,7 +1318,9 @@
 			to_chat(usr, "<span class='warning'>This cannot be used on instances of type /mob/living/silicon/ai</span>")
 			return
 
-		M.Paralyse(5)
+		if(isliving(M))
+			var/mob/living/L = M
+			L.Paralyse(10 SECONDS)
 		sleep(5)
 		M.loc = pick(GLOB.tdomeadmin)
 		spawn(50)
@@ -1343,7 +1354,9 @@
 			var/mob/living/carbon/human/observer = M
 			observer.equip_to_slot_or_del(new /obj/item/clothing/under/suit_jacket(observer), slot_w_uniform)
 			observer.equip_to_slot_or_del(new /obj/item/clothing/shoes/black(observer), slot_shoes)
-		M.Paralyse(5)
+		if(isliving(M))
+			var/mob/living/L = M
+			L.Paralyse(10 SECONDS)
 		sleep(5)
 		M.loc = pick(GLOB.tdomeobserve)
 		spawn(50)
@@ -1436,7 +1449,9 @@
 			to_chat(usr, "<span class='warning'>This cannot be used on instances of type /mob/living/silicon/ai</span>")
 			return
 
-		M.Paralyse(5)
+		if(isliving(M))
+			var/mob/living/L = M
+			L.Paralyse(10 SECONDS)
 		sleep(5)
 		M.loc = pick(GLOB.aroomwarp)
 		spawn(50)
@@ -1771,9 +1786,8 @@
 			M.gib()
 		else
 			M.adjustBruteLoss(min(99,(M.health - 1)))
-			M.Stun(20)
-			M.Weaken(20)
-			M.Stuttering(20)
+			M.Weaken(40 SECONDS)
+			M.Stuttering(40 SECONDS)
 
 	else if(href_list["CentcommReply"])
 		if(!check_rights(R_ADMIN))
@@ -1938,8 +1952,8 @@
 					theghost = pick(candidates)
 					P.key = theghost.key
 					P.master_commander = H
-					P.universal_speak = 1
-					P.universal_understand = 1
+					P.universal_speak = TRUE
+					P.universal_understand = TRUE
 					P.can_collar = 1
 					P.faction = list("neutral")
 					var/obj/item/clothing/accessory/petcollar/C = new
@@ -2011,7 +2025,7 @@
 				M.electrocute_act(5, "Lightning Bolt", flags = SHOCK_NOGLOVES)
 				playsound(get_turf(M), 'sound/magic/lightningshock.ogg', 50, 1, -1)
 				M.adjustFireLoss(75)
-				M.Weaken(5)
+				M.Weaken(10 SECONDS)
 				to_chat(M, "<span class='userdanger'>The gods have punished you for your sins!</span>")
 				logmsg = "a lightning bolt."
 			if("Fire Death")
@@ -2038,7 +2052,7 @@
 					organ.insert(H)
 				logmsg = "a honk tumor."
 			if("Hallucinate")
-				H.Hallucinate(1000)
+				H.Hallucinate(1000 SECONDS)
 				logmsg = "hallucinations."
 			if("Cold")
 				H.reagents.add_reagent("frostoil", 40)
@@ -2143,26 +2157,27 @@
 				log_admin("[key_name(usr)] despawned [M] in cryo.")
 				message_admins("[key_name_admin(usr)] despawned [M] in cryo.")
 		else
-			var/fast_despawn = FALSE
-			if(href_list["fast_despawn"])
+			var/area/mob_area = get_area(M)
+			var/should_despawn = FALSE
+			if(mob_area.fast_despawn)
 				if(alert(owner, "[M] is an area where players being AFK cryo'd should be despawned immediately. \
 						Do you wish to immediately de-spawn them, or just continue moving them to the cryopod?", "Cryo or De-Spawn", "De-Spawn", "Move to Cryopod") == "De-Spawn")
-					fast_despawn = TRUE
+					should_despawn = TRUE
 			if(!cryo_ssd(M))
 				return
 
 			if(human)
 				var/mob/living/carbon/human/H = M
-				var/msg = "[key_name(usr)] [fast_despawn ? "despawned" : "sent"] [H.job] [H] [fast_despawn ? "in" : "to"] cryo."
+				var/msg = "[key_name(usr)] [should_despawn ? "despawned" : "sent"] [H.job] [H] [should_despawn ? "in" : "to"] cryo."
 				log_admin(msg)
 				message_admins(msg)
 			else
-				var/msg = "[key_name(usr)] [fast_despawn ? "despawned" : "sent"] [M] [fast_despawn ? "in" : "to"] cryo."
+				var/msg = "[key_name(usr)] [should_despawn ? "despawned" : "sent"] [M] [should_despawn ? "in" : "to"] cryo."
 				log_admin(msg)
 				message_admins(msg)
 
-			if(fast_despawn)
-				var/obj/machinery/cryopod/P = M.loc // They're already in the cryopod because of `cryo_ssd(M)` above.
+			if(should_despawn)
+				var/obj/machinery/cryopod/P = M.loc // They've already been placed in the cryopod because of `cryo_ssd(M)` above.
 				P.despawn_occupant()
 				return
 
@@ -2748,8 +2763,8 @@
 					spawn(0)
 						H.corgize()
 				ok = 1
-			if("striketeam")
-				if(usr.client.strike_team())
+			if("deathsquad")
+				if(usr.client.send_deathsquad())
 					SSblackbox.record_feedback("tally", "admin_secrets_fun_used", 1, "Send Team - Deathsquad")
 			if("striketeam_syndicate")
 				if(usr.client.syndicate_strike_team())
@@ -2821,7 +2836,7 @@
 
 //don't warp them if they aren't ready or are already there
 						continue
-					H.Paralyse(5)
+					H.Paralyse(10 SECONDS)
 					if(H.wear_id)
 						var/obj/item/card/id/id = H.get_idcard()
 						for(var/A in id.access)
@@ -2856,9 +2871,12 @@
 				SSblackbox.record_feedback("tally", "admin_secrets_fun_used", 1, "Traitor All ([objective])")
 
 				for(var/mob/living/carbon/human/H in GLOB.player_list)
-					if(H.stat == 2 || !H.client || !H.mind) continue
-					if(is_special_character(H)) continue
-					//traitorize(H, objective, 0)
+					if(H.stat == DEAD || !H.client || !H.mind)
+						continue
+					if(is_special_character(H))
+						continue
+					if(jobban_isbanned(H, ROLE_TRAITOR) || jobban_isbanned(H, ROLE_SYNDICATE))
+						continue
 					H.mind.add_antag_datum(/datum/antagonist/traitor)
 
 				for(var/mob/living/silicon/A in GLOB.player_list)
@@ -3255,64 +3273,6 @@
 		var/text = html_decode(href_list["showdetails"])
 		usr << browse("<HTML><HEAD><TITLE>Details</TITLE></HEAD><BODY><TT>[replacetext(text, "\n", "<BR>")]</TT></BODY></HTML>",
 			"window=show_details;size=500x200")
-
-	// Library stuff
-	else if(href_list["library_book_id"])
-		var/isbn = text2num(href_list["library_book_id"])
-
-		if(href_list["view_library_book"])
-			var/datum/db_query/query_view_book = SSdbcore.NewQuery("SELECT content, title FROM library WHERE id=:isbn", list(
-				"isbn" = isbn
-			))
-			if(!query_view_book.warn_execute())
-				qdel(query_view_book)
-				return
-
-			var/content = ""
-			var/title = ""
-			while(query_view_book.NextRow())
-				content = query_view_book.item[1]
-				title = html_encode(query_view_book.item[2])
-
-			var/dat = "<pre><code>"
-			dat += "[html_encode(html_to_pencode(content))]"
-			dat += "</code></pre>"
-
-			var/datum/browser/popup = new(usr, "admin_view_book", "[title]", 700, 400)
-			popup.set_content(dat)
-			popup.open(0)
-
-			qdel(query_view_book)
-			log_admin("[key_name(usr)] has viewed the book [isbn].")
-			message_admins("[key_name_admin(usr)] has viewed the book [isbn].")
-			return
-
-		else if(href_list["unflag_library_book"])
-			var/datum/db_query/query_unflag_book = SSdbcore.NewQuery("UPDATE library SET flagged = 0 WHERE id=:isbn", list(
-				"isbn" = isbn
-			))
-			if(!query_unflag_book.warn_execute())
-				qdel(query_unflag_book)
-				return
-
-			qdel(query_unflag_book)
-			log_admin("[key_name(usr)] has unflagged the book [isbn].")
-			message_admins("[key_name_admin(usr)] has unflagged the book [isbn].")
-
-		else if(href_list["delete_library_book"])
-			var/datum/db_query/query_delbook = SSdbcore.NewQuery("DELETE FROM library WHERE id=:isbn", list(
-				"isbn" = isbn
-			))
-			if(!query_delbook.warn_execute())
-				qdel(query_delbook)
-				return
-
-			qdel(query_delbook)
-			log_admin("[key_name(usr)] has deleted the book [isbn].")
-			message_admins("[key_name_admin(usr)] has deleted the book [isbn].")
-
-		// Refresh the page
-		src.view_flagged_books()
 
 	else if(href_list["create_outfit_finalize"])
 		if(!check_rights(R_EVENT))

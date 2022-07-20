@@ -24,6 +24,8 @@
 
 #define is_pen(W) (istype(W, /obj/item/pen))
 
+#define isstorage(A) (istype(A, /obj/item/storage))
+
 GLOBAL_LIST_INIT(pointed_types, typecacheof(list(
 	/obj/item/pen,
 	/obj/item/screwdriver,
@@ -46,6 +48,8 @@ GLOBAL_LIST_INIT(glass_sheet_types, typecacheof(list(
 #define issimulatedturf(A) istype(A, /turf/simulated)
 
 #define isspaceturf(A) istype(A, /turf/space)
+
+#define istransparentturf(A) istype(A, /turf/simulated/floor/transparent)
 
 #define isfloorturf(A) istype(A, /turf/simulated/floor)
 

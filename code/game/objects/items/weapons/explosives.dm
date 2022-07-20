@@ -5,7 +5,7 @@
 	item_state = "plastic-explosive"
 	flags = NOBLUDGEON
 	det_time = 10
-	display_timer = 0
+	display_timer = FALSE
 	origin_tech = "syndicate=1"
 	toolspeed = 1
 	var/atom/target = null
@@ -72,6 +72,9 @@
 	if(iscarbon(AM))
 		to_chat(user, "<span class='warning'>You can't get the [src] to stick to [AM]!</span>")
 		return
+	if(isobserver(AM))
+		to_chat(user, "<span class='warning'>Your hand just phases through [AM]!</span>")
+		return
 	to_chat(user, "<span class='notice'>You start planting [src]. The timer is set to [det_time]...</span>")
 
 	if(do_after(user, 50 * toolspeed, target = AM))
@@ -108,7 +111,7 @@
 				message_say = "FOR THE FEDERATION!"
 			else if(role == ROLE_REV || role == "head revolutionary")
 				message_say = "FOR THE REVOLUTION!"
-			else if(role == "death commando" || role == ROLE_ERT)
+			else if(role == SPECIAL_ROLE_DEATHSQUAD || role == ROLE_ERT)
 				message_say = "FOR NANOTRASEN!"
 	user.say(message_say)
 	target = user

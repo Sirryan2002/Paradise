@@ -2,7 +2,7 @@
 	name = "null rod"
 	desc = "A rod of pure obsidian, its very presence disrupts and dampens the powers of dark magic."
 	icon_state = "nullrod"
-	item_state = "nullrod"
+	item_state = "tele_baton"
 	force = 15
 	throw_speed = 3
 	throw_range = 4
@@ -48,7 +48,7 @@
 		if(!user.mind || !user.mind.isholy)
 			user.adjustBruteLoss(force)
 			user.adjustFireLoss(sanctify_force)
-			user.Weaken(5)
+			user.Weaken(10 SECONDS)
 			user.unEquip(src, 1)
 			user.visible_message("<span class='warning'>[src] slips out of the grip of [user] as they try to pick it up, bouncing upwards and smacking [user.p_them()] in the face!</span>", \
 			"<span class='warning'>[src] slips out of your grip as you pick it up, bouncing upwards and smacking you in the face!</span>")
@@ -157,7 +157,7 @@
 /obj/item/nullrod/claymore/darkblade
 	name = "dark blade"
 	icon_state = "cultblade"
-	item_state = "cultblade"
+	item_state = "darkbalde"
 	desc = "Spread the glory of the dark gods!"
 	slot_flags = SLOT_BELT
 	hitsound = 'sound/hallucinations/growl1.ogg'
@@ -237,7 +237,7 @@
 
 /obj/item/nullrod/scythe/vibro
 	name = "high frequency blade"
-	icon_state = "hfrequency0"
+	icon_state = "hfrequency1"
 	item_state = "hfrequency1"
 	desc = "Bad references are the DNA of the soul."
 	attack_verb = list("chopped", "sliced", "cut", "zandatsu'd")
@@ -515,7 +515,7 @@
 		if(src == holder.l_hand || src == holder.r_hand)
 			for(var/mob/living/carbon/human/H in range(5, loc))
 				if(H.mind.assigned_role == "Clown")
-					H.Silence(10)
+					H.Silence(20 SECONDS)
 					animate_fade_grayscale(H,20)
 					if(prob(10))
 						to_chat(H, "<span class='userdanger'>Being in the presence of [holder]'s [src] is interfering with your honk!</span>")

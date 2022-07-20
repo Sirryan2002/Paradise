@@ -14,7 +14,7 @@
 	strip_delay = 70
 	resistance_flags = NONE
 
-/obj/item/clothing/shoes/combat/swat //overpowered boots for death squads
+/obj/item/clothing/shoes/combat/swat //overpowered gimmick boots
 	name = "\improper SWAT shoes"
 	desc = "High speed, no drag combat boots."
 	permeability_coefficient = 0.01
@@ -124,14 +124,14 @@
 	if(slot == slot_shoes)
 		return TRUE
 
-/obj/item/clothing/shoes/clown_shoes/slippers/ui_action_click(mob/user, action)
+/obj/item/clothing/shoes/clown_shoes/slippers/ui_action_click(mob/living/user, action)
 	if(recharging_time > world.time)
 		to_chat(user, "<span class='warning'>The boot's internal propulsion needs to recharge still!</span>")
 		return
 	var/prev_dir = user.dir
 	var/prev_pass_flags = user.pass_flags
 	user.pass_flags |= PASSMOB
-	user.Weaken(2)
+	user.Weaken(4 SECONDS)
 	user.dir = prev_dir
 	playsound(src, 'sound/effects/stealthoff.ogg', 50, TRUE, 1)
 	recharging_time = world.time + recharging_rate

@@ -96,7 +96,7 @@
 
 		for(var/i = 0, i<numChangelings, i++)
 			H = pick(candidates)
-			H.mind.make_Changeling()
+			H.mind.add_antag_datum(/datum/antagonist/changeling)
 			candidates.Remove(H)
 
 		return 1
@@ -297,76 +297,6 @@
 	return 1
 */
 
-/datum/admins/proc/makeDeathsquad()
-	var/list/mob/candidates = list()
-	var/mob/theghost = null
-	var/time_passed = world.time
-	var/input = "Purify the station."
-	if(prob(10))
-		input = "Save Runtime and any other cute things on the station."
-
-		var/antnum = input(owner, "How many deathsquad members you want to create? Enter 0 to cancel.","Amount:", 0) as num
-		if(!antnum || antnum <= 0)
-			return
-		log_admin("[key_name(owner)] tried making a [antnum] person Death Squad with One-Click-Antag")
-		message_admins("[key_name_admin(owner)] tried making a [antnum] person Death Squad with One-Click-Antag")
-
-		var/syndicate_leader_selected = 0 //when the leader is chosen. The last person spawned.
-
-		//Generates a list of commandos from active ghosts. Then the user picks which characters to respawn as the commandos.
-		for(var/mob/G in GLOB.respawnable_list)
-			if(!jobban_isbanned(G, ROLE_SYNDICATE))
-				spawn(0)
-					switch(alert(G,"Do you wish to be considered for an elite syndicate strike team being sent in?","Please answer in 30 seconds!","Yes","No"))
-						if("Yes")
-							if((world.time-time_passed)>300)//If more than 30 game seconds passed.
-								return
-							candidates += G
-						if("No")
-							return
-						else
-							return
-		sleep(300)
-
-		for(var/mob/dead/observer/G in candidates)
-			if(!G.key)
-				candidates.Remove(G)
-
-		if(candidates.len)
-			//Spawns commandos and equips them.
-			for(var/obj/effect/landmark/L in /area/syndicate_mothership/elite_squad)
-				if(antnum <= 0)
-					break
-				if(L.name == "Syndicate-Commando")
-					syndicate_leader_selected = antnum == 1?1:0
-
-					var/mob/living/carbon/human/new_syndicate_commando = create_syndicate_death_commando(L, syndicate_leader_selected)
-
-					while((!theghost || !theghost.client) && candidates.len)
-						theghost = pick(candidates)
-						candidates.Remove(theghost)
-
-					if(!theghost)
-						qdel(new_syndicate_commando)
-						break
-
-					new_syndicate_commando.key = theghost.key
-					new_syndicate_commando.internal = new_syndicate_commando.s_store
-					new_syndicate_commando.update_action_buttons_icon()
-
-					//So they don't forget their code or mission.
-
-
-					to_chat(new_syndicate_commando, "<span class='notice'>You are an Elite Syndicate. [!syndicate_leader_selected ? "commando" : "<B>LEADER</B>"] in the service of the Syndicate. \nYour current mission is: <span class='danger'>[input]</span></span>")
-
-					antnum--
-
-			for(var/obj/effect/landmark/L in /area/shuttle/syndicate_elite)
-				if(L.name == "Syndicate-Commando-Bomb")
-					new /obj/effect/spawner/newbomb/timer/syndicate(L.loc)
-	return 1
-
-
 /proc/makeBody(mob/dead/observer/G_found) // Uses stripped down and bastardized code from respawn character
 	if(!G_found || !G_found.key)	return
 
@@ -473,51 +403,37 @@
 		var/teamTwoMembers = 5
 		var/datum/character_save/S = new
 		S.randomise()
-		for(var/thing in GLOB.landmarks_list)
-			var/obj/effect/landmark/L = thing
-			if(L.name == "tdome1")
-				if(teamOneMembers<=0)
-					break
+		for(var/obj/effect/landmark/L in GLOB.tdome1)
+			if(!teamOneMembers)
+				break
+			var/mob/living/carbon/human/newMember = new(get_turf(L))
+			S.copy_to(newMember)
+			newMember.dna.ready_dna(newMember)
+			while((!theghost || !theghost.client) && candidates.len)
+				theghost = pick(candidates)
+				candidates.Remove(theghost)
+			if(!theghost)
+				qdel(newMember)
+				break
+			newMember.key = theghost.key
+			teamOneMembers--
+			to_chat(newMember, "You are a member of the <font color='green'><b>GREEN</b></font> Thunderdome team! Gear up and help your team destroy the red team!")
 
-				var/mob/living/carbon/human/newMember = new(L.loc)
-
-				S.copy_to(newMember)
-
-				newMember.dna.ready_dna(newMember)
-
-				while((!theghost || !theghost.client) && candidates.len)
-					theghost = pick(candidates)
-					candidates.Remove(theghost)
-
-				if(!theghost)
-					qdel(newMember)
-					break
-
-				newMember.key = theghost.key
-				teamOneMembers--
-				to_chat(newMember, "You are a member of the <font color = 'green'><b>GREEN</b></font> Thunderdome team! Gear up and help your team destroy the red team!")
-
-			if(L.name == "tdome2")
-				if(teamTwoMembers<=0)
-					break
-
-				var/mob/living/carbon/human/newMember = new(L.loc)
-
-				S.copy_to(newMember)
-
-				newMember.dna.ready_dna(newMember)
-
-				while((!theghost || !theghost.client) && candidates.len)
-					theghost = pick(candidates)
-					candidates.Remove(theghost)
-
-				if(!theghost)
-					qdel(newMember)
-					break
-
-				newMember.key = theghost.key
-				teamTwoMembers--
-				to_chat(newMember, "You are a member of the <font color = 'red'><b>RED</b></font> Thunderdome team! Gear up and help your team destroy the green team!")
+		for(var/obj/effect/landmark/L in GLOB.tdome2)
+			if(!teamTwoMembers)
+				break
+			var/mob/living/carbon/human/newMember = new(get_turf(L))
+			S.copy_to(newMember)
+			newMember.dna.ready_dna(newMember)
+			while((!theghost || !theghost.client) && candidates.len)
+				theghost = pick(candidates)
+				candidates.Remove(theghost)
+			if(!theghost)
+				qdel(newMember)
+				break
+			newMember.key = theghost.key
+			teamTwoMembers--
+			to_chat(newMember, "You are a member of the <font color='red'><b>RED</b></font> Thunderdome team! Gear up and help your team destroy the green team!")
 	else
 		return 0
 	return 1

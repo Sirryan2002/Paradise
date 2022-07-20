@@ -53,11 +53,11 @@
 			if("feet")
 				if(!H.shoes)
 					affecting = H.get_organ(pick("l_leg", "r_leg"))
-					H.Weaken(3)
+					H.Weaken(6 SECONDS)
 			if("l_hand", "r_hand")
 				if(!H.gloves)
 					affecting = H.get_organ(type)
-					H.Stun(3)
+					H.Stun(6 SECONDS)
 		if(affecting)
 			affecting.receive_damage(1, 0)
 	else if(ismouse(target))
@@ -130,7 +130,7 @@
 
 /obj/item/assembly/mousetrap/armed
 	icon_state = "mousetraparmed"
-	armed = 1
+	armed = TRUE
 
 
 /obj/item/assembly/mousetrap/verb/hide_under()

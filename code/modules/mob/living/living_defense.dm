@@ -14,7 +14,7 @@
 	var/armor = getarmor(def_zone, attack_flag)
 
 	//the if "armor" check is because this is used for everything on /living, including humans
-	if(armor && armor < 100 && armour_penetration) // Armor with 100+ protection can not be penetrated for admin items
+	if(armor > 0 && armor < 100 && armour_penetration) // Armor with 100+ protection can not be penetrated for admin items, nor can you penetrate already negative armor
 		armor = max(0, armor - armour_penetration)
 		if(penetrated_text)
 			to_chat(src, "<span class='userdanger'>[penetrated_text]</span>")
@@ -138,7 +138,7 @@
 			step_away(src,M,15)
 		switch(M.damtype)
 			if("brute")
-				Paralyse(1)
+				Paralyse(2 SECONDS)
 				take_overall_damage(rand(M.force/2, M.force))
 				playsound(src, 'sound/weapons/punch4.ogg', 50, TRUE)
 			if("fire")
@@ -317,7 +317,7 @@
 /mob/living/attack_animal(mob/living/simple_animal/M)
 	M.face_atom(src)
 	if((M.a_intent == INTENT_HELP && M.ckey) || M.melee_damage_upper == 0)
-		M.custom_emote(1, "[M.friendly] [src].")
+		M.custom_emote(EMOTE_VISIBLE, "[M.friendly] [src].")
 		return FALSE
 	if(HAS_TRAIT(M, TRAIT_PACIFISM))
 		to_chat(M, "<span class='warning'>You don't want to hurt anyone!</span>")
@@ -374,3 +374,12 @@
 
 /mob/living/proc/cult_self_harm(damage)
 	return FALSE
+
+/mob/living/shove_impact(mob/living/target, mob/living/attacker)
+	if(IS_HORIZONTAL(src))
+		return FALSE
+	add_attack_logs(attacker, target, "pushed into [src]", ATKLOG_ALL)
+	playsound(src, 'sound/weapons/punch1.ogg', 50, 1)
+	target.KnockDown(1 SECONDS) // knock them both down
+	KnockDown(1 SECONDS)
+	return TRUE

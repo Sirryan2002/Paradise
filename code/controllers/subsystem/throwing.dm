@@ -12,8 +12,8 @@ SUBSYSTEM_DEF(throwing)
 	var/list/currentrun
 	var/list/processing = list()
 
-/datum/controller/subsystem/throwing/stat_entry()
-	..("P:[processing.len]")
+/datum/controller/subsystem/throwing/get_stat_details()
+	return "P:[length(processing)]"
 
 /datum/controller/subsystem/throwing/get_metrics()
 	. = ..()
@@ -138,7 +138,7 @@ SUBSYSTEM_DEF(throwing)
 		thrownthing.newtonian_move(init_dir)
 
 	if(target)
-		thrownthing.throw_impact(target, src)
+		thrownthing.throw_impact(target, src, speed)
 
 	if(callback)
 		callback.Invoke()

@@ -114,9 +114,9 @@
 
 /obj/item/organ/internal/attempt_become_organ(obj/item/organ/external/parent,mob/living/carbon/human/H)
 	if(parent_organ != parent.limb_name)
-		return 0
+		return FALSE
 	insert(H)
-	return 1
+	return TRUE
 
 // Rendering!
 /obj/item/organ/internal/proc/render()
@@ -232,15 +232,15 @@
 		organhonked = world.time + suffering_delay
 		to_chat(owner, "<font color='red' size='7'>HONK</font>")
 		owner.SetSleeping(0)
-		owner.Stuttering(20)
+		owner.Stuttering(40 SECONDS)
 		owner.AdjustEarDamage(0, 30)
-		owner.Weaken(3)
+		owner.Weaken(6 SECONDS)
 		SEND_SOUND(owner, sound('sound/items/airhorn.ogg'))
 		if(prob(30))
-			owner.Stun(10)
-			owner.Paralyse(4)
+			owner.Stun(20 SECONDS)
+			owner.Paralyse(8 SECONDS)
 		else
-			owner.Jitter(500)
+			owner.Jitter(1000 SECONDS)
 
 		if(ishuman(owner))
 			var/mob/living/carbon/human/H = owner

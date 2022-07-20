@@ -6,6 +6,7 @@
 	name = "clusterbang"
 	icon = 'icons/obj/grenade.dmi'
 	icon_state = "clusterbang"
+	item_state = "flashbang"
 	var/payload = /obj/item/grenade/flashbang/cluster
 
 /obj/item/grenade/clusterbuster/prime()
@@ -41,7 +42,7 @@
 	..()
 	icon_state = "clusterbang_segment_active"
 	payload = payload_type
-	active = 1
+	active = TRUE
 	walk_away(src,loc,rand(1,4))
 	spawn(rand(15,60))
 		prime()
@@ -63,7 +64,7 @@
 	for(var/loop = numspawned ,loop > 0, loop--)
 		var/obj/item/grenade/P = new type(loc)
 		if(istype(P, /obj/item/grenade))
-			P.active = 1
+			P.active = TRUE
 		walk_away(P,loc,rand(1,4))
 
 		spawn(rand(15,60))
@@ -253,10 +254,7 @@
 	payload = /obj/item/grenade/gas/knockout
 
 ////////////Clusterbuster of Clusterbusters////////////
-
-/obj/item/grenade/clusterbuster/mega_fox
-	name = "\improper Mega Troublemaking Grenade."
-	payload = /obj/item/grenade/clusterbuster/fox
+//As a note: be extrodinarily careful about make the payload clusterbusters as it can quickly destroy the MC/Server
 
 /obj/item/grenade/clusterbuster/mega_bang
 	name = "For when stunlocking is just too short."
@@ -266,10 +264,3 @@
 	name = "Mega SyndiWrath."
 	payload = /obj/item/grenade/clusterbuster/syndieminibomb
 
-/obj/item/grenade/clusterbuster/mega_honk_evil
-	name = "\improper Mega Evil Mega Honk Grenade."
-	payload = /obj/item/grenade/clusterbuster/honk_evil
-
-/obj/item/grenade/clusterbuster/mega_emp
-	name = "Electromagnetic Storm"
-	payload = /obj/item/grenade/clusterbuster/emp

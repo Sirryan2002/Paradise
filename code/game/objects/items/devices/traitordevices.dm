@@ -27,27 +27,27 @@
 	origin_tech = "magnets=3;biotech=5;syndicate=3"
 	var/intensity = 5 // how much damage the radiation does
 	var/wavelength = 10 // time it takes for the radiation to kick in, in seconds
-	var/used = 0 // is it cooling down?
+	var/used = FALSE // is it cooling down?
 
 /obj/item/rad_laser/attack(mob/living/M, mob/living/user)
 	if(!used)
 		add_attack_logs(user, M, "Irradiated by [src]")
 		user.visible_message("<span class='notice'>[user] analyzes [M]'s vitals.</span>")
 		var/cooldown = round(max(100,(((intensity*8)-(wavelength/2))+(intensity*2))*10))
-		used = 1
+		used = TRUE
 		icon_state = "health1"
 		handle_cooldown(cooldown) // splits off to handle the cooldown while handling wavelength
 		spawn((wavelength+(intensity*4))*10)
 			if(M)
 				if(intensity >= 5)
-					M.apply_effect(round(intensity/1.5), PARALYZE)
+					M.Paralyse(intensity * 40/3)
 				M.rad_act(intensity * 10)
 	else
 		to_chat(user, "<span class='warning'>The radioactive microlaser is still recharging.</span>")
 
 /obj/item/rad_laser/proc/handle_cooldown(cooldown)
 	spawn(cooldown)
-		used = 0
+		used = FALSE
 		icon_state = "health2"
 
 /obj/item/rad_laser/attack_self(mob/user)
@@ -292,8 +292,7 @@
 /obj/item/teleporter/proc/telefrag(turf/fragging_location, mob/user)
 	for(var/mob/living/M in fragging_location)//Hit everything in the turf
 		M.apply_damage(20, BRUTE)
-		M.Stun(3)
-		M.Weaken(3)
+		M.Weaken(6 SECONDS)
 		to_chat(M, "<span_class='warning'>[user] teleports into you, knocking you to the floor with the bluespace wave!</span>")
 
 /obj/item/paper/teleporter
@@ -312,11 +311,9 @@
 /obj/item/storage/box/syndie_kit/teleporter
 	name = "syndicate teleporter kit"
 
-/obj/item/storage/box/syndie_kit/teleporter/New()
-	..()
+/obj/item/storage/box/syndie_kit/teleporter/populate_contents()
 	new /obj/item/teleporter(src)
 	new /obj/item/paper/teleporter(src)
-	return
 
 /obj/effect/temp_visual/teleport_abductor/syndi_teleporter
 	duration = 5

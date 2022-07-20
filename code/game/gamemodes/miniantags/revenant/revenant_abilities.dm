@@ -119,7 +119,7 @@
 	desc = "Telepathically transmits a message to the target."
 	panel = "Revenant Abilities"
 	charge_max = 0
-	clothes_req = 0
+	clothes_req = FALSE
 	action_icon_state = "r_transmit"
 	action_background_icon_state = "bg_revenant"
 
@@ -141,7 +141,7 @@
 
 
 /obj/effect/proc_holder/spell/aoe_turf/revenant
-	clothes_req = 0
+	clothes_req = FALSE
 	action_background_icon_state = "bg_revenant"
 	panel = "Revenant Abilities (Locked)"
 	name = "Report this to a coder"
@@ -334,24 +334,24 @@
 
 /turf/simulated/wall/defile()
 	..()
-	if(prob(15))
+	if(prob(15) && !rusted)
 		new/obj/effect/temp_visual/revenant(loc)
-		ChangeTurf(/turf/simulated/wall/rust)
+		rust()
 
 /turf/simulated/wall/indestructible/defile()
 	return
 
 /turf/simulated/wall/r_wall/defile()
 	..()
-	if(prob(15))
+	if(prob(15) && !rusted)
 		new/obj/effect/temp_visual/revenant(loc)
-		ChangeTurf(/turf/simulated/wall/r_wall/rust)
+		rust()
 
 /mob/living/carbon/human/defile()
 	to_chat(src, "<span class='warning'>You suddenly feel [pick("sick and tired", "tired and confused", "nauseated", "dizzy")].</span>")
 	adjustStaminaLoss(25)
 	adjustToxLoss(5)
-	AdjustConfused(20, bound_lower = 0, bound_upper = 30)
+	AdjustConfused(40 SECONDS, bound_lower = 0, bound_upper = 60 SECONDS)
 	new /obj/effect/temp_visual/revenant(loc)
 
 /obj/structure/window/defile()
@@ -367,8 +367,8 @@
 	if(prob(15))
 		if(intact && floor_tile)
 			new floor_tile(src)
-		broken = 0
-		burnt = 0
+		broken = FALSE
+		burnt = FALSE
 		make_plating(1)
 
 /turf/simulated/floor/plating/defile()

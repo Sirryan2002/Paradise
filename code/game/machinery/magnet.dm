@@ -11,10 +11,9 @@
 	name = "Electromagnetic Generator"
 	desc = "A device that uses station power to create points of magnetic energy."
 	level = 1		// underfloor
-	layer = WIRE_LAYER+0.001
+	layer = WIRE_LAYER + 0.001
 	anchored = TRUE
-	use_power = IDLE_POWER_USE
-	idle_power_usage = 50
+	idle_power_consumption = 50
 
 	var/freq = AIRLOCK_FREQ		// radio frequency
 	var/electricity_level = 1 // intensity of the magnetic pull
@@ -41,32 +40,26 @@
 	spawn()
 		magnetic_process()
 
+/obj/machinery/magnetic_module/Destroy()
+	SSradio.remove_object(src, freq)  // i have zero idea what the hell is going on
+	return ..()
+
 	// update the invisibility and icon
 /obj/machinery/magnetic_module/hide(intact)
 	invisibility = intact ? INVISIBILITY_MAXIMUM : 0
-	updateicon()
+	update_icon(UPDATE_ICON_STATE)
 
-	// update the icon_state
-/obj/machinery/magnetic_module/proc/updateicon()
-	var/state="floor_magnet"
-	var/onstate=""
-	if(!on)
-		onstate="0"
-
-	if(invisibility)
-		icon_state = "[state][onstate]-f"	// if invisible, set icon to faded version
+/obj/machinery/magnetic_module/update_icon_state()
+	icon_state = "floor_magnet[on ? "" : "0"][invisibility ? "-f" : ""]"	// if invisible, set icon to faded version
 											// in case of being revealed by T-scanner
-	else
-		icon_state = "[state][onstate]"
 
+// This is the LAST thing allowed to use this
 /obj/machinery/magnetic_module/receive_signal(datum/signal/signal)
 	var/command = signal.data["command"]
 	var/modifier = signal.data["modifier"]
 	var/signal_code = signal.data["code"]
 	if(command && (signal_code == code))
 		Cmd(command, modifier)
-
-
 
 /obj/machinery/magnetic_module/proc/Cmd(command, modifier)
 	if(command)
@@ -145,11 +138,11 @@
 
 	// Update power usage:
 	if(on)
-		use_power = 2
-		active_power_usage = electricity_level*15
+		change_power_mode(ACTIVE_POWER_USE)
+		active_power_consumption = electricity_level*15
 	else
-		use_power = 0
-		updateicon()
+		change_power_mode(NO_POWER_USE)
+		update_icon(UPDATE_ICON_STATE)
 
 
 /obj/machinery/magnetic_module/proc/magnetic_process() // proc that actually does the pulling
@@ -164,7 +157,7 @@
 					step_towards(M, center)
 
 			for(var/mob/living/silicon/S in orange(magnetic_field, center))
-				if(istype(S, /mob/living/silicon/ai)) continue
+				if(isAI(S)) continue
 				step_towards(S, center)
 
 		use_power(electricity_level * 5)
@@ -178,9 +171,11 @@
 	icon_state = "airlock_control_standby"
 	density = TRUE
 	anchored = TRUE
-	use_power = IDLE_POWER_USE
-	idle_power_usage = 45
-	frequency = AIRLOCK_FREQ
+	idle_power_consumption = 45
+
+	// this is a temp measure
+	var/frequency = AIRLOCK_FREQ
+	var/datum/radio_frequency/radio_connection
 	var/code = 0
 	var/list/magnets = list()
 	var/title = "Magnetic Control Console"
@@ -211,21 +206,25 @@
 	if(autolink)
 		// GLOB.machines is populated in /machinery/Initialize
 		// so linkage gets delayed until that one finished.
-		for(var/obj/machinery/magnetic_module/M in GLOB.machines)
-			if(M.freq == frequency && M.code == code)
-				magnets.Add(M)
+		link_magnets()
 
 /obj/machinery/magnetic_controller/Destroy()
 	SSradio.remove_object(src, frequency)
 	radio_connection = null
 	return ..()
 
+/obj/machinery/magnetic_controller/proc/on_magnet_del(atom/magnet)
+	magnets -= magnet
+
+/obj/machinery/magnetic_controller/proc/link_magnets()
+	for(var/obj/machinery/magnetic_module/M in GLOB.machines)
+		if(M.freq == frequency && M.code == code)
+			magnets.Add(M)
+			RegisterSignal(M, COMSIG_PARENT_QDELETING, PROC_REF(on_magnet_del))
+
 /obj/machinery/magnetic_controller/process()
 	if(magnets.len == 0 && autolink)
-		for(var/obj/machinery/magnetic_module/M in GLOB.machines)
-			if(M.freq == frequency && M.code == code)
-				magnets.Add(M)
-
+		link_magnets()
 
 /obj/machinery/magnetic_controller/attack_ai(mob/user as mob)
 	return src.attack_hand(user)

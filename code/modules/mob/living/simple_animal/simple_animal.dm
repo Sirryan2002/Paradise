@@ -56,7 +56,10 @@
 	var/melee_damage_lower = 0
 	var/melee_damage_upper = 0
 	var/obj_damage = 0 //how much damage this simple animal does to objects, if any
-	var/armour_penetration = 0 //How much armour they ignore, as a flat reduction from the targets armour value
+	/// Flat armour reduction, occurs after percentage armour penetration.
+	var/armour_penetration_flat = 0
+	/// Percentage armour reduction, happens before flat armour reduction.
+	var/armour_penetration_percentage = 0
 	var/melee_damage_type = BRUTE //Damage type of a simple mob's melee attack, should it do damage.
 	var/list/damage_coeff = list(BRUTE = 1, BURN = 1, TOX = 1, CLONE = 1, STAMINA = 0, OXY = 1) // 1 for full damage , 0 for none , -1 for 1:1 heal from that source
 	var/attacktext = "attacks"
@@ -66,8 +69,10 @@
 
 	var/speed = 1 //LETS SEE IF I CAN SET SPEEDS FOR SIMPLE MOBS WITHOUT DESTROYING EVERYTHING. Higher speed is slower, negative speed is faster
 	var/can_hide = FALSE
+	/// Allows a mob to pass unbolted doors while hidden
+	var/pass_door_while_hidden = FALSE
 
-	var/obj/item/clothing/accessory/petcollar/pcollar = null
+	var/obj/item/petcollar/pcollar = null
 	var/collar_type //if the mob has collar sprites, define them.
 	var/unique_pet = FALSE // if the mob can be renamed
 	var/can_collar = FALSE // can add collar to mob or not
@@ -126,6 +131,8 @@
 		AddComponent(/datum/component/footstep, footstep_type)
 
 /mob/living/simple_animal/Destroy()
+	/// We need to clear the reference to where we're walking to properly GC
+	walk_to(src, 0)
 	QDEL_NULL(pcollar)
 	master_commander = null
 	GLOB.simple_animals[AIStatus] -= src
@@ -185,9 +192,11 @@
 			death()
 			create_debug_log("died of damage, trigger reason: [reason]")
 		else
-			if(IsSleeping() && (stat == CONSCIOUS))
-				KnockOut()
-			else
+			if(HAS_TRAIT(src, TRAIT_KNOCKEDOUT))
+				if(stat == CONSCIOUS)
+					KnockOut()
+					create_debug_log("knocked out, trigger reason: [reason]")
+			else if(stat == UNCONSCIOUS)
 				WakeUp()
 				create_debug_log("woke up, trigger reason: [reason]")
 	med_hud_set_status()
@@ -490,7 +499,7 @@
 				return FALSE
 			if(!can_collar)
 				return FALSE
-			if(!istype(I, /obj/item/clothing/accessory/petcollar))
+			if(!istype(I, /obj/item/petcollar))
 				return FALSE
 			return TRUE
 
@@ -599,7 +608,7 @@
 		SSidlenpcpool.idle_mobs_by_zlevel[old_z] -= src
 		toggle_ai(initial(AIStatus))
 
-/mob/living/simple_animal/proc/add_collar(obj/item/clothing/accessory/petcollar/P, mob/user)
+/mob/living/simple_animal/proc/add_collar(obj/item/petcollar/P, mob/user)
 	if(!istype(P) || QDELETED(P) || pcollar)
 		return
 	if(user && !user.unEquip(P))

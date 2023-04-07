@@ -129,9 +129,6 @@
 		D.visible_message("<span class='danger'>[A] has weakened [D]!!</span>", \
 								"<span class='userdanger'>[A] has weakened [D]!</span>")
 		D.apply_effect(8 SECONDS, WEAKEN, armor_block)
-		D.forcesay(GLOB.hit_appends)
-	else if(IS_HORIZONTAL(D))
-		D.forcesay(GLOB.hit_appends)
 	return TRUE
 
 /datum/martial_art/proc/teach(mob/living/carbon/human/H, make_temporary = FALSE)
@@ -223,7 +220,7 @@
 	if(slot == slot_belt)
 		var/mob/living/carbon/human/H = user
 		if(HAS_TRAIT(user, TRAIT_PACIFISM))
-			to_chat("<span class='warning'>In spite of the grandiosity of the belt, you don't feel like getting into any fights.</span>")
+			to_chat(user, "<span class='warning'>In spite of the grandiosity of the belt, you don't feel like getting into any fights.</span>")
 			return
 		style.teach(H,1)
 		to_chat(user, "<span class='sciradio'>You have an urge to flex your muscles and get into a fight. You have the knowledge of a thousand wrestlers before you. You can remember more by using the Recall teaching verb in the wrestling tab.</span>")
@@ -243,7 +240,7 @@
 	desc = "An aged and frayed scrap of paper written in shifting runes. There are hand-drawn illustrations of pugilism."
 	icon = 'icons/obj/wizard.dmi'
 	icon_state ="scroll2"
-	var/used = 0
+	var/used = FALSE
 
 /obj/item/plasma_fist_scroll/attack_self(mob/user as mob)
 	if(!ishuman(user))
@@ -254,7 +251,7 @@
 		var/datum/martial_art/plasma_fist/F = new/datum/martial_art/plasma_fist(null)
 		F.teach(H)
 		to_chat(H, "<span class='boldannounce'>You have learned the ancient martial art of Plasma Fist.</span>")
-		used = 1
+		used = TRUE
 		desc = "It's completely blank."
 		name = "empty scroll"
 		icon_state = "blankscroll"
@@ -323,11 +320,13 @@
 	throw_speed = 2
 	attack_verb = list("smashed", "slammed", "whacked", "thwacked")
 	icon_state = "bostaff0"
-	block_chance = 50
 
-/obj/item/twohanded/bostaff/update_icon()
+/obj/item/twohanded/bostaff/Initialize(mapload)
+	. = ..()
+	AddComponent(/datum/component/parry, _stamina_constant = 2, _stamina_coefficient = 0.5, _parryable_attack_types = ALL_ATTACK_TYPES)
+
+/obj/item/twohanded/bostaff/update_icon_state()
 	icon_state = "bostaff[wielded]"
-	return
 
 /obj/item/twohanded/bostaff/attack(mob/target, mob/living/user)
 	add_fingerprint(user)
@@ -360,24 +359,24 @@
 
 			var/mob/living/carbon/human/H = target
 			var/list/fluffmessages = list("[user] clubs [H] with [src]!", \
-										  "[user] smacks [H] with the butt of [src]!", \
-										  "[user] broadsides [H] with [src]!", \
-										  "[user] smashes [H]'s head with [src]!", \
-										  "[user] beats [H] with front of [src]!", \
-										  "[user] twirls and slams [H] with [src]!")
+										"[user] smacks [H] with the butt of [src]!", \
+										"[user] broadsides [H] with [src]!", \
+										"[user] smashes [H]'s head with [src]!", \
+										"[user] beats [H] with front of [src]!", \
+										"[user] twirls and slams [H] with [src]!")
 			H.visible_message("<span class='warning'>[pick(fluffmessages)]</span>", \
-								   "<span class='userdanger'>[pick(fluffmessages)]</span>")
+								"<span class='userdanger'>[pick(fluffmessages)]</span>")
 			playsound(get_turf(user), 'sound/effects/woodhit.ogg', 75, 1, -1)
 			H.adjustStaminaLoss(rand(13,20))
 			if(prob(10))
 				H.visible_message("<span class='warning'>[H] collapses!</span>", \
-									   "<span class='userdanger'>Your legs give out!</span>")
+									"<span class='userdanger'>Your legs give out!</span>")
 				H.Weaken(8 SECONDS)
 			if(H.staminaloss && !H.IsSleeping())
 				var/total_health = (H.health - H.staminaloss)
 				if(total_health <= HEALTH_THRESHOLD_CRIT && !H.stat)
 					H.visible_message("<span class='warning'>[user] delivers a heavy hit to [H]'s head, knocking [H.p_them()] out cold!</span>", \
-										   "<span class='userdanger'>[user] knocks you unconscious!</span>")
+										"<span class='userdanger'>[user] knocks you unconscious!</span>")
 					H.SetSleeping(60 SECONDS)
 					H.adjustBrainLoss(25)
 			return

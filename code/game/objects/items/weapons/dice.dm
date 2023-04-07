@@ -155,7 +155,7 @@
 		var/turf/T = get_turf(src)
 		T.visible_message("<span class='userdanger'>[src] flares briefly.</span>")
 
-		addtimer(CALLBACK(src, .proc/effect, user, .), 1 SECONDS)
+		addtimer(CALLBACK(src, PROC_REF(effect), user, .), 1 SECONDS)
 
 /obj/item/dice/d20/fate/equipped(mob/user, slot)
 	if(!ishuman(user) || !user.mind || (user.mind in SSticker.mode.wizards))
@@ -164,7 +164,7 @@
 
 /obj/item/dice/d20/fate/proc/create_smoke(amount)
 	var/datum/effect_system/smoke_spread/smoke = new
-	smoke.set_up(amount, 0, drop_location())
+	smoke.set_up(amount, FALSE, drop_location())
 	smoke.start()
 
 /obj/item/dice/d20/fate/proc/effect(mob/living/carbon/human/user, roll)
@@ -235,7 +235,7 @@
 			var/turf/Start = get_turf(src)
 			for(var/direction in GLOB.alldirs)
 				var/turf/dirturf = get_step(Start,direction)
-				if(rand(0,1))
+				if(prob(50))
 					new /obj/item/stack/spacecash/c1000(dirturf)
 				else
 					var/obj/item/storage/bag/money/M = new(dirturf)
@@ -280,7 +280,7 @@
 		if(17)
 			//Tator Kit
 			T.visible_message("<span class='userdanger'>A suspicious box appears!</span>")
-			new /obj/item/storage/box/syndicate(drop_location())
+			new /obj/item/storage/box/syndie_kit/bundle(drop_location())
 			create_smoke(2)
 		if(18)
 			//Captain ID
@@ -304,8 +304,8 @@
 	icon_state = "d100"
 	sides = 100
 
-/obj/item/dice/d100/update_icon()
-	return
+/obj/item/dice/d100/update_overlays()
+	return list()
 
 /obj/item/dice/d20/e20
 	var/triggered = FALSE
@@ -333,15 +333,15 @@
 		comment = "NAT 20!"
 	else if(sides == 20 && result == 1)
 		comment = "Ouch, bad luck."
-	update_icon()
+	update_icon(UPDATE_OVERLAYS)
 	if(initial(icon_state) == "d00")
 		result = (result - 1) * 10
 	if(length(special_faces) == sides)
 		result = special_faces[result]
 	if(user != null) //Dice was rolled in someone's hand
 		user.visible_message("[user] has thrown [src]. It lands on [result]. [comment]",
-							 "<span class='notice'>You throw [src]. It lands on [result]. [comment]</span>",
-							 "<span class='italics'>You hear [src] rolling, it sounds like a [fake_result].</span>")
+							"<span class='notice'>You throw [src]. It lands on [result]. [comment]</span>",
+							"<span class='italics'>You hear [src] rolling, it sounds like a [fake_result].</span>")
 	else if(!throwing) //Dice was thrown and is coming to rest
 		visible_message("<span class='notice'>[src] rolls to a stop, landing on [result]. [comment]</span>")
 
@@ -358,7 +358,7 @@
 	else
 		triggered = TRUE
 		visible_message("<span class='notice'>You hear a quiet click.</span>")
-		addtimer(CALLBACK(src, .proc/boom, user, result), 4 SECONDS)
+		addtimer(CALLBACK(src, PROC_REF(boom), user, result), 4 SECONDS)
 
 /obj/item/dice/d20/e20/proc/boom(mob/user, result)
 	var/capped = TRUE
@@ -375,9 +375,9 @@
 	log_game("E20 detonated at [A.name] ([epicenter.x],[epicenter.y],[epicenter.z]) with a roll of [actual_result]. Triggered by: [key_name(user)]")
 	add_attack_logs(user, src, "detonated with a roll of [actual_result]", ATKLOG_FEW)
 
-/obj/item/dice/update_icon()
-	overlays.Cut()
-	overlays += "[icon_state][result]"
+/obj/item/dice/update_overlays()
+	. = ..()
+	. += "[icon_state][result]"
 
 /obj/item/storage/box/dice
 	name = "Box of dice"

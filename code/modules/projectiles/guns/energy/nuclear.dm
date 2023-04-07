@@ -11,9 +11,6 @@
 	flight_y_offset = 10
 	shaded_charge = TRUE
 
-/obj/item/gun/energy/gun/detailed_examine()
-	return "This is an energy weapon. Most energy weapons can fire through windows harmlessly. To switch between stun and lethal, click the weapon \
-			in your hand. To recharge this weapon, use a weapon recharger."
 
 /obj/item/gun/energy/gun/cyborg
 	desc = "An energy-based laser gun that draws power from the cyborg's internal energy cell directly. So this is what freedom looks like?"
@@ -44,10 +41,10 @@
 	cell.maxcharge = 600
 	cell.charge = 600
 
-/obj/item/gun/energy/gun/mini/update_icon()
-	..()
+/obj/item/gun/energy/gun/mini/update_overlays()
+	. = ..()
 	if(gun_light && gun_light.on)
-		overlays += "mini-light"
+		. += "mini-light"
 
 /obj/item/gun/energy/gun/hos
 	name = "\improper X-01 MultiPhase Energy Gun"
@@ -62,6 +59,10 @@
 	shaded_charge = FALSE
 	can_holster = TRUE
 
+/obj/item/gun/energy/gun/hos/Initialize(mapload, ...)
+	. = ..()
+	RegisterSignal(src, COMSIG_PARENT_QDELETING, PROC_REF(alert_admins_on_destroy))
+
 /obj/item/gun/energy/gun/blueshield
 	name = "advanced energy revolver"
 	desc = "An advanced energy revolver with the capacity to shoot both disablers and lasers."
@@ -75,7 +76,7 @@
 	can_holster = TRUE
 
 /obj/item/gun/energy/gun/blueshield/pdw9
-	name = "\improper PDW-9 taser pistol"
+	name = "\improper PDW-9 energy pistol"
 	desc = "A military grade sidearm, used by many militia forces throughout the local sector."
 	icon_state = "pdw9pistol"
 	item_state = "gun"
@@ -108,6 +109,6 @@
 	selfcharge = TRUE
 	shaded_charge = FALSE
 
-/obj/item/gun/energy/gun/nuclear/detailed_examine()
-	return "This is an energy weapon. Most energy weapons can fire through windows harmlessly. To switch between disable and lethal, click the weapon \
-			in your hand. Unlike most weapons, this weapon recharges itself."
+/obj/item/gun/energy/gun/nuclear/examine(mob/user)
+	. = ..()
+	. += "<span class='notice'>This items cell recharges on it's own. Known to drive people mad by forcing them to wait for shots to recharge. Cannot be recharged in a recharger.</span>"

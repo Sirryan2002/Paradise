@@ -19,23 +19,26 @@
 	var/light_range_on = 1
 	var/light_power_on = 0.1 //just dont want it to be culled by byond.
 
-/obj/machinery/atmospherics/binary/circulator/detailed_examine()
-	return "This generates electricity, depending on the difference in temperature between each side of the machine. The meter in \
-			the center of the machine gives an indicator of how much electricity is being generated."
+/obj/machinery/atmospherics/binary/circulator/examine(mob/user)
+	. = ..()
+	. += "<span class='notice'>This generates electricity, depending on the difference in temperature between each side of the machine. The meter in \
+		the center of the machine gives an indicator of how much electricity is being generated.</span>"
+
 
 // Creating a custom circulator pipe subtype to be delivered through cargo
 /obj/item/pipe/circulator
 	name = "circulator/heat exchanger fitting"
 
-/obj/item/pipe/circulator/New(loc)
-	var/obj/machinery/atmospherics/binary/circulator/C = new /obj/machinery/atmospherics/binary/circulator(null)
-	..(loc, make_from = C)
+/obj/item/pipe/circulator/Initialize(mapload, pipe_type, dir, obj/machinery/atmospherics/make_from)
+	. = ..(make_from = new /obj/machinery/atmospherics/binary/circulator(null))
 
 /obj/machinery/atmospherics/binary/circulator/Destroy()
 	if(generator && generator.cold_circ == src)
 		generator.cold_circ = null
+
 	else if(generator && generator.hot_circ == src)
 		generator.hot_circ = null
+
 	return ..()
 
 /obj/machinery/atmospherics/binary/circulator/proc/return_transfer_air()
@@ -106,39 +109,47 @@
 		return
 	side_inverted = !side_inverted
 	to_chat(user, "<span class='notice'>You reverse the circulator's valve settings. The inlet of the circulator is now on the [get_inlet_side(dir)] side.</span>")
+	update_appearance(UPDATE_DESC|UPDATE_ICON)
+
+/obj/machinery/atmospherics/binary/circulator/update_desc()
+	. = ..()
 	desc = "A gas circulator pump and heat exchanger. Its input port is on the [get_inlet_side(dir)] side, and its output port is on the [get_outlet_side(dir)] side."
 
-/obj/machinery/atmospherics/binary/circulator/update_icon() //this gets called everytime atmos is updated in the circulator (alot)
-	..()
-	underlays.Cut()
-	cut_overlays()
-
+/obj/machinery/atmospherics/binary/circulator/update_icon_state() //this gets called everytime atmos is updated in the circulator (alot)
 	if(stat & (BROKEN|NOPOWER))
 		icon_state = "circ[side]-p"
-	else if(last_pressure_delta > 0)
+		return
+	if(last_pressure_delta > 0)
 		if(last_pressure_delta > ONE_ATMOSPHERE)
 			icon_state = "circ[side]-run"
-			underlays += emissive_appearance(icon,"emit[side]-run")
 		else
 			icon_state = "circ[side]-slow"
-			underlays += emissive_appearance(icon,"emit[side]-slow")
 	else
 		icon_state = "circ[side]-off"
-		underlays += emissive_appearance(icon,"emit[side]-off")
 
+/obj/machinery/atmospherics/binary/circulator/update_overlays()
+	. = ..()
 	if(!side_inverted)
-		add_overlay(mutable_appearance(icon,"in_up"))
+		. += "in_up"
 	else
-		add_overlay(mutable_appearance(icon,"in_down"))
+		. += "in_down"
 
 	if(node2)
 		var/image/new_pipe_overlay = image(icon, "connected")
 		new_pipe_overlay.color = node2.pipe_color
-		add_overlay(new_pipe_overlay)
+		. += new_pipe_overlay
 	else
-		add_overlay(mutable_appearance(icon, "disconnected"))
+		. += "disconnected"
 
-	return 1
+	if(stat & (BROKEN|NOPOWER) && !light)
+		return
+	if(last_pressure_delta > 0)
+		if(last_pressure_delta > ONE_ATMOSPHERE)
+			. += emissive_appearance(icon,"emit[side]-run")
+		else
+			. += emissive_appearance(icon,"emit[side]-slow")
+	else
+		. += emissive_appearance(icon,"emit[side]-off")
 
 /obj/machinery/atmospherics/binary/circulator/power_change()
 	. = ..()
@@ -146,7 +157,8 @@
 		set_light(0)
 	else
 		set_light(light_range_on, light_power_on)
-	update_icon()
+	if(.)
+		update_icon()
 
 /obj/machinery/atmospherics/binary/circulator/update_underlays()
 	. = ..()

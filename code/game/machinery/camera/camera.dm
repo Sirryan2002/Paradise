@@ -3,9 +3,9 @@
 	desc = "It's used to monitor rooms."
 	icon = 'icons/obj/monitors.dmi'
 	icon_state = "camera"
-	use_power = ACTIVE_POWER_USE
-	idle_power_usage = 5
-	active_power_usage = 10
+	power_state = ACTIVE_POWER_USE
+	idle_power_consumption = 5
+	active_power_consumption = 10
 	layer = WALL_OBJ_LAYER
 	resistance_flags = FIRE_PROOF
 	damage_deflection = 12
@@ -45,7 +45,7 @@
 	GLOB.cameranet.cameras += src
 	GLOB.cameranet.addCamera(src)
 	if(isturf(loc))
-		LAZYADD(myArea.cameras, UID())
+		LAZYADD(get_area(src).cameras, UID())
 	if(is_station_level(z) && prob(3) && !start_active)
 		toggle_cam(null, FALSE)
 		wires.cut_all()
@@ -60,8 +60,8 @@
 	QDEL_NULL(wires)
 	GLOB.cameranet.removeCamera(src) //Will handle removal from the camera network and the chunks, so we don't need to worry about that
 	GLOB.cameranet.cameras -= src
-	if(isarea(myArea))
-		LAZYREMOVE(myArea.cameras, UID())
+	if(isarea(get_area(src)))
+		LAZYREMOVE(get_area(src).cameras, UID())
 	var/area/ai_monitored/A = get_area(src)
 	if(istype(A))
 		A.motioncameras -= src
@@ -69,32 +69,42 @@
 	cancelAlarm()
 	return ..()
 
+/obj/machinery/camera/examine(mob/user)
+	. = ..()
+	. += "<span class='notice'>[src]'s maintenance panel can be <b>screwed [panel_open ? "closed" : "open"]</b>.</span>"
+	if(panel_open)
+		. += "<span class='notice'>Upgrades can be added to [src] or <b>pried out</b>.</span>"
+		if(!wires.CanDeconstruct())
+			. += "<span class='notice'>[src]'s <b>internal wires</b> are preventing you from cutting it free.</span>"
+		else
+			. += "<span class='notice'>[src]'s <i>internal wires</i> are disconnected, but it can be <b>cut free</b>.</span>"
+
+
 /obj/machinery/camera/emp_act(severity)
 	if(!status)
 		return
 	if(!isEmpProof())
 		if(prob(150/severity))
-			update_icon()
+			update_icon(UPDATE_ICON_STATE)
 			var/list/previous_network = network
 			network = list()
 			GLOB.cameranet.removeCamera(src)
 			stat |= EMPED
 			set_light(0)
 			emped = emped+1  //Increase the number of consecutive EMP's
-			update_icon()
+			update_icon(UPDATE_ICON_STATE)
 			var/thisemp = emped //Take note of which EMP this proc is for
 			spawn(900)
 				if(!QDELETED(src))
 					if(emped == thisemp) //Only fix it if the camera hasn't been EMP'd again
 						network = previous_network
 						stat &= ~EMPED
-						update_icon()
+						update_icon(UPDATE_ICON_STATE)
 						if(can_use())
 							GLOB.cameranet.addCamera(src)
 						emped = 0 //Resets the consecutive EMP count
 			for(var/mob/M in GLOB.player_list)
 				if(M.client && M.client.eye == src)
-					M.unset_machine()
 					M.reset_perspective(null)
 					to_chat(M, "The screen bursts into static.")
 			..()
@@ -164,7 +174,7 @@
 		to_chat(U, "You hold \the [itemname] up to the camera ...")
 		U.changeNext_move(CLICK_CD_MELEE)
 		for(var/mob/O in GLOB.player_list)
-			if(istype(O, /mob/living/silicon/ai))
+			if(isAI(O))
 				var/mob/living/silicon/ai/AI = O
 				if(AI.control_disabled || (AI.stat == DEAD))
 					return
@@ -243,7 +253,7 @@
 			new /obj/item/stack/cable_coil(loc, 2)
 	qdel(src)
 
-/obj/machinery/camera/update_icon()
+/obj/machinery/camera/update_icon_state()
 	if(!status)
 		icon_state = "[initial(icon_state)]1"
 	else if(stat & EMPED)
@@ -256,15 +266,12 @@
 	if(can_use())
 		GLOB.cameranet.addCamera(src)
 		if(isturf(loc))
-			myArea = get_area(src)
-			LAZYADD(myArea.cameras, UID())
-		else
-			myArea = null
+			LAZYADD(get_area(src).cameras, UID())
 	else
 		set_light(0)
 		GLOB.cameranet.removeCamera(src)
-		if(isarea(myArea))
-			LAZYREMOVE(myArea.cameras, UID())
+		if(isarea(get_area(src)))
+			LAZYREMOVE(get_area(src).cameras, UID())
 	GLOB.cameranet.updateChunk(x, y, z)
 	var/change_msg = "deactivates"
 	if(status)
@@ -277,14 +284,13 @@
 			visible_message("<span class='danger'>\The [src] [change_msg]!</span>")
 
 		playsound(loc, toggle_sound, 100, 1)
-	update_icon()
+	update_icon(UPDATE_ICON_STATE)
 
 	// now disconnect anyone using the camera
 	//Apparently, this will disconnect anyone even if the camera was re-activated.
 	//I guess that doesn't matter since they can't use it anyway?
 	for(var/mob/O in GLOB.player_list)
 		if(O.client && O.client.eye == src)
-			O.unset_machine()
 			O.reset_perspective(null)
 			to_chat(O, "The screen bursts into static.")
 

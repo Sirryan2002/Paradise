@@ -12,11 +12,11 @@
 /* Cable directions (d1 and d2)
 
 
-  9   1   5
-	\ | /
-  8 - 0 - 4
-	/ | \
-  10  2   6
+*   9   1   5
+* 	\ | /
+*   8 - 0 - 4
+* 	/ | \
+*   10  2   6
 
 If d1 = 0 and d2 = 0, there's no cable
 If d1 = 0 and d2 = dir, it's a O-X cable, getting from the center of the tile to dir (knot cable)
@@ -107,14 +107,13 @@ By design, d1 is the smallest direction and d2 is the highest
 
 	if(level == 1 && isturf(loc))
 		invisibility = i ? INVISIBILITY_MAXIMUM : 0
-	updateicon()
+	update_icon()
 
-/obj/structure/cable/proc/updateicon()
+/obj/structure/cable/update_icon_state()
 	if(invisibility)
 		icon_state = "[d1]-[d2]-f"
 	else
 		icon_state = "[d1]-[d2]"
-
 
 ////////////////////////////////////////////
 // Power related
@@ -465,7 +464,7 @@ By design, d1 is the smallest direction and d2 is the highest
 
 	// queue it to rebuild
 	SSmachines.deferred_powernet_rebuilds += O
-//	addtimer(CALLBACK(O, .proc/auto_propogate_cut_cable, O), 0) //so we don't rebuild the network X times when singulo/explosion destroys a line of X cables
+//	addtimer(CALLBACK(O, PROC_REF(auto_propogate_cut_cable), O), 0) //so we don't rebuild the network X times when singulo/explosion destroys a line of X cables
 
 	// Disconnect machines connected to nodes
 	if(d1 == 0) // if we cut a node (O-X) cable
@@ -495,12 +494,11 @@ GLOBAL_LIST_INIT(cable_coil_recipes, list (new/datum/stack_recipe/cable_restrain
 	max_amount = MAXCOIL
 	merge_type = /obj/item/stack/cable_coil // This is here to let its children merge between themselves
 	color = COLOR_RED
-	desc = "A coil of power cable."
 	throwforce = 10
 	w_class = WEIGHT_CLASS_SMALL
 	throw_speed = 2
 	throw_range = 5
-	materials = list(MAT_METAL=10, MAT_GLASS=5)
+	materials = list(MAT_METAL = 15, MAT_GLASS = 10)
 	flags = CONDUCT
 	slot_flags = SLOT_BELT
 	item_state = "coil"
@@ -512,12 +510,11 @@ GLOBAL_LIST_INIT(cable_coil_recipes, list (new/datum/stack_recipe/cable_restrain
 	if(locate(/obj/structure/chair/stool) in user.loc)
 		user.visible_message("<span class='suicide'>[user] is making a noose with [src]! It looks like [user.p_theyre()] trying to commit suicide.</span>")
 	else
-		user.visible_message("<span class='suicide'>[user] is strangling [user.p_them()]self with [src]! It looks like [user.p_theyre()] trying to commit suicide.</span>")
+		user.visible_message("<span class='suicide'>[user] is strangling [user.p_themselves()] with [src]! It looks like [user.p_theyre()] trying to commit suicide.</span>")
 	return OXYLOSS
 
 /obj/item/stack/cable_coil/New(loc, length = MAXCOIL, paramcolor = null)
 	..()
-	amount = length
 	if(paramcolor)
 		color = paramcolor
 	pixel_x = rand(-2,2)
@@ -537,7 +534,7 @@ GLOBAL_LIST_INIT(cable_coil_recipes, list (new/datum/stack_recipe/cable_restrain
 
 		if(!S)
 			return
-		if(!S.is_robotic() || user.a_intent != INTENT_HELP || S.open == 2)
+		if(!S.is_robotic() || user.a_intent != INTENT_HELP || S.open == ORGAN_SYNTHETIC_OPEN)
 			return ..()
 
 		if(S.burn_dam > ROBOLIMB_SELF_REPAIR_CAP)
@@ -562,12 +559,12 @@ GLOBAL_LIST_INIT(cable_coil_recipes, list (new/datum/stack_recipe/cable_restrain
 				E = S
 			else if(LAZYLEN(childlist))
 				E = pick_n_take(childlist)
-				if(!E.burn_dam || !E.is_robotic())
+				if(!E.burn_dam || E.burn_dam >= ROBOLIMB_SELF_REPAIR_CAP || !E.is_robotic())
 					continue
 			else if(S.parent && !parenthealed)
 				E = S.parent
 				parenthealed = TRUE
-				if(!E.burn_dam || !E.is_robotic())
+				if(!E.burn_dam ||  E.burn_dam >= ROBOLIMB_SELF_REPAIR_CAP || !E.is_robotic())
 					break
 			else
 				break
@@ -587,19 +584,22 @@ GLOBAL_LIST_INIT(cable_coil_recipes, list (new/datum/stack_recipe/cable_restrain
 	C.color = color
 	return C
 
-/obj/item/stack/cable_coil/update_icon()
+/obj/item/stack/cable_coil/update_name()
+	. = ..()
+	if(amount > 2)
+		name = "cable coil"
+	else
+		name = "cable piece"
+
+/obj/item/stack/cable_coil/update_icon_state()
 	if(!color)
 		color = pick(COLOR_RED, COLOR_BLUE, COLOR_GREEN, COLOR_ORANGE, COLOR_WHITE, COLOR_PINK, COLOR_YELLOW, COLOR_CYAN)
 	if(amount == 1)
 		icon_state = "coil1"
-		name = "cable piece"
 	else if(amount == 2)
 		icon_state = "coil2"
-		name = "cable piece"
 	else
 		icon_state = "coil"
-		name = "cable coil"
-	..()
 
 /obj/item/stack/cable_coil/proc/update_wclass()
 	if(amount == 1)
@@ -615,7 +615,7 @@ GLOBAL_LIST_INIT(cable_coil_recipes, list (new/datum/stack_recipe/cable_restrain
 		else if(get_amount() == 2)
 			. += "A piece of power cable."
 		else
-			. += "A coil of power cable. There are [get_amount()] lengths of cable in the coil."
+			. += "A coil of power cables."
 
 // Items usable on a cable coil :
 //   - Wirecutters : cut them duh !
@@ -686,7 +686,7 @@ GLOBAL_LIST_INIT(cable_coil_recipes, list (new/datum/stack_recipe/cable_restrain
 	C.d1 = 0 //it's a O-X node cable
 	C.d2 = dirn
 	C.add_fingerprint(user)
-	C.updateicon()
+	C.update_icon()
 
 	//create a new powernet with the cable, if needed it will be merged later
 	var/datum/powernet/PN = new()
@@ -796,7 +796,7 @@ GLOBAL_LIST_INIT(cable_coil_recipes, list (new/datum/stack_recipe/cable_restrain
 		C.d2 = nd2
 
 		C.add_fingerprint()
-		C.updateicon()
+		C.update_icon()
 
 
 		C.mergeConnectedNetworks(C.d1) //merge the powernets...
@@ -831,8 +831,15 @@ GLOBAL_LIST_INIT(cable_coil_recipes, list (new/datum/stack_recipe/cable_restrain
 	src.amount = rand(1,2)
 	pixel_x = rand(-2,2)
 	pixel_y = rand(-2,2)
-	update_icon()
+	update_appearance(UPDATE_NAME|UPDATE_ICON_STATE)
 	update_wclass()
+
+
+/obj/item/stack/cable_coil/five
+
+// Passes '5' to the parent as `new_amount`, so 5 coils are created.
+/obj/item/stack/cable_coil/five/New(loc, new_amount = 5, merge = TRUE, paramcolor = null)
+	..()
 
 /obj/item/stack/cable_coil/yellow
 	color = COLOR_YELLOW
@@ -877,7 +884,7 @@ GLOBAL_LIST_INIT(cable_coil_recipes, list (new/datum/stack_recipe/cable_restrain
 	energy_type = /datum/robot_energy_storage/cable
 	is_cyborg = TRUE
 
-/obj/item/stack/cable_coil/cyborg/update_icon()
+/obj/item/stack/cable_coil/cyborg/update_icon_state()
 	return // icon_state should always be a full cable
 
 /obj/item/stack/cable_coil/cyborg/attack_self(mob/user)

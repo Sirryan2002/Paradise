@@ -111,7 +111,7 @@
 	id = "empty-shell"
 	suffix = "emptyshell.dmm"
 	name = "Empty Shell"
-	description = "Cosy, rural property availible for young professional \
+	description = "Cosy, rural property available for young professional \
 		couple. Only twelve parsecs from the nearest hyperspace lane!"
 
 /datum/map_template/ruin/space/intact_empty_ship
@@ -309,3 +309,11 @@
 	description = "A now-defunct outpost, with the last received signal being that of distress."
 	allow_duplicates = FALSE
 	cost = 2 // Also pretty big
+
+/datum/map_template/ruin/space/voyager
+	id = "voyager"
+	suffix = "voyager.dmm"
+	name = "Voyager"
+	description = "A relic of old times, you don't know what it hide inside."
+	allow_duplicates = FALSE
+	cost = 1 // Gives research levels and it should be hard-to-find

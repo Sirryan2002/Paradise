@@ -426,6 +426,7 @@
 		return
 	occupant.forceMove(loc)
 	occupant = null
+	playsound(src, 'sound/machines/podopen.ogg', 5)
 	update_icon(UPDATE_ICON_STATE)
 	// eject trash the occupant dropped
 	for(var/atom/movable/A in contents - component_parts - list(beaker))
@@ -489,6 +490,10 @@
 		visible_message("[user] starts climbing into the sleeper.")
 	else
 		visible_message("[user] starts putting [L.name] into the sleeper.")
+	INVOKE_ASYNC(src, TYPE_PROC_REF(/obj/machinery/sleeper, put_in), O, user, L)
+	return TRUE
+
+/obj/machinery/sleeper/proc/put_in(atom/movable/O, mob/user, mob/living/L) // need this proc to use INVOKE_ASYNC in other proc. You're not recommended to use that one
 	if(do_after(user, 20, target = L))
 		if(!permitted_check(O, user))
 			return
@@ -496,14 +501,13 @@
 			return
 		L.forceMove(src)
 		occupant = L
+		playsound(src, 'sound/machines/podclose.ogg', 5)
 		update_icon(UPDATE_ICON_STATE)
 		to_chat(L, "<span class='boldnotice'>You feel cool air surround you. You go numb as your senses turn inward.</span>")
 		add_fingerprint(user)
 		if(user.pulling == L)
 			user.stop_pulling()
 		SStgui.update_uis(src)
-		return
-	return
 
 /obj/machinery/sleeper/proc/permitted_check(atom/movable/O, mob/user)
 	if(O.loc == user) //no you can't pull things out of your ass
@@ -567,6 +571,7 @@
 		usr.stop_pulling()
 		usr.forceMove(src)
 		occupant = usr
+		playsound(src, 'sound/machines/podclose.ogg', 5)
 		update_icon(UPDATE_ICON_STATE)
 
 		for(var/obj/O in src)

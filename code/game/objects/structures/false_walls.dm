@@ -96,7 +96,7 @@
 	if(!density)
 		icon_state = "fwall_open"
 		return
-	smoothing_flags = SMOOTH_BITMASK
+	smoothing_flags = SMOOTH_BITMASK | SMOOTH_OBJ
 	icon_state = initial(icon_state)
 	icon_state = "[base_icon_state]-[smoothing_junction]"
 	QUEUE_SMOOTH(src)
@@ -263,7 +263,7 @@
 
 /obj/structure/falsewall/plasma
 	name = "plasma wall"
-	desc = "A wall with plasma plating. This is definately a bad idea."
+	desc = "A wall with plasma plating. This is definitely a bad idea."
 	icon = 'icons/turf/walls/plasma_wall.dmi'
 	icon_state = "plasma_wall-0"
 	base_icon_state = "plasma_wall"

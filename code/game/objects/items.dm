@@ -751,6 +751,8 @@ GLOBAL_DATUM_INIT(welding_sparks, /mutable_appearance, mutable_appearance('icons
 	if(loc && I.loc == loc && isstorage(loc) && loc.Adjacent(user)) // Are we trying to swap two items in the storage?
 		var/obj/item/storage/S = loc
 		S.swap_items(src, I, user)
+		remove_outline()
+		return TRUE
 	remove_outline() //get rid of the hover effect in case the mouse exit isn't called if someone drags and drops an item and somthing goes wrong
 
 /obj/item/proc/apply_outline(mob/user, outline_color = null)
@@ -834,12 +836,16 @@ GLOBAL_DATUM_INIT(welding_sparks, /mutable_appearance, mutable_appearance('icons
 	var/job_icons = get_all_job_icons()
 	var/centcom = get_all_centcom_jobs()
 	var/solgov = get_all_solgov_jobs()
+	var/soviet = get_all_soviet_jobs()
 
 	if((assignmentName in centcom) || (rankName in centcom)) //Return with the NT logo if it is a Centcom job
 		return "Centcom"
 
 	if((assignmentName in solgov) || (rankName in solgov)) //Return with the SolGov logo if it is a SolGov job
 		return "solgov"
+
+	if((assignmentName in soviet) || (rankName in soviet)) //Return with the U.S.S.P logo if it is a Soviet job
+		return "soviet"
 
 	if(assignmentName in job_icons) //Check if the job has a hud icon
 		return assignmentName

@@ -1127,26 +1127,6 @@ Traitors and the like can also be revived with the previous role mostly intact.
 	message_admins("[key_name_admin(usr)] sent a Tip of the round.")
 	log_admin("[key_name(usr)] sent \"[input]\" as the Tip of the Round.")
 
-/client/proc/modify_goals()
-	set category = "Event"
-	set name = "Modify Station Goals"
-
-	if(!check_rights(R_EVENT))
-		return
-
-	holder.modify_goals()
-
-/datum/admins/proc/modify_goals()
-	if(!SSticker || !SSticker.mode)
-		to_chat(usr, "<span class='warning'>This verb can only be used if the round has started.</span>")
-		return
-
-	var/dat = ""
-	for(var/datum/station_goal/S in SSticker.mode.station_goals)
-		dat += "[S.name] - <a href='?src=[S.UID()];announce=1'>Announce</a> | <a href='?src=[S.UID()];remove=1'>Remove</a><br>"
-	dat += "<br><a href='?src=[UID()];add_station_goal=1'>Add New Goal</a>"
-	usr << browse(dat, "window=goals;size=400x400")
-
 /// Allow admin to add or remove traits of datum
 /datum/admins/proc/modify_traits(datum/D)
 	if(!D)

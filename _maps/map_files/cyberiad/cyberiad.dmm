@@ -27426,6 +27426,7 @@
 	d2 = 8;
 	icon_state = "4-8"
 	},
+/obj/machinery/project_manager,
 /turf/simulated/floor/plasteel,
 /area/bridge)
 "bsB" = (

@@ -590,9 +590,6 @@ SUBSYSTEM_DEF(ticker)
 	// Display the scoreboard window
 	score.scoreboard()
 
-	// Declare the completion of the station goals
-	mode.declare_station_goal_completion()
-
 	//Ask the event manager to print round end information
 	SSevents.RoundEnd()
 

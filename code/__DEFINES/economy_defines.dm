@@ -60,3 +60,16 @@
 #define SUPPLY_MATERIALS 	7
 #define SUPPLY_MISC 		8
 #define SUPPLY_VEND 		9
+
+/// Station Projects
+
+/// Node flag which indicates that this node immediately completes upon being discovered/unlocked
+#define NODE_TYPE_AUTOCOMPLETE	(1 << 0)
+/// Node flag which indicates that this node cannot be seen until one of its parent nodes is completed
+#define NODE_TYPE_DISCOVERABLE	(1 << 1)
+/// Node flag which indicates that this node is visible in the tree
+#define NODE_REVEALED			(1 << 2)
+/// Node flag which indicates that this node is the first node in the tree
+#define NODE_TYPE_TRUNK			(1 << 3)
+/// Node flag which indicates that this node has no child nodes
+#define NODE_TYPE_LEAF			(1 << 4)

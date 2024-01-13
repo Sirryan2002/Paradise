@@ -25,5 +25,6 @@ export { Section } from './Section';
 export { Slider } from './Slider';
 export { Table } from './Table';
 export { Tabs } from './Tabs';
+export { TechGraph } from './TechGraph';
 export { Tooltip } from './Tooltip';
 export { TimeDisplay } from './TimeDisplay';

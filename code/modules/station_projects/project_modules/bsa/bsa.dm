@@ -3,23 +3,19 @@
 // Requires high amount of power
 // Requires high level stock parts
 
-/datum/station_goal/bluespace_cannon
-	name = "Bluespace Artillery"
+/datum/station_project/bluespace_cannon
+	project_name = "Bluespace Artillery"
+	project_flavor_name = "Bluespace Artillery position construction"
+	project_short_description = "construct a BSA Artillery position aboard your station"
+	project_long_description = "Our military presence is inadequate in your sector. We need you to construct a BSA Artillery\
+								position aboard your station. Its base parts should be available for shipping by your cargo shuttle."
 
-/datum/station_goal/bluespace_cannon/get_report()
-	return {"<b>Bluespace Artillery position construction</b><br>
-	Our military presence is inadequate in your sector. We need you to construct a BSA-[rand(1,99)] Artillery position aboard your station.
-	<br><br>
-	Its base parts should be available for shipping by your cargo shuttle.
-	<br>
-	-Nanotrasen Naval Command"}
+/datum/station_project/bluespace_cannon/New()
+	. = ..()
+	var/obj/machinery/I = /obj/machinery/bsa/full
+	project_splash = "[icon2base64(icon(initial(I.icon), initial(I.icon_state), SOUTH, 1))]"
 
-/datum/station_goal/bluespace_cannon/on_report()
-	//Unlock BSA parts
-	var/datum/supply_packs/misc/station_goal/bsa/P = SSeconomy.supply_packs["[/datum/supply_packs/misc/station_goal/bsa]"]
-	P.special_enabled = TRUE
-
-/datum/station_goal/bluespace_cannon/check_completion()
+/datum/station_project/bluespace_cannon/check_completion()
 	if(..())
 		return TRUE
 	for(var/obj/machinery/bsa/full/B)

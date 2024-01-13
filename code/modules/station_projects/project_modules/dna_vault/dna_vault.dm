@@ -10,46 +10,39 @@
 #define VAULT_ARMOUR "Hardened Skin"
 #define VAULT_QUICK "Arm Muscle Stimulus"
 
-/datum/station_goal/dna_vault
-	name = "DNA Vault"
-	var/animal_count
-	var/human_count
-	var/plant_count
+/datum/station_project/dna_vault
+	project_name = "DNA Vault"
+	project_flavor_name = "DNA Vault construction"
+	project_short_description = "Our long term prediction systems say there's 99% chance of system-wide cataclysm in near future. As such, we need you to construct a DNA Vault aboard your station."
+	project_long_description = "Our long term prediction systems say there's 99% chance of system-wide cataclysm in near future.\
+								 As such, we need you to construct a DNA Vault aboard your station.\
+								The DNA Vault needs to contain samples unique animal data, unique non-standard plant data, and unique sapient humanoid DNA data.</li>\
+								The base vault parts should be available for shipping by your cargo shuttle."
 
-/datum/station_goal/dna_vault/New()
+	var/animal_count = 0
+	var/human_count = 0
+	var/plant_count = 0
+
+/datum/station_project/dna_vault/New()
 	..()
+	var/obj/machinery/I = /obj/machinery/dna_vault
+	project_splash = "[icon2base64(icon(initial(I.icon), initial(I.icon_state), SOUTH, 1))]"
+
 	animal_count = rand(15, 20) //might be too few given ~15 roundstart stationside ones
 	human_count = rand(round(0.75 * SSticker.mode.num_players_started()), SSticker.mode.num_players_started()) // 75%+ roundstart population.
 	var/non_standard_plants = non_standard_plants_count()
 	plant_count = rand(round(0.5 * non_standard_plants),round(0.7 * non_standard_plants))
 
-/datum/station_goal/dna_vault/proc/non_standard_plants_count()
+
+
+/datum/station_project/dna_vault/proc/non_standard_plants_count()
 	. = 0
 	for(var/T in subtypesof(/obj/item/seeds)) //put a cache if it's used anywhere else
 		var/obj/item/seeds/S = T
 		if(initial(S.rarity) > 0)
 			.++
 
-/datum/station_goal/dna_vault/get_report()
-	return {"<b>DNA Vault construction</b><br>
-	Our long term prediction systems say there's 99% chance of system-wide cataclysm in near future. As such, we need you to construct a DNA Vault aboard your station.
-	<br><br>
-	The DNA Vault needs to contain samples of:
-	<ul style='margin-top: 10px; margin-bottom: 10px;'>
-	<li>[animal_count] unique animal data.</li>
-	<li>[plant_count] unique non-standard plant data.</li>
-	<li>[human_count] unique sapient humanoid DNA data.</li>
-	</ul>
-	The base vault parts should be available for shipping by your cargo shuttle."}
-
-/datum/station_goal/dna_vault/on_report()
-	var/datum/supply_packs/P = SSeconomy.supply_packs["[/datum/supply_packs/misc/station_goal/dna_vault]"]
-	P.special_enabled = TRUE
-
-	P = SSeconomy.supply_packs["[/datum/supply_packs/misc/station_goal/dna_probes]"]
-	P.special_enabled = TRUE
-
-/datum/station_goal/dna_vault/check_completion()
+/datum/station_project/dna_vault/check_completion()
 	if(..())
 		return TRUE
 	for(var/obj/machinery/dna_vault/V in GLOB.machines)
@@ -183,10 +176,10 @@ GLOBAL_LIST_INIT(non_simple_animals, typecacheof(list(/mob/living/carbon/human/m
 		fillers += F
 
 	if(SSticker.mode)
-		for(var/datum/station_goal/dna_vault/G in SSticker.mode.station_goals)
-			animals_max = G.animal_count
-			plants_max = G.plant_count
-			dna_max = G.human_count
+		for(var/datum/station_project/dna_vault/G in SSeconomy.station_projects)
+			animals_max = initial(G.animal_count)
+			plants_max = initial(G.plant_count)
+			dna_max = initial(G.human_count)
 			break
 
 /obj/machinery/dna_vault/update_icon_state()

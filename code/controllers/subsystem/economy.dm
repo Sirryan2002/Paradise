@@ -98,6 +98,9 @@ SUBSYSTEM_DEF(economy)
 	var/global_paycheck_bonus = 0
 	var/global_paycheck_deduction = 0
 
+	var/list/station_projects = list()
+	var/list/active_station_projects = list()
+
 /datum/controller/subsystem/economy/vv_edit_var(var_name, var_value)
 	switch(var_name)
 		//These are all things that admins should not be touching during production, these are either used for logging
@@ -134,6 +137,9 @@ SUBSYSTEM_DEF(economy)
 	centcom_message = "<center>---[station_time_timestamp()]---</center><br>Remember to stamp and send back the supply manifests.<hr>"
 
 	next_paycheck_delay = 30 MINUTES + world.time
+
+	for(var/datum/station_project/project as anything in subtypesof(/datum/station_project))
+		station_projects += new project()
 
 /datum/controller/subsystem/economy/fire()
 	if(next_paycheck_delay <= world.time)
@@ -286,6 +292,7 @@ SUBSYSTEM_DEF(economy)
 				objective.owner_account.modify_payroll(objective.completion_payment, TRUE, "Job Objective \"[objective.objective_name]\" completed, award will be included in next paycheck")
 				objective.payout_given = TRUE
 			break
+
 
 //
 //   The NanoCoin Economy is booming

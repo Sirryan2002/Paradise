@@ -1,38 +1,4 @@
-//Station Shield
-// A chain of satellites encircles the station
-// Satellites be actived to generate a shield that will block unorganic matter from passing it.
-/datum/station_goal/station_shield
-	name = "Station Shield"
-	var/coverage_goal = 5000
 
-/datum/station_goal/station_shield/get_report()
-	return {"<b>Station Shield construction</b><br>
-	The station is located in a zone full of space debris. We have a prototype shielding system you will deploy to reduce collision related accidents.
-	<br><br>
-	You can order the satellites and control systems through the cargo shuttle."}
-
-/datum/station_goal/station_shield/on_report()
-	//Unlock
-	var/datum/supply_packs/P = SSeconomy.supply_packs["[/datum/supply_packs/misc/station_goal/shield_sat]"]
-	P.special_enabled = TRUE
-
-	P = SSeconomy.supply_packs["[/datum/supply_packs/misc/station_goal/shield_sat_control]"]
-	P.special_enabled = TRUE
-
-/datum/station_goal/station_shield/check_completion()
-	if(..())
-		return TRUE
-	if(get_coverage() >= coverage_goal)
-		return TRUE
-	return FALSE
-
-/datum/station_goal/proc/get_coverage()
-	var/list/coverage = list()
-	for(var/obj/machinery/satellite/meteor_shield/A in GLOB.machines)
-		if(!A.active || !is_station_level(A.z))
-			continue
-		coverage |= view(A.kill_range, A)
-	return coverage.len
 
 /obj/item/circuitboard/computer/sat_control
 	board_name = "Satellite Network Control"
@@ -70,7 +36,7 @@
 		))
 	data["notice"] = notice
 
-	var/datum/station_goal/station_shield/G = locate() in SSticker.mode.station_goals
+	var/datum/station_project/station_shield/G = locate() in SSeconomy.station_projects
 	if(G)
 		data["meteor_shield"] = 1
 		data["meteor_shield_coverage"] = G.get_coverage()

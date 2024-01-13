@@ -1,35 +1,19 @@
 //Station goal stuff goes here
-/datum/station_goal/bluespace_tap
-	name = "Bluespace Harvester"
-	var/goal = 45000
+/datum/station_project/bluespace_tap
+	project_name = "Bluespace Harvester"
+	project_flavor_name = "Bluespace Harvester Experiment"
+	project_short_description = "A device that reaches through bluespace into other dimensions to shift through them for interesting objects."
+	project_long_description = "Another research station has developed a device called a Bluespace Harvester.It, Due to unforseen \
+								circumstances the large-scale test of the prototype could not be completed on the original research station. \
+								It will instead be carried out on your station. Acquire the circuit board, construct the device over a wire \
+								knot and feed it enough power to generate mining points by shift end. Be advised that the device is experimental \
+								and might act in slightly unforseen ways if sufficiently powered."
 
-/datum/station_goal/bluespace_tap/get_report()
-	return {"<b>Bluespace Harvester Experiment</b><br>
-	Another research station has developed a device called a Bluespace Harvester.
-	It reaches through bluespace into other dimensions to shift through them for interesting objects.<br>
-	Due to unforseen circumstances the large-scale test of the prototype could not be completed on the original research station. It will instead be carried out on your station.
-	Acquire the circuit board, construct the device over a wire knot and feed it enough power to generate [goal] mining points by shift end.
-	<br><br>
-	Be advised that the device is experimental and might act in slightly unforseen ways if sufficiently powered.
-	<br>
-	Nanotrasen Science Directorate"}
+/datum/station_project/bluespace_tap/New()
+	. = ..()
+	var/obj/machinery/I = /obj/machinery/power/bluespace_tap
+	project_splash = "[icon2base64(icon(initial(I.icon), initial(I.icon_state), SOUTH, 1))]"
 
-/datum/station_goal/bluespace_tap/on_report()
-	var/datum/supply_packs/misc/station_goal/bluespace_tap/P = SSeconomy.supply_packs["[/datum/supply_packs/misc/station_goal/bluespace_tap]"]
-	P.special_enabled = TRUE
-
-/datum/station_goal/bluespace_tap/check_completion()
-	if(..())
-		return TRUE
-	var/highscore = 0
-	for(var/obj/machinery/power/bluespace_tap/T in GLOB.machines)
-		highscore = max(highscore, T.total_points)
-	to_chat(world, "<b>Bluespace Harvester Highscore</b>: [highscore >= goal ? "<span class='greenannounce'>": "<span class='boldannounce'>"][highscore]</span>")
-	if(highscore >= goal)
-		return TRUE
-	return FALSE
-
-//needed for the vending part of it
 /datum/data/bluespace_tap_product
 	var/product_name = "generic"
 	var/product_path = null

@@ -1,0 +1,81 @@
+
+.station-project-interface-container {
+  width: 100%;
+  display: -ms-inline-grid;
+  -ms-grid-columns: 12em lfr;
+  grid-template-columns: 12em auto;
+}
+
+.station-project-sidenav {
+  -ms-grid-column-end: span 1;
+  grid-column-end: span 1;
+  height: 100vh;
+  width: 13em;
+  background-color: #111;
+
+  .Tabs__tab {
+    width: 8em;
+    height: 5em;
+    font-size: 18px;
+    padding: .5em;
+    padding-top: 1.5em;
+    white-space: normal;
+  }
+
+  .tab-name-container {
+    width: 5em;
+    float: right;
+  }
+}
+
+.station-project-content-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -ms-grid-column: 2;
+  grid-column: 2;
+  grid-column-end: span 1;
+  overflow-y: scroll;
+  background-color: #111111c4;
+
+}
+
+.projectcard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #222;
+  width: 35em;
+  padding: 10px;
+  padding-bottom: 1px;
+  border-radius: .5em;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  margin:.4em;
+  margin-left: .4em;
+
+  .h2 {
+    font-size: 24px;
+    color: #ffcc00;
+    margin-bottom: 10px;
+  }
+
+  .img {
+    vertical-align: middle;
+    max-width: 100%;
+    border-radius: 4px;
+  }
+
+  .button-container {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .Button { // overriding button styles
+    width: 10.3em;
+    height: 2.5em;
+    font-size: 20px;
+    text-align: center;
+    line-height: 2.5em; // a hacky method to vertially align the text :)
+    border-radius: .1em;
+  }
+}

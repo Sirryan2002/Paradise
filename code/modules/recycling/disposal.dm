@@ -517,7 +517,7 @@
 
 	src.updateDialog()
 
-	if(flush && air_contents.return_pressure() >= SEND_PRESSURE)	// flush can happen even without power
+	if(flush && DISPOSALS_CHARGED)	// flush can happen even without power
 		flush()
 
 	if(stat & NOPOWER)			// won't charge if no power

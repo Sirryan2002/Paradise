@@ -566,7 +566,7 @@
 	flushing = 0
 	// now reset disposal state
 	flush = 0
-	if(mode == DISPOSALS_CHARGED)	// if was ready,
+	if(mode == DISPOSALS_CHARGED)	// if not in state that prevents charging,
 		mode = DISPOSALS_RECHARGING	// switch to charging
 		change_power_mode(IDLE_POWER_USE)
 	else

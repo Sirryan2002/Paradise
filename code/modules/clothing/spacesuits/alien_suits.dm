@@ -79,23 +79,20 @@
 	armor = list(MELEE = 35, BULLET = 35, LASER = 20, ENERGY = 10, BOMB = 20, RAD = 20, FIRE = 200, ACID = 285)
 	heat_protection = UPPER_TORSO|LOWER_TORSO|LEGS|FEET|ARMS|HANDS
 	max_heat_protection_temperature = SPACE_SUIT_MAX_TEMP_PROTECT
+	dyeable = FALSE
 	icon = 'icons/obj/clothing/species/vox/suits.dmi'
-	species_restricted = list("Vox", "Vox Armalis")
+	species_restricted = list("Vox")
 	sprite_sheets = list(
-		"Vox" = 'icons/mob/clothing/species/vox/suit.dmi',
-		"Vox Armalis" = 'icons/mob/clothing/species/armalis/suit.dmi',
-		)
+		"Vox" = 'icons/mob/clothing/species/vox/suit.dmi')
 
 /obj/item/clothing/head/helmet/space/vox
 	armor = list(MELEE = 35, BULLET = 35, LASER = 20, ENERGY = 10, BOMB = 20, RAD = 20, FIRE = 200, ACID = 285)
 	flags = STOPSPRESSUREDMAGE
 	flags_cover = HEADCOVERSEYES
 	icon = 'icons/obj/clothing/species/vox/hats.dmi'
-	species_restricted = list("Vox","Vox Armalis")
+	species_restricted = list("Vox")
 	sprite_sheets = list(
-		"Vox" = 'icons/mob/clothing/species/vox/head.dmi',
-		"Vox Armalis" = 'icons/mob/clothing/species/armalis/head.dmi',
-		)
+		"Vox" = 'icons/mob/clothing/species/vox/head.dmi')
 
 /obj/item/clothing/head/helmet/space/vox/pressure
 	name = "alien helmet"
@@ -147,32 +144,47 @@
 	desc = "An almost organic looking nonhuman pressure suit."
 
 /obj/item/clothing/under/vox
-	has_sensor = FALSE
-	icon = 'icons/obj/clothing/species/vox/uniforms.dmi'
+	icon = 'icons/mob/clothing/species/vox/under/misc.dmi'
 	species_restricted = list("Vox")
 	sprite_sheets = list(
 		"Vox" = 'icons/mob/clothing/species/vox/under/misc.dmi'
 		)
 
 /obj/item/clothing/under/vox/vox_casual
-	name = "alien clothing"
-	desc = "This doesn't look very comfortable."
-	icon_state = "vox-casual-1"
-	item_color = "vox-casual-1"
-	item_state = "vox-casual-1"
-	body_parts_covered = LEGS
+	name = "Vox jumpsuit"
+	desc = "These loose clothes are optimized for the labors of the lower castes onboard the arkships. Large openings in the top allow for breathability while the pants are durable yet flexible enough to not restrict movement."
+	icon_state = "vox-jumpsuit_s"
+	item_color = "vox-jumpsuit"
+	item_state = "vox-jumpsuit"
 
-/obj/item/clothing/under/vox/vox_robes //This will be invisible on Armalis for lack of a proper sprite. They wear a carapace suit anyway, and this is more just to let them use IDs and such.
-	name = "alien robes"
-	desc = "Weird and flowing!"
-	icon_state = "vox-casual-2"
-	item_color = "vox-casual-2"
-	item_state = "vox-casual-2"
-	species_restricted = list("Vox","Vox Armalis")
+/obj/item/clothing/suit/hooded/vox_robes
+	name = "Vox robes"
+	desc = "Large, comfortable robes worn by those who need a bit more covering. The thick fabric contains a pocket suitable for those that need their hands free during their work, while the cloth serves to cover scars or other injuries to the wearer's body."
+	icon = 'icons/mob/clothing/species/vox/suit.dmi'
+	icon_state = "vox-robes"
+	item_color = "vox-robes"
+	item_state = "vox-robes"
+	body_parts_covered = UPPER_TORSO|LOWER_TORSO|LEGS|ARMS
+	hoodtype = /obj/item/clothing/head/hooded/vox_robe_hood
+	species_restricted = list("Vox")
 	sprite_sheets = list(
-		"Vox" = 'icons/mob/clothing/species/vox/under/misc.dmi',
-		"Vox Armalis" = 'icons/mob/clothing/species/armalis/suit.dmi'
-		)
+		"Vox" = 'icons/mob/clothing/species/vox/suit.dmi'
+	)
+
+//Vox Robes Hood
+/obj/item/clothing/head/hooded/vox_robe_hood
+	name = "Vox hood"
+	desc = "The thick fabric of this hood serves a variety of purposes to the vox wearing it - serving as a method to hide a scarred face or a way to keep warm in the coldest areas onboard the ship."
+	icon = 'icons/mob/clothing/species/vox/head.dmi'
+	icon_state = "vox-robes-hood"
+	item_color = "vox-robes-hood"
+	item_state = "vox-robes-hood"
+	flags = BLOCKHAIR
+	flags_cover = HEADCOVERSEYES
+	species_restricted = list("Vox")
+	sprite_sheets = list(
+		"Vox" = 'icons/mob/clothing/species/vox/head.dmi'
+	)
 
 /obj/item/clothing/gloves/color/yellow/vox
 	name = "insulated gauntlets"
@@ -183,11 +195,9 @@
 	permeability_coefficient = 0.05
 	item_color = "gloves-vox"
 	icon = 'icons/obj/clothing/species/vox/gloves.dmi'
-	species_restricted = list("Vox","Vox Armalis")
+	species_restricted = list("Vox")
 	sprite_sheets = list(
-		"Vox" = 'icons/mob/clothing/species/vox/gloves.dmi',
-		"Vox Armalis" = 'icons/mob/clothing/species/armalis/gloves.dmi',
-		)
+		"Vox" = 'icons/mob/clothing/species/vox/gloves.dmi')
 
 /obj/item/clothing/shoes/magboots/vox
 	name = "vox magclaws"
@@ -195,17 +205,14 @@
 	item_state = "boots-vox"
 	icon_state = "boots-vox"
 	icon = 'icons/obj/clothing/species/vox/shoes.dmi'
-	species_restricted = list("Vox","Vox Armalis")
+	species_restricted = list("Vox")
 	sprite_sheets = list(
-		"Vox" = 'icons/mob/clothing/species/vox/feet.dmi',
-		"Vox Armalis" = 'icons/mob/clothing/species/armalis/feet.dmi'
-		)
+		"Vox" = 'icons/mob/clothing/species/vox/feet.dmi')
+	multiple_icons = FALSE
 
 /obj/item/clothing/shoes/magboots/vox/attack_self(mob/user)
 	if(magpulse)
-		flags &= ~NOSLIP
-		magpulse = FALSE
-		flags |= NODROP
+		flags &= ~NODROP
 		to_chat(user, "You relax your deathgrip on the flooring.")
 	else
 		//make sure these can only be used when equipped.
@@ -213,22 +220,20 @@
 			return
 		var/mob/living/carbon/human/H = user
 		if(H.shoes != src)
-			to_chat(user, "<span class='warning>You will have to put on [src] before you can do that.</span>")
+			to_chat(user, "<span class='warning'>You will have to put on [src] before you can do that.</span>")
 			return
-
-		flags |= NOSLIP
-		magpulse = TRUE
-		flags &= ~NODROP	//kinda hard to take off magclaws when you are gripping them tightly.
+		flags |= NODROP	//kinda hard to take off magclaws when you are gripping them tightly.
 		to_chat(user, "You dig your claws deeply into the flooring, bracing yourself.")
 		to_chat(user, "It would be hard to take off [src] without relaxing your grip first.")
+	return ..()
 
 //In case they somehow come off while enabled.
 /obj/item/clothing/shoes/magboots/vox/dropped(mob/user as mob)
 	..()
 	if(magpulse)
 		user.visible_message("[src] go limp as they are removed from [usr]'s feet.", "[src] go limp as they are removed from your feet.")
-		flags &= ~NOSLIP
 		magpulse = FALSE
+		no_slip = FALSE
 		flags &= ~NODROP
 
 /obj/item/clothing/shoes/magboots/vox/examine(mob/user)

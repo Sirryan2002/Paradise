@@ -30,9 +30,11 @@
 
 	else if(is_pen(W))
 		var/t = rename_interactive(user, W, prompt = "Enter new robot name")
-		if(!isnull(t))
+		if(length(t))
 			created_name = t
 			log_game("[key_name(user)] has renamed a robot to [t]")
+		else
+			to_chat(user, "The robot's name must have at least one character.")
 
 //Edbot Assembly
 
@@ -52,9 +54,11 @@
 
 	if(is_pen(W))
 		var/t = rename_interactive(user, W, prompt = "Enter new robot name")
-		if(!isnull(t))
+		if(length(t))
 			created_name = t
 			log_game("[key_name(user)] has renamed a robot to [t]")
+		else
+			to_chat(user, "The robot's name must have at least one character.")
 		return
 
 	switch(build_step)
@@ -250,7 +254,7 @@
 		return
 	if(!istype(src, /obj/item/storage/toolbox))
 		return
-	if(contents.len >= 1)
+	if(length(contents) >= 1)
 		to_chat(user, "<span class='warning'>They won't fit in, as there is already stuff inside.</span>")
 		return
 	if(T.use(10))
@@ -300,9 +304,11 @@
 
 	else if(is_pen(W))
 		var/t = rename_interactive(user, W, prompt = "Enter new robot name")
-		if(!isnull(t))
+		if(length(t))
 			created_name = t
 			log_game("[key_name(user)] has renamed a robot to [t]")
+		else
+			to_chat(user, "The robot's name must have at least one character.")
 
 /obj/item/toolbox_tiles/sensor/update_icon_state()
 	icon_state = "[toolbox_color]toolbox_tiles_sensor"
@@ -311,17 +317,12 @@
 	..()
 	if(istype(W, /obj/item/robot_parts/l_arm) || istype(W, /obj/item/robot_parts/r_arm))
 		qdel(W)
-		var/mob/living/simple_animal/bot/floorbot/A = new(drop_location(), toolbox_color)
+		var/mob/living/simple_animal/bot/floorbot/A = new(get_turf(src), toolbox_color)
 		A.name = created_name
 		A.robot_arm = W.type
 		to_chat(user, "<span class='notice'>You add the robot arm to the odd looking toolbox assembly. Boop beep!</span>")
 		user.unEquip(src, 1)
 		qdel(src)
-	else if(is_pen(W))
-		var/t = rename_interactive(user, W, prompt = "Enter new robot name")
-		if(!isnull(t))
-			created_name = t
-			log_game("[key_name(user)] has renamed a robot to [t]")
 
 //Medbot Assembly
 /obj/item/storage/firstaid/attackby(obj/item/I, mob/user, params)
@@ -331,7 +332,7 @@
 		robot_arm = I.type
 
 	//Making a medibot!
-	if(contents.len)
+	if(length(contents))
 		to_chat(user, "<span class='warning'>You need to empty [src] out first!</span>")
 		return
 
@@ -386,9 +387,11 @@
 	..()
 	if(is_pen(I))
 		var/t = rename_interactive(user, I, prompt = "Enter new robot name")
-		if(!isnull(t))
+		if(length(t))
 			created_name = t
 			log_game("[key_name(user)] has renamed a robot to [t]")
+		else
+			to_chat(user, "The robot's name must have at least one character.")
 	else
 		switch(build_step)
 			if(0)
@@ -494,13 +497,15 @@
 
 	else if(is_pen(I))
 		var/t = rename_interactive(user, I, prompt = "Enter new robot name")
-		if(!isnull(t))
+		if(length(t))
 			created_name = t
 			log_game("[key_name(user)] has renamed a robot to [t]")
+		else
+			to_chat(user, "The robot's name must have at least one character.")
 
 //General Griefsky
 
-	else if(istype(I, /obj/item/wrench) && build_step == 3)
+	else if(iswrench(I) && build_step == 3)
 		var/obj/item/griefsky_assembly/A = new /obj/item/griefsky_assembly(get_turf(src))
 		user.put_in_hands(A)
 		to_chat(user, "<span class='notice'>You adjust the arm slots for extra weapons!</span>")
@@ -561,7 +566,7 @@
 
 /obj/item/griefsky_assembly/attackby(obj/item/I, mob/user, params)
 	..()
-	if((istype(I, /obj/item/melee/energy/sword)) && (build_step < 3 ))
+	if((istype(I, /obj/item/melee/energy/sword)) && (build_step < 3))
 		if(!user.unEquip(I))
 			return
 		build_step++
@@ -576,7 +581,7 @@
 		qdel(I)
 		qdel(src)
 
-	else if((istype(I, /obj/item/toy/sword)) && (toy_step < 3 ))
+	else if((istype(I, /obj/item/toy/sword)) && (toy_step < 3))
 		if(!user.unEquip(I))
 			return
 		toy_step++
@@ -613,7 +618,7 @@
 	else
 		robot_arm = W.type
 
-	if(contents.len)
+	if(length(contents))
 		to_chat(user, "<span class='warning'>You need to empty [src] out first!</span>")
 		return
 

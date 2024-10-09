@@ -1,0 +1,5 @@
+/obj/item/stack/cable_coil/@SUBTYPES : /obj/item/stack/cable_coil/low_voltage/@SUBTYPES{@OLD}
+/obj/item/stack/cable_coil/cut : /obj/item/stack/cable_coil/low_voltage/cut{@OLD}
+/obj/item/stack/cable_coil/random : /obj/item/stack/cable_coil/low_voltage/random{@OLD}
+/obj/machinery/power/smes/@SUBTYPES : /obj/machinery/power/battery/smes/@SUBTYPES{@OLD}
+/obj/structure/cable/@SUBTYPES : /obj/structure/cable/low_voltage/@SUBTYPES{@OLD}

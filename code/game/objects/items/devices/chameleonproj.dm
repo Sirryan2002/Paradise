@@ -3,7 +3,7 @@
 	icon = 'icons/obj/device.dmi'
 	icon_state = "shield0"
 	flags = CONDUCT
-	slot_flags = SLOT_BELT
+	slot_flags = SLOT_FLAG_BELT
 	item_state = "electronic"
 	throwforce = 5
 	throw_speed = 3
@@ -39,7 +39,7 @@
 		return
 	if(!active_dummy)
 		if(isitem(target) && !istype(target, /obj/item/disk/nuclear))
-			playsound(get_turf(src), 'sound/weapons/flash.ogg', 100, 1, -6)
+			playsound(get_turf(src), 'sound/weapons/flash.ogg', 100, TRUE, -6)
 			to_chat(user, "<span class='notice'>Scanned [target].</span>")
 			saved_item = target.type
 			saved_icon = target.icon
@@ -55,7 +55,7 @@
 		return
 	if(active_dummy)
 		eject_all()
-		playsound(get_turf(src), 'sound/effects/pop.ogg', 100, 1, -6)
+		playsound(get_turf(src), 'sound/effects/pop.ogg', 100, TRUE, -6)
 		QDEL_NULL(active_dummy)
 		to_chat(usr, "<span class='notice'>You deactivate [src].</span>")
 		var/obj/effect/overlay/T = new/obj/effect/overlay(get_turf(src))
@@ -64,7 +64,7 @@
 		spawn(8)
 			qdel(T)
 	else
-		playsound(get_turf(src), 'sound/effects/pop.ogg', 100, 1, -6)
+		playsound(get_turf(src), 'sound/effects/pop.ogg', 100, TRUE, -6)
 		var/obj/O = new saved_item(src)
 		if(!O)
 			return
@@ -90,18 +90,20 @@
 
 /obj/item/chameleon/proc/eject_all()
 	for(var/atom/movable/A in active_dummy)
-		A.loc = active_dummy.loc
-		if(ismob(A))
-			var/mob/M = A
-			M.reset_perspective(null)
+		A.forceMove(active_dummy.loc)
 
 /obj/effect/dummy/chameleon
 	name = ""
 	desc = ""
+	resistance_flags = INDESTRUCTIBLE | FREEZE_PROOF
 	density = FALSE
 	anchored = TRUE
 	var/can_move = TRUE
 	var/obj/item/chameleon/master = null
+
+/obj/effect/dummy/chameleon/Initialize()
+	. = ..()
+	ADD_TRAIT(src, TRAIT_EFFECT_CAN_TELEPORT, ROUNDSTART_TRAIT)
 
 /obj/effect/dummy/chameleon/proc/activate(obj/O, mob/M, new_icon, new_iconstate, new_overlays, new_underlays, obj/item/chameleon/C)
 	name = O.name
@@ -111,7 +113,7 @@
 	overlays = new_overlays
 	underlays = new_underlays
 	dir = O.dir
-	M.loc = src
+	M.forceMove(src)
 	master = C
 	master.active_dummy = src
 
@@ -132,6 +134,12 @@
 	master.disrupt()
 
 /obj/effect/dummy/chameleon/attack_alien()
+	master.disrupt()
+
+/obj/effect/dummy/chameleon/fire_act(datum/gas_mixture/air, exposed_temperature, exposed_volume, global_overlay)
+	master.disrupt() // things like plasmafires, lava, bonfires will disrupt it
+
+/obj/effect/dummy/chameleon/acid_act()
 	master.disrupt()
 
 /obj/effect/dummy/chameleon/ex_act(severity) //no longer bomb-proof
@@ -197,7 +205,7 @@
 	disrupt(user)
 
 /obj/item/borg_chameleon/attack_self(mob/living/silicon/robot/syndicate/saboteur/user)
-	if(user && user.cell && user.cell.charge >  activationCost)
+	if(user && user.cell && user.cell.charge > activationCost)
 		if(isturf(user.loc))
 			toggle(user)
 		else

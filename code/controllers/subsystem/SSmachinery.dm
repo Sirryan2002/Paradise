@@ -41,20 +41,20 @@ SUBSYSTEM_DEF(machines)
 			new_pn.propagate_network(PC)
 
 /datum/controller/subsystem/machines/get_stat_details()
-	return "Machines: [processing.len] | Powernets: [powernets.len] | Deferred: [deferred_powernet_rebuilds.len]"
+	return "Machines: [length(processing)] | Powernets: [length(powernets)] | Deferred: [length(deferred_powernet_rebuilds)]"
 
 /datum/controller/subsystem/machines/proc/process_defered_powernets(resumed = 0)
 	if(!resumed)
 		src.currentrun = deferred_powernet_rebuilds.Copy()
 	//cache for sanid speed (lists are references anyways)
 	var/list/currentrun = src.currentrun
-	while(currentrun.len)
+	while(length(currentrun))
 		// we know that the deffered powernet rebuilds will only ever be cables
 		var/obj/structure/cable/C = currentrun[currentrun.len]
 		currentrun.len--
 		if(!QDELETED(C))
 			var/datum/regional_powernet/newPN = new(C) // create a new powernet...
-			newPN.propagate_network()//... and propagate it to the other side of the cable
+			newPN.propagate_network(C)//... and propagate it to the other side of the cable
 
 		deferred_powernet_rebuilds.Remove(C)
 		if(MC_TICK_CHECK)
@@ -65,8 +65,8 @@ SUBSYSTEM_DEF(machines)
 		src.currentrun = powernets.Copy()
 	//cache for sanid speed (lists are references anyways)
 	var/list/currentrun = src.currentrun
-	while(currentrun.len)
-		var/datum/regional_powernet/P = currentrun[currentrun.len]
+	while(length(currentrun))
+		var/datum/regional_powernet/P = currentrun[length(currentrun)]
 		currentrun.len--
 		if(P)
 			P.process_power() // reset the power state
@@ -83,8 +83,8 @@ SUBSYSTEM_DEF(machines)
 		src.currentrun = processing.Copy()
 	//cache for sanic speed (lists are references anyways)
 	var/list/currentrun = src.currentrun
-	while(currentrun.len)
-		var/obj/machinery/thing = currentrun[currentrun.len]
+	while(length(currentrun))
+		var/obj/machinery/thing = currentrun[length(currentrun)]
 		currentrun.len--
 		if(!QDELETED(thing) && thing.process(seconds) != PROCESS_KILL)
 			if(prob(MACHINE_FLICKER_CHANCE))
@@ -131,3 +131,8 @@ SUBSYSTEM_DEF(machines)
 		processing = SSmachines.processing
 	if(istype(SSmachines.powernets))
 		powernets = SSmachines.powernets
+
+#undef SSMACHINES_DEFERREDPOWERNETS
+#undef SSMACHINES_POWERNETS
+#undef SSMACHINES_PREMACHINERY
+#undef SSMACHINES_MACHINERY

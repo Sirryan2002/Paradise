@@ -1,3 +1,6 @@
+// Datums
+#define isdatum(thing) (istype(thing, /datum))
+
 // Atoms
 #define isatom(A) (isloc(A))
 
@@ -7,7 +10,7 @@
 
 #define isliving(A) (istype(A, /mob/living))
 
-#define isbrain(A) (istype(A, /mob/living/carbon/brain))
+#define isbrain(A) (istype(A, /mob/living/brain))
 
 // Carbon mobs
 #define iscarbon(A) (istype(A, /mob/living/carbon))
@@ -24,7 +27,11 @@
 
 #define isaliensentinel(A) (istype(A, /mob/living/carbon/alien/humanoid/sentinel))
 
+#define isalienqueen(A) (istype(A, /mob/living/carbon/alien/humanoid/queen))
+
 // Simple animals
+
+#define issimple_animal(A) (istype(A, /mob/living/simple_animal))
 
 #define ismegafauna(A) istype(A, /mob/living/simple_animal/hostile/megafauna)
 
@@ -33,6 +40,8 @@
 #define isconstruct(A) (istype(A, /mob/living/simple_animal/hostile/construct))
 
 #define isslime(A) (istype((A), /mob/living/simple_animal/slime))
+
+#define ispulsedemon(A) (istype(A, /mob/living/simple_animal/demon/pulse_demon))
 
 // Objects
 #define isobj(A) istype(A, /obj) //override the byond proc because it returns true on children of /atom/movable that aren't objs
@@ -44,6 +53,10 @@
 #define iseffect(A) (istype(A, /obj/effect))
 
 #define isclothing(A) (istype(A, /obj/item/clothing))
+
+#define isprojectile(A) (istype(A, /obj/item/projectile))
+
+#define isgun(A) (istype(A, /obj/item/gun))
 
 #define is_pen(W) (istype(W, /obj/item/pen) || istype(W, /obj/item/flashlight/pen))
 
@@ -75,9 +88,11 @@
 	// Objects - Machinery
 #define ismachinery(A) (istype(A, /obj/machinery))
 
+#define isairlock(A) (istype(A, /obj/machinery/door))
+
 #define ispowermachine(A) (istype(A, /obj/machinery/power))
 
-#define is_apc(A) (istype(A, /obj/machinery/power/apc))
+#define isapc(A) (istype(A, /obj/machinery/power/apc))
 
 #define iscable(A)  (istype(A, /obj/structure/cable))
 
@@ -118,7 +133,7 @@ GLOBAL_LIST_INIT(glass_sheet_types, typecacheof(list(
 
 #define ismineralturf(A) istype(A, /turf/simulated/mineral)
 
-#define islava(A) (istype(A, /turf/simulated/floor/plating/lava))
+#define islava(A) (istype(A, /turf/simulated/floor/lava))
 
 #define ischasm(A) (istype(A, /turf/simulated/floor/chasm))
 
@@ -127,11 +142,31 @@ GLOBAL_LIST_INIT(glass_sheet_types, typecacheof(list(
 // Areas
 //#define isarea(A, B, C...) BYOND proc, can test multiple arguments and only return TRUE if all are areas
 
+#define isspacearea(A)	(istype(A, /area/space))
+
 // Structures
 #define isstructure(A)	(istype((A), /obj/structure))
+
+// Vehicles
+#define isvehicle(A) istype(A, /obj/vehicle)
+#define istgvehicle(A) istype(A, /obj/tgvehicle)
 
 // Misc
 #define isclient(A) istype(A, /client)
 #define isradio(A) istype(A, /obj/item/radio)
-#define ispill(A) istype(A, /obj/item/reagent_containers/food/pill)
+#define ispill(A) istype(A, /obj/item/reagent_containers/pill)
+#define ispatch(A) istype(A, /obj/item/reagent_containers/patch)
+#define isfood(A) istype(A, /obj/item/food)
 
+// Modsuits
+#define ismodcontrol(A) istype(A, /obj/item/mod/control)
+
+// Meteors
+GLOBAL_LIST_INIT(turfs_pass_meteor, typecacheof(list(
+	/turf/simulated/floor/plating/asteroid,
+	/turf/space
+)))
+
+#define ispassmeteorturf(A) (is_type_in_typecache(A, GLOB.turfs_pass_meteor))
+
+#define is_screen_atom(A) istype(A, /atom/movable/screen)

@@ -108,7 +108,7 @@ GLOBAL_LIST_INIT(cable_coil_recipes, list (new/datum/stack_recipe/cable_restrain
 	. = ..()
 	if(istype(W, /obj/item/toy/crayon))
 		var/obj/item/toy/crayon/C = W
-		cable_color(C.colourName)
+		cable_color(C.dye_color)
 
 ///////////////////////////////////////////////
 // Cable laying procedures
@@ -177,7 +177,7 @@ GLOBAL_LIST_INIT(cable_coil_recipes, list (new/datum/stack_recipe/cable_restrain
 	update_wclass()
 
 /obj/item/stack/cable_coil/low_voltage/cyborg
-	energy_type = /datum/robot_energy_storage/cable
+	energy_type = /datum/robot_storage/energy/cable
 	is_cyborg = TRUE
 
 /obj/item/stack/cable_coil/low_voltage/cyborg/update_icon_state()

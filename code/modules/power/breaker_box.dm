@@ -36,7 +36,7 @@
 	for(var/obj/machinery/power/terminal/apc_terminal in terminal.powernet.nodes)
 		var/obj/machinery/power/apc/apc = apc_terminal.master
 		if(!istype(apc))
-			return // git out of here!
+			continue // git out of here!
 		breakers[apc.UID()] = apc.operating
 
 /obj/machinery/power/breaker_box/proc/make_terminal()
@@ -151,11 +151,11 @@
 	playsound(get_turf(src), 'sound/machines/power/breaker_flip.ogg', 50, 0)
 
 
-/obj/machinery/power/breaker_box/ui_interact(mob/user, ui_key = "main", datum/tgui/ui = null, force_open = FALSE, datum/tgui/master_ui = null, datum/ui_state/state = GLOB.default_state)
+/obj/machinery/power/breaker_box/ui_interact(mob/user, datum/tgui/ui = null)
 	remake_breaker_list()
-	ui = SStgui.try_update_ui(user, src, ui_key, ui, force_open)
+	ui = SStgui.try_update_ui(user, src, ui)
 	if(!ui)
-		ui = new(user, src, ui_key, "BreakerBox", name, 500, 750, master_ui, state)
+		ui = new(user, src, "BreakerBox", name)
 		ui.autoupdate = TRUE
 		ui.open()
 
@@ -176,8 +176,10 @@
 	data["has_wirecutter"] = iswirecutter(user.get_active_hand())
 	return data
 
-/obj/machinery/power/breaker_box/ui_act(action, list/params, datum/tgui/ui, datum/ui_state/state)
-	. = ..()
+/obj/machinery/power/breaker_box/ui_act(action, params, datum/tgui/ui, datum/ui_state/state)
+	if(..())
+		return
+
 	switch(action)
 		if("flip_breaker")
 			message_admins("detected")

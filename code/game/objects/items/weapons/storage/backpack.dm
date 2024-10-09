@@ -11,7 +11,7 @@
 	lefthand_file = 'icons/mob/inhands/clothing_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/clothing_righthand.dmi'
 	w_class = WEIGHT_CLASS_BULKY
-	slot_flags = SLOT_BACK	//ERROOOOO
+	slot_flags = SLOT_FLAG_BACK	//ERROOOOO
 	max_w_class = WEIGHT_CLASS_NORMAL
 	max_combined_w_class = 21
 	storage_slots = 21
@@ -19,31 +19,30 @@
 	max_integrity = 300
 	sprite_sheets = list(
 		"Vox" = 'icons/mob/clothing/species/vox/back.dmi',
-		"Vox Armalis" = 'icons/mob/clothing/species/armalis/back.dmi',
 		"Grey" = 'icons/mob/clothing/species/grey/back.dmi'
-		) //For Armalis anything but this and the nitrogen tank will use the default backpack icon.
+		)
 
 /obj/item/storage/backpack/attackby(obj/item/W as obj, mob/user as mob, params)
-	if(in_range(user, src))
-		playsound(src.loc, "rustle", 50, 1, -5)
+	if(Adjacent(user))
+		playsound(src.loc, "rustle", 50, TRUE, -5)
 		return ..()
 
 /obj/item/storage/backpack/examine(mob/user)
 	var/space_used = 0
 	. = ..()
-	if(in_range(user, src))
+	if(Adjacent(user))
 		for(var/obj/item/I in contents)
 			space_used += I.w_class
 		if(!space_used)
-			. += "<span class='notice'> [src] is empty.</span>"
+			. += "<span class='notice'>[src] is empty.</span>"
 		else if(space_used <= max_combined_w_class * 0.6)
-			. += "<span class='notice'> [src] still has plenty of remaining space.</span>"
+			. += "<span class='notice'>[src] still has plenty of remaining space.</span>"
 		else if(space_used <= max_combined_w_class * 0.8)
-			. += "<span class='notice'> [src] is beginning to run out of space.</span>"
+			. += "<span class='notice'>[src] is beginning to run out of space.</span>"
 		else if(space_used < max_combined_w_class)
-			. += "<span class='notice'> [src] doesn't have much space left.</span>"
+			. += "<span class='notice'>[src] doesn't have much space left.</span>"
 		else
-			. += "<span class='notice'> [src] is full.</span>"
+			. += "<span class='notice'>[src] is full.</span>"
 
 /*
  * Backpack Types
@@ -62,19 +61,27 @@
 	cant_hold = list(/obj/item/storage/backpack, /obj/item/storage/belt/bluespace)
 	cant_hold_override = list(/obj/item/storage/backpack/satchel_flat)
 	armor = list(MELEE = 0, BULLET = 0, LASER = 0, ENERGY = 0, BOMB = 0, RAD = 0, FIRE = 60, ACID = 50)
+	allow_same_size = TRUE
 
 /obj/item/storage/backpack/holding/attackby(obj/item/W, mob/user, params)
 	if(istype(W, /obj/item/storage/backpack/holding))
-		var/response = alert(user, "This creates a singularity, destroying you and much of the station. Are you SURE?","IMMINENT DEATH!", "No", "Yes")
+		var/response = tgui_alert(user, "This creates a singularity, destroying you and much of the station. Are you SURE?", "IMMINENT DEATH!", list("No", "Yes"))
 		if(response == "Yes")
 			user.visible_message("<span class='warning'>[user] grins as [user.p_they()] begin[user.p_s()] to put a Bag of Holding into a Bag of Holding!</span>", "<span class='warning'>You begin to put the Bag of Holding into the Bag of Holding!</span>")
 			if(do_after(user, 30, target=src))
+				if(GLOB.disable_explosions)
+					if(istype(user))
+						to_chat(user, "<span class='userdanger'>You seem to stuff yourself into the quantum hellscape between the two bags. That wasn't wise.</span>")
+						user.gib()
+
+					return
+
 				investigate_log("has become a singularity. Caused by [user.key]","singulo")
-				user.visible_message("<span class='warning'>[user] erupts in evil laughter as [user.p_they()] put[user.p_s()] the Bag of Holding into another Bag of Holding!</span>", "<span class='warning'>You can't help but laugh wildly as you put the Bag of Holding into another Bag of Holding, complete darkness surrounding you.</span>","<span class='warning'> You hear the sound of scientific evil brewing! </span>")
+				user.visible_message("<span class='warning'>[user] erupts in evil laughter as [user.p_they()] put[user.p_s()] the Bag of Holding into another Bag of Holding!</span>", "<span class='warning'>You can't help but laugh wildly as you put the Bag of Holding into another Bag of Holding, complete darkness surrounding you.</span>","<span class='danger'> You hear the sound of scientific evil brewing!</span>")
 				qdel(W)
 				var/obj/singularity/singulo = new /obj/singularity(get_turf(user))
 				singulo.energy = 300 //To give it a small boost
-				message_admins("[key_name_admin(user)] detonated a bag of holding <A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[x];Y=[y];Z=[z]'>JMP</a>)")
+				message_admins("[key_name_admin(user)] detonated a bag of holding <A href='byond://?_src_=holder;adminplayerobservecoodjump=1;X=[x];Y=[y];Z=[z]'>JMP</a>)")
 				log_game("[key_name(user)] detonated a bag of holding")
 				qdel(src)
 			else
@@ -112,23 +119,28 @@
 /obj/item/storage/backpack/clown/syndie/populate_contents()
 	new /obj/item/clothing/under/rank/civilian/clown(src)
 	new /obj/item/clothing/shoes/magboots/clown(src)
-	new /obj/item/clothing/mask/chameleon(src)
+	new /obj/item/clothing/mask/chameleon/voice_change(src)
 	new /obj/item/radio/headset/headset_service(src)
 	new /obj/item/pda/clown(src)
 	new /obj/item/storage/box/survival(src)
-	new /obj/item/reagent_containers/food/snacks/grown/banana(src)
+	new /obj/item/food/grown/banana(src)
 	new /obj/item/stamp/clown(src)
 	new /obj/item/toy/crayon/rainbow(src)
 	new /obj/item/storage/fancy/crayons(src)
 	new /obj/item/reagent_containers/spray/waterflower(src)
-	new /obj/item/reagent_containers/food/drinks/bottle/bottleofbanana(src)
+	new /obj/item/reagent_containers/drinks/bottle/bottleofbanana(src)
 	new /obj/item/instrument/bikehorn(src)
 	new /obj/item/bikehorn(src)
 	new /obj/item/dnainjector/comic(src)
+	for(var/i in 1 to 10)
+		new /obj/item/ammo_box/magazine/m12g/confetti(src)
+	for(var/i in 1 to 5)
+		new /obj/item/grenade/confetti(src)
+	new /obj/item/gun/projectile/revolver/capgun(src)
 
 /obj/item/storage/backpack/mime
-	name = "Parcel Parceaux"
-	desc = "A silent backpack made for those silent workers. Silence Co."
+	name = "Pierre the Panda"
+	desc = "A backpack modelled after Pierre the Panda - the official mascot for the Université du Mime."
 	icon_state = "mimepack"
 	item_state = "mimepack"
 
@@ -208,6 +220,13 @@
 	icon_state = "blueshieldpack"
 	item_state = "blueshieldpack"
 
+/obj/item/storage/backpack/robotics
+	name = "robotics backpack"
+	desc = "A specially designed backpack. It's fire resistant and smells vaguely of welding fuel."
+	icon_state = "robopack"
+	item_state = "robopack"
+	resistance_flags = FIRE_PROOF
+
 /*
  * Satchel Types
  */
@@ -220,20 +239,19 @@
 	resistance_flags = FIRE_PROOF
 	var/strap_side_straight = FALSE
 
-/obj/item/storage/backpack/satchel/verb/switch_strap()
-	set name = "Switch Strap Side"
-	set category = "Object"
-	set src in usr
+/obj/item/storage/backpack/satchel/examine(mob/user)
+	. = ..()
+	. += "<span class='notice'>You can <b>Alt-Shift-Click</b> [src] to flip it's strap side.</span>"
 
-	if(usr.incapacitated())
+/obj/item/storage/backpack/satchel/AltShiftClick(mob/user)
+	if(user.stat || HAS_TRAIT(user, TRAIT_HANDS_BLOCKED) || !Adjacent(user))
 		return
+
 	strap_side_straight = !strap_side_straight
 	item_state = strap_side_straight ? "satchel-flipped" : "satchel"
 	if(ishuman(loc))
 		var/mob/living/carbon/human/H = loc
 		H.update_inv_back()
-
-
 
 /obj/item/storage/backpack/satcheldeluxe
 	name = "leather satchel"
@@ -255,6 +273,12 @@
 	desc = "A deluxe NT Satchel, made of the highest quality leather."
 	icon_state = "satchel-norm"
 	item_state = "satchel-norm"
+
+/obj/item/storage/backpack/satchel/clown
+	name = "Tickles Von Squeakerton"
+	desc = "A satchel with extra pockets for all your banana storing needs!"
+	icon_state = "satchel-clown"
+	item_state = "satchel-clown"
 
 /obj/item/storage/backpack/satchel_eng
 	name = "industrial satchel"
@@ -331,6 +355,13 @@
 	desc = "A robust satchel issued to Nanotrasen's finest."
 	icon_state = "satchel-blueshield"
 	item_state = "satchel-blueshield"
+
+/obj/item/storage/backpack/satchel_robo
+	name = "bioengineer satchel"
+	desc = "A black satchel designed for holding repair equipment."
+	icon_state = "satchel-robo"
+	item_state = "satchel-robo"
+	resistance_flags = FIRE_PROOF
 
 /obj/item/storage/backpack/satchel_flat
 	name = "smuggler's satchel"
@@ -430,7 +461,7 @@
 
 // The following three procs handle refusing access to contents if the duffel is zipped
 
-/obj/item/storage/backpack/duffel/handle_item_insertion(obj/item/I, prevent_warning, bypass_zip = FALSE)
+/obj/item/storage/backpack/duffel/handle_item_insertion(obj/item/I, mob/user, prevent_warning, bypass_zip = FALSE)
 	if(bypass_zip)
 		return ..()
 
@@ -572,10 +603,13 @@
 	new /obj/item/bonegel(src)
 	new /obj/item/bonesetter(src)
 	new /obj/item/FixOVein(src)
+	new /obj/item/surgical_drapes(src)
 	new /obj/item/clothing/suit/straight_jacket(src)
 	new /obj/item/clothing/mask/muzzle(src)
+	new /obj/item/reagent_containers/glass/bottle/reagent/hydrocodone(src)
 
-/obj/item/storage/backpack/duffel/syndie/med/surgery_fake //for maint spawns
+/// for maint spawns
+/obj/item/storage/backpack/duffel/syndie/med/surgery_fake
 	name = "surgery duffelbag"
 	desc = "A suspicious looking duffelbag for holding surgery tools."
 
@@ -590,6 +624,16 @@
 	if(prob(50))
 		new /obj/item/circular_saw(src)
 		new /obj/item/surgicaldrill(src)
+
+/obj/item/storage/backpack/duffel/syndie/party
+	desc = "A large duffel bag, packed to the brim with hilarious equipment."
+
+/obj/item/storage/backpack/duffel/syndie/party/populate_contents()
+	for(var/i in 1 to 10)
+		new /obj/item/ammo_box/magazine/m12g/confetti(src)
+	for(var/i in 1 to 5)
+		new /obj/item/grenade/confetti(src)
+	new /obj/item/gun/projectile/revolver/capgun(src)
 
 #define NANNY_MAX_VALUE 7
 #define NANNY_MIN_VALUE 6
@@ -621,10 +665,10 @@
 			new /obj/item/organ/internal/cyberimp/arm/katana(src)
 			value += 1
 		if(3)
-			new /obj/item/twohanded/mjollnir(src)
+			new /obj/item/mjollnir(src)
 			value += 2
 		if(4)
-			new /obj/item/twohanded/singularityhammer(src)
+			new /obj/item/singularityhammer(src)
 			value += 2
 		if(5)
 			new /obj/item/katana(src)
@@ -633,13 +677,14 @@
 			new /obj/item/claymore(src)
 			value += 2 //force 40 this is value 2
 		if(7)
-			new /obj/item/twohanded/spear/grey_tide(src)
+			new /obj/item/spear/grey_tide(src)
 			value += 2 //Value 2, clones are strong
 		if(8)
 			if(prob(50))
 				new /obj/item/sord(src)
 				value -= 1 //Useless joke, might as well give them a value point back.
-				new /obj/item/twohanded/bostaff(src) //Funky item, not really worth a point, but good to balance sord's free point out
+			else
+				new /obj/item/bostaff(src) //Funky item, not really worth a point, but good to balance sord's free point out
 	//Wands
 	var/wands = 0
 	while(wands < 2)
@@ -681,10 +726,10 @@
 		/obj/item/organ/internal/heart/cursed/wizard = 1,
 		/obj/item/organ/internal/vocal_cords/colossus/wizard = 2,
 		/obj/item/warp_cube/red = 1,
-		/obj/item/reagent_containers/food/drinks/everfull = 2,
-		/obj/item/clothing/suit/space/hardsuit/shielded/wizard = 2,
-		/obj/item/jacobs_ladder = 1, //funny
-		/obj/item/immortality_talisman = 1 ) //spells recharge when invincible
+		/obj/item/reagent_containers/drinks/everfull = 2,
+		/obj/item/clothing/suit/space/hardsuit/wizard = 2,
+		/obj/item/immortality_talisman = 1, //spells recharge when invincible
+		/obj/item/tarot_generator/wizard = 2)
 	var/obj/item/pickeda = pick(list_a)
 	value += list_a[pickeda]
 	new pickeda(src)
@@ -714,7 +759,7 @@
 			value += 1
 		if(8)
 			if(prob(25))
-				new /obj/item/reagent_containers/food/snacks/grown/nymph_pod(src)
+				new /obj/item/food/grown/nymph_pod(src)
 				new /obj/item/slimepotion/sentience(src)
 			else
 				new /obj/item/paicard(src) //Still useful, not a point useful.
@@ -722,10 +767,10 @@
 	//Treat / potion. Free.
 	var/obj/item/pickedt = pick(
 			/obj/item/storage/box/syndidonkpockets, // Healing + speed
-			/obj/item/reagent_containers/food/drinks/bottle/dragonsbreath, // Killing
-			/obj/item/reagent_containers/food/drinks/bottle/immortality, // Super healing for 20 seconds
-			/obj/item/reagent_containers/food/snacks/meatsteak/stimulating, //Healing + stun immunity
-			/obj/item/reagent_containers/food/snacks/plum_pie ) // Great healing over long period of time
+			/obj/item/reagent_containers/drinks/bottle/dragonsbreath, // Killing
+			/obj/item/reagent_containers/drinks/bottle/immortality, // Super healing for 20 seconds
+			/obj/item/food/meatsteak/stimulating, //Healing + stun immunity
+			/obj/item/food/plum_pie ) // Great healing over long period of time
 	new pickedt(src)
 
 
@@ -739,7 +784,7 @@
 #undef NANNY_MAX_VALUE
 #undef NANNY_MIN_VALUE
 
-/obj/item/reagent_containers/food/drinks/bottle/dragonsbreath
+/obj/item/reagent_containers/drinks/bottle/dragonsbreath
 	name = "flask of dragons breath"
 	desc = "Not recommended for wizardly consumption. Recommended for mundane consumption!"
 	icon_state = "holyflask"
@@ -747,7 +792,7 @@
 	volume = 100
 	list_reagents = list("dragonsbreath" = 80, "hell_water" = 20)
 
-/obj/item/reagent_containers/food/drinks/bottle/immortality
+/obj/item/reagent_containers/drinks/bottle/immortality
 	name = "drop of immortality"
 	desc = "Drinking this will make you immortal. For a moment or two, at least."
 	icon_state = "holyflask"
@@ -755,15 +800,16 @@
 	volume = 5
 	list_reagents = list("adminordrazine" = 5)
 
-/obj/item/reagent_containers/food/snacks/meatsteak/stimulating
+/obj/item/food/meatsteak/stimulating
 	name = "stimulating steak"
 	desc = "Stimulate your senses."
 	list_reagents = list("nutriment" = 5, "stimulants" = 25)
 	bitesize = 100
 
-/obj/item/reagent_containers/food/snacks/plum_pie
+/obj/item/food/plum_pie
 	name = "perfect plum pie"
 	desc = "The Jack Horner brand of pie. 2 big thumbs up."
+	icon = 'icons/obj/food/bakedgoods.dmi'
 	icon_state = "plump_pie"
 	filling_color = "#B8279B"
 	bitesize = 10
@@ -845,6 +891,12 @@
 	icon_state = "duffel-blueshield"
 	item_state = "duffel-blueshield"
 
+/obj/item/storage/backpack/duffel/robotics
+	name = "roboticist duffelbag"
+	desc = "A duffelbag designed to hold tools."
+	icon_state = "duffel-robo"
+	item_state = "duffel-robo"
+
 //ERT backpacks.
 /obj/item/storage/backpack/ert
 	name = "emergency response team backpack"
@@ -885,8 +937,8 @@
 
 //Solgov
 /obj/item/storage/backpack/ert/solgov
-	name = "\improper TSF marine backpack"
-	desc = "A spacious backpack with lots of pockets, worn by marines of the Trans-Solar Federation."
+	name = "\improper TSF marine rucksack"
+	desc = "A spacious rucksack covered in pouches and pockets, worn by marines of the Trans-Solar Federation."
 	icon_state = "ert_solgov"
 
 /obj/item/storage/backpack/ert/deathsquad

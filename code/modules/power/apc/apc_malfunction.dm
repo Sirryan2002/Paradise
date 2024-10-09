@@ -18,8 +18,8 @@
 	to_chat(malf, "Beginning override of APC systems. This takes some time, and you can only hack one APC at a time.")
 	malf.malfhack = src
 	malf.malfhacking = addtimer(CALLBACK(malf, TYPE_PROC_REF(/mob/living/silicon/ai, malfhacked), src), 600, TIMER_STOPPABLE)
-	var/obj/screen/alert/hackingapc/A
-	A = malf.throw_alert("hackingapc", /obj/screen/alert/hackingapc)
+	var/atom/movable/screen/alert/hackingapc/A
+	A = malf.throw_alert("hackingapc", /atom/movable/screen/alert/hackingapc)
 	A.target = src
 
 /obj/machinery/power/apc/proc/malfoccupy(mob/living/silicon/ai/malf)
@@ -46,10 +46,10 @@
 	occupier.eyeobj.name = "[occupier.name] (AI Eye)"
 	if(malf.parent)
 		qdel(malf)
-	var/datum/action/innate/ai/return_to_core/R = new
-	R.Grant(occupier)
+	var/datum/spell/ai_spell/return_to_core/R = new
+	occupier.AddSpell(R)
 	occupier.cancel_camera()
-	if((seclevel2num(get_security_level()) == SEC_LEVEL_DELTA) && malf.nuking)
+	if((SSsecurity_level.get_current_level_as_number() == SEC_LEVEL_DELTA) && malf.nuking)
 		for(var/obj/item/pinpointer/point in GLOB.pinpointer_list)
 			point.the_disk = src //the pinpointer will detect the shunted AI
 
@@ -62,7 +62,7 @@
 		occupier.parent.adjustOxyLoss(occupier.getOxyLoss())
 		occupier.parent.cancel_camera()
 		qdel(occupier)
-		if(seclevel2num(get_security_level()) == SEC_LEVEL_DELTA)
+		if(SSsecurity_level.get_current_level_as_number() == SEC_LEVEL_DELTA)
 			for(var/obj/item/pinpointer/point in GLOB.pinpointer_list)
 				for(var/mob/living/silicon/ai/A in GLOB.ai_list)
 					if((A.stat != DEAD) && A.nuking)
@@ -93,3 +93,8 @@
 			return APC_MALF_HACKED
 	else
 		return APC_MALF_NOT_HACKED
+
+#undef APC_MALF_NOT_HACKED
+#undef APC_MALF_HACKED
+#undef APC_MALF_SHUNTED_HERE
+#undef APC_MALF_SHUNTED_OTHER

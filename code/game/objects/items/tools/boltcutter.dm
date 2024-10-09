@@ -4,7 +4,7 @@
 	icon = 'icons/obj/tools.dmi'
 	icon_state = "boltcutters"
 	flags = CONDUCT
-	slot_flags = SLOT_BACK
+	slot_flags = SLOT_FLAG_BACK
 	force = 10
 	throw_speed = 5
 	throw_range = 3

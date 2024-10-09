@@ -7,7 +7,7 @@
 	singular_name = "cable"
 	icon = 'icons/obj/power.dmi'
 	icon_state = "coil"
-	item_state = "coil_red"
+	item_state = "coil"
 	belt_icon = "cable_coil"
 	amount = MAXCOIL
 	max_amount = MAXCOIL
@@ -18,8 +18,7 @@
 	throw_range = 5
 	materials = list(MAT_METAL = 15, MAT_GLASS = 10)
 	flags = CONDUCT
-	slot_flags = SLOT_BELT
-	item_state = "coil"
+	slot_flags = SLOT_FLAG_BELT
 	attack_verb = list("whipped", "lashed", "disciplined", "flogged")
 	usesound = 'sound/items/deconstruct.ogg'
 	toolspeed = 1
@@ -29,8 +28,6 @@
 
 /obj/item/stack/cable_coil/Initialize(mapload)
 	. = ..()
-	pixel_x = rand(-2,2)
-	pixel_y = rand(-2,2)
 	update_icon()
 	update_wclass()
 
@@ -128,7 +125,8 @@
 		C.merge_diagonal_networks(C.d2)
 	use(1)
 	#warn REIMPLEMENT_CABLE_SHOCKING
-	return C
+
+	SEND_GLOBAL_SIGNAL(COMSIG_GLOB_CABLE_UPDATED, T)
 
 /// called when cable_coil is click on an installed obj/cable or click on a turf that already contains a "node" cable
 /obj/item/stack/cable_coil/proc/cable_join(obj/structure/cable/C, mob/user)
@@ -168,6 +166,7 @@
 		if(NC.shock(user, 50))
 			if(prob(50)) //fail
 				NC.deconstruct()
+				return
 
 	// exisiting cable doesn't point at our position, so see if it's a stub
 	else if(C.d1 == NO_DIRECTION)
@@ -184,7 +183,7 @@
 		for(var/obj/structure/cable/LC in T)		// check to make sure there's no matching cable
 			if(LC == C)			// skip the cable we're interacting with
 				continue
-			if((LC.d1 == nd1 && LC.d2 == nd2) || (LC.d1 == nd2 && LC.d2 == nd1) )	// make sure no cable matches either direction
+			if((LC.d1 == nd1 && LC.d2 == nd2) || (LC.d1 == nd2 && LC.d2 == nd1))	// make sure no cable matches either direction
 				to_chat(user, "<span class='warning'>There's already a cable at that position!</span>")
 				return
 
@@ -215,6 +214,7 @@
 				C.deconstruct()
 				return
 		C.denode()// this call may have disconnected some cables that terminated on the centre of the turf, if so split the powernets.
+	SEND_GLOBAL_SIGNAL(COMSIG_GLOB_CABLE_UPDATED, T)
 
 //////////////////////////////
 // Misc.
@@ -222,10 +222,7 @@
 
 /obj/item/stack/cable_coil/suicide_act(mob/user)
 	if(locate(/obj/structure/chair/stool) in user.loc)
-		user.visible_message("<span class='suicide'>[user] is making a noose with [src]! It looks like [user.p_theyre()] trying to commit suicide.</span>")
+		user.visible_message("<span class='suicide'>[user] is making a noose with [src]! It looks like [user.p_theyre()] trying to commit suicide!</span>")
 	else
-		user.visible_message("<span class='suicide'>[user] is strangling [user.p_themselves()] with [src]! It looks like [user.p_theyre()] trying to commit suicide.</span>")
+		user.visible_message("<span class='suicide'>[user] is strangling [user.p_themselves()] with [src]! It looks like [user.p_theyre()] trying to commit suicide!</span>")
 	return OXYLOSS
-
-/obj/item/stack/cable_coil/five/New(loc, new_amount = 5, merge = TRUE, paramcolor = null)
-	..()

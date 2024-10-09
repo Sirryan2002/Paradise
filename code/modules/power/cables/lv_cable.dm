@@ -41,15 +41,15 @@
 			return
 		coil.cable_join(src, user)
 
-	else if(istype(W, /obj/item/twohanded/rcl))
-		var/obj/item/twohanded/rcl/R = W
+	else if(istype(W, /obj/item/rcl))
+		var/obj/item/rcl/R = W
 		if(R.loaded)
 			R.loaded.cable_join(src, user)
 			R.is_empty(user)
 
 	else if(istype(W, /obj/item/toy/crayon))
 		var/obj/item/toy/crayon/C = W
-		cable_color(C.colourName)
+		cable_color(C.dye_color)
 
 	else
 		if(W.flags & CONDUCT)
@@ -93,9 +93,7 @@
 	return ..()
 
 /obj/structure/cable/low_voltage/proc/cable_color(colorC)
-	if(!colorC)
-		color = COLOR_RED
-	else if(colorC == "rainbow")
+	if(colorC == "rainbow")
 		color = color_rainbow()
 	else if(colorC == "orange") //byond only knows 16 colors by name, and orange isn't one of them
 		color = COLOR_ORANGE

@@ -79,7 +79,6 @@
 	name = "water tank"
 	desc = "A water tank."
 	icon_state = "water"
-	pull_speed = 0
 
 /obj/structure/reagent_dispensers/watertank/high
 	name = "high-capacity water tank"
@@ -94,7 +93,6 @@
 	icon_state = "oil"
 	reagent_id = "oil"
 	tank_volume = 3000
-	pull_speed = 0
 
 /obj/structure/reagent_dispensers/fueltank
 	name = "fuel tank"
@@ -103,7 +101,6 @@
 	reagent_id = "fuel"
 	tank_volume = 4000
 	anchored = TRUE
-	pull_speed = 0
 	var/obj/item/assembly_holder/rig = null
 	var/accepts_rig = 1
 
@@ -259,7 +256,7 @@
 		to_chat(user, "<span class='warning'>There aren't any cups left!</span>")
 		return
 	user.visible_message("<span class='notice'>[user] takes a cup from [src].</span>", "<span class='notice'>You take a paper cup from [src].</span>")
-	var/obj/item/reagent_containers/food/drinks/sillycup/S = new(get_turf(src))
+	var/obj/item/reagent_containers/drinks/sillycup/S = new(get_turf(src))
 	user.put_in_hands(S)
 	paper_cups--
 
@@ -276,13 +273,38 @@
 
 /obj/structure/reagent_dispensers/beerkeg/nuke
 	name = "Nanotrasen-brand nuclear fission explosive"
-	desc = "One of the more successful achievements of the Nanotrasen Corporate Warfare Division, their nuclear fission explosives are renowned for being cheap\
+	desc = "One of the more successful achievements of the Nanotrasen Corporate Warfare Division, their nuclear fission explosives are renowned for being cheap \
 	to produce and devestatingly effective. Signs explain that though this is just a model, every Nanotrasen station is equipped with one, just in case. \
 	All Captains carefully guard the disk needed to detonate them - at least, the sign says they do. There seems to be a tap on the back."
 	icon = 'icons/obj/nuclearbomb.dmi'
 	icon_state = "nuclearbomb0"
 	anchored = TRUE
-	pull_speed = 0
+	/// If TRUE, prevents the player from inserting the disk again while it is currently exploding.
+	var/exploding = FALSE
+
+/obj/structure/reagent_dispensers/beerkeg/nuke/attackby(obj/item/O, mob/user, params)
+	. = ..()
+	if(exploding)
+		return
+	if(!istype(O, /obj/item/disk/nuclear))
+		return
+	user.visible_message(
+		"<span class='danger'>[user] inserts [O] into [src] and it begins making a loud beeping noise! Uh-oh!</span>",
+		"<span class='danger'>You prime [src] with [O] and it begins making a loud beeping noise! Better run!</span>")
+	playsound(src, 'sound/machines/alarm.ogg', 100, FALSE, 0)
+	exploding = TRUE
+	addtimer(CALLBACK(src, PROC_REF(explode)), 13 SECONDS)
+
+/obj/structure/reagent_dispensers/beerkeg/nuke/proc/explode()
+	var/datum/reagents/R = new(100)
+	R.my_atom = src
+	R.add_reagent("beer", 100)
+	var/datum/effect_system/smoke_spread/chem/smoke = new
+	smoke.set_up(R, src, TRUE)
+	playsound(src.loc, 'sound/effects/smoke.ogg', 50, TRUE, -3)
+	smoke.start(3)
+	qdel(R)
+	qdel(src)
 
 /obj/structure/reagent_dispensers/beerkeg/nuke/update_overlays()
 	. = ..()

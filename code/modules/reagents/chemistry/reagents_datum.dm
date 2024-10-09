@@ -19,7 +19,6 @@
 	//By default, all reagents will ONLY affect organics, not synthetics. Re-define in the reagent's definition if the reagent is meant to affect synths
 	var/process_flags = ORGANIC
 	var/harmless = FALSE //flag used for attack logs
-	var/can_synth = TRUE //whether or not a mech syringe gun and synthesize this reagent
 	var/overdose_threshold = 0
 	var/addiction_chance = 0
 	var/addiction_chance_additional = 100 // If we want to lower the chance of addiction even more, set this
@@ -38,6 +37,20 @@
 	var/taste_description = "metaphorical salt"
 	/// how quickly the addiction threshold var decays
 	var/addiction_decay_rate = 0.01
+
+	// Which department's (if any) reagent goals this is eligible for.
+	// Must match the values used by request consoles.
+	var/goal_department = "Unknown"
+	// How difficult is this chemical for the department to make?
+	// Affects the quantity of the reagent that is requested by CC.
+	var/goal_difficulty = REAGENT_GOAL_SKIP
+
+	/// At what temperature does this reagent burn? Currently only used for chemical flamethrowers
+	var/burn_temperature = T0C
+	/// How long would a fire burn using this reagent? Currently only used for chemical flamethrowers
+	var/burn_duration = 30 SECONDS
+	/// How many firestacks will the reagent apply when it is burning? Currently only used for chemical flamethrowers
+	var/fire_stack_applications = 1
 
 /datum/reagent/Destroy()
 	. = ..()
@@ -72,13 +85,15 @@
 		if(can_become_addicted)
 			if(is_type_in_list(src, M.reagents.addiction_list))
 				to_chat(M, "<span class='notice'>You feel slightly better, but for how long?</span>") //sate_addiction handles this now, but kept this for the feed back.
-
 	var/mob/living/carbon/C = M
+	if(C.mind?.has_antag_datum(/datum/antagonist/vampire))
+		return
 	if(method == REAGENT_INGEST && istype(C) && C.get_blood_id() == id)
 		if(id == "blood" && !(data?["blood_type"] in get_safe_blood(C.dna?.blood_type)) || C.dna?.species.name != data?["species"] && (data?["species_only"] || C.dna?.species.own_species_blood))
 			C.reagents.add_reagent("toxin", volume * 0.5)
 		else
-			C.blood_volume = min(C.blood_volume + round(volume, 0.1), BLOOD_VOLUME_NORMAL)
+			if(data?["blood_type"] != BLOOD_TYPE_FAKE_BLOOD)
+				C.blood_volume = min(C.blood_volume + round(volume, 0.1), BLOOD_VOLUME_NORMAL)
 		// This does not absorb the blood we are getting in *this* reagent transfer operation,
 		// (because the actual transfer has not happened yet. Because reasons) but it does process
 		// the blood already in the mob.
@@ -120,15 +135,18 @@
 	return STATUS_UPDATE_NONE
 
 /datum/reagent/proc/handle_addiction(mob/living/M, consumption_rate)
-	if(addiction_chance && !is_type_in_list(src, M.reagents.addiction_list))
-		M.reagents.addiction_threshold_accumulated[type] += consumption_rate
-		var/current_threshold_accumulated = M.reagents.addiction_threshold_accumulated[type]
+	if(!addiction_chance)
+		return
+	M.reagents.addiction_threshold_accumulated[type] += consumption_rate
+	if(is_type_in_list(src, M.reagents.addiction_list))
+		return
+	var/current_threshold_accumulated = M.reagents.addiction_threshold_accumulated[type]
 
-		if(addiction_threshold < current_threshold_accumulated && prob(addiction_chance) && prob(addiction_chance_additional))
-			to_chat(M, "<span class='danger'>You suddenly feel invigorated and guilty...</span>")
-			var/datum/reagent/new_reagent = new type()
-			new_reagent.last_addiction_dose = world.timeofday
-			M.reagents.addiction_list.Add(new_reagent)
+	if(addiction_threshold < current_threshold_accumulated && prob(addiction_chance) && prob(addiction_chance_additional))
+		to_chat(M, "<span class='danger'>You suddenly feel invigorated and guilty...</span>")
+		var/datum/reagent/new_reagent = new type()
+		new_reagent.last_addiction_dose = world.timeofday
+		M.reagents.addiction_list.Add(new_reagent)
 
 /datum/reagent/proc/sate_addiction(mob/living/M) //reagents sate their own withdrawals
 	if(is_type_in_list(src, M.reagents.addiction_list))
@@ -199,6 +217,9 @@
 	return list(effect, update_flags)
 
 /datum/reagent/proc/overdose_start(mob/living/M)
+	return
+
+/datum/reagent/proc/overdose_end(mob/living/M)
 	return
 
 /datum/reagent/proc/addiction_act_stage1(mob/living/M)
@@ -287,3 +308,6 @@
 	if(M.healthdoll)
 		M.healthdoll.cached_healthdoll_overlays.Cut()
 	M.updatehealth("fakedeath reagent end")
+
+/datum/reagent/proc/has_heart_rate_increase()
+	return heart_rate_increase

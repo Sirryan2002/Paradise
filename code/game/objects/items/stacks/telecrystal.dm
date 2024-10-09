@@ -6,14 +6,14 @@
 	icon_state = "telecrystal"
 	item_state = "telecrystal"
 	w_class = WEIGHT_CLASS_TINY
-	max_amount = 50
+	max_amount = 100
 	flags = NOBLUDGEON
 	origin_tech = "materials=6;syndicate=1"
 	dynamic_icon_state = TRUE
 
 /obj/item/stack/telecrystal/attack(mob/target, mob/user)
 	if(target == user) //You can't go around smacking people with crystals to find out if they have an uplink or not.
-		for(var/obj/item/implant/uplink/I in target)
+		for(var/obj/item/bio_chip/uplink/I in target)
 			if(I && I.imp_in)
 				I.hidden_uplink.uses += amount
 				use(amount)
@@ -48,3 +48,6 @@
 
 /obj/item/stack/telecrystal/fifty
 	amount = 50
+
+/obj/item/stack/telecrystal/hundred
+	amount = 100

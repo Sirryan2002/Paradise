@@ -6,20 +6,20 @@
 #define TRANSFORMER_OVERHEAT_SHUTDOWN 	105
 
 /// The default wattage setting for transformers
-#define WATTAGE_SETTING_DEFAULT (40 kW)
+#define WATTAGE_SETTING_DEFAULT (40 KW)
 /// The lower bound for transformer wattage settings
-#define MIN_WATTAGE_SETTING (5 kW)
+#define MIN_WATTAGE_SETTING (5 KW)
 /// The higher bound for transformer wattage settings
-#define MAX_WATTAGE_SETTING (750 kW)
+#define MAX_WATTAGE_SETTING (750 KW)
 
 /// The default transformer efficiency level when it does not have a capacitor in it
 #define TRANSFORMER_DEFAULT_INEFFICIENCY 0.5
 /// The transformer efficiency level when it has a capacitor in it
 #define TRANSFORMER_BASIC_INEFFICIENCY 0.2
 /// The default value for a transformers safety buffer
-#define TRANSFORMER_DEFAULT_SAFETY_BUFFER (5 kW)
+#define TRANSFORMER_DEFAULT_SAFETY_BUFFER (5 KW)
 /// How much kw's the safety buffer loses every time you go up a rating on the transformers capacitor
-#define TRANSFORMER_RATING_TO_SAFETY_BUFFER (2.5 kW)
+#define TRANSFORMER_RATING_TO_SAFETY_BUFFER (2.5 KW)
 
 /*
 	* # /obj/machinery/power/transformer
@@ -270,10 +270,10 @@
 /obj/machinery/power/transformer/proc/transformer_rumble_end()
 	animate(src, transform = matrix())
 
-/obj/machinery/power/transformer/ui_interact(mob/user, ui_key = "main", datum/tgui/ui = null, force_open = FALSE, datum/tgui/master_ui = null, datum/ui_state/state = GLOB.default_state)
-	ui = SStgui.try_update_ui(user, src, ui_key, ui, force_open)
+/obj/machinery/power/transformer/ui_interact(mob/user, datum/tgui/ui = null)
+	ui = SStgui.try_update_ui(user, src, ui)
 	if(!ui)
-		ui = new(user, src, ui_key, "Transformer", name, 500, 425, master_ui, state)
+		ui = new(user, src, "Transformer", name)
 		ui.autoupdate = TRUE
 		ui.open()
 
@@ -308,6 +308,9 @@
 	. = ..()
 	if(!.)
 		return
+
+	var/mob/living/user = ui.user
+
 	switch(action)
 		if("toggle_power")
 			if(operating && (overheat_counter || overload_counter))
@@ -328,7 +331,7 @@
 			else
 				var/obj/item/stock_parts/capacitor/user_capacitor = ui.user.get_active_hand()
 				if(!istype(user_capacitor))
-					insert_capacitor(I, user)
+					insert_capacitor(user_capacitor, user)
 
 /obj/machinery/power/transformer/screwdriver_act(mob/user, obj/item/I)
 	if(user.a_intent == INTENT_HARM)

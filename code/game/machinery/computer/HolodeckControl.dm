@@ -75,7 +75,7 @@
 			for(var/turf/T in linkedholodeck)
 				if(prob(30))
 					do_sparks(2, 1, T)
-				T.ex_act(3)
+				T.ex_act(EXPLODE_LIGHT)
 				T.hotspot_expose(1000,500,1)
 
 /obj/machinery/computer/HolodeckControl/proc/loadProgram(area/A)
@@ -97,7 +97,7 @@
 		qdel(B)
 	for(var/mob/living/simple_animal/hostile/carp/holocarp/C in linkedholodeck)
 		qdel(C)
-	holographic_items = A.copy_contents_to(linkedholodeck, platingRequired = TRUE, perfect_copy = FALSE)
+	holographic_items = A.copy_contents_to(linkedholodeck, platingRequired = TRUE)
 
 	if(emagged)
 		for(var/obj/item/holo/H in linkedholodeck)
@@ -143,10 +143,13 @@
 		return FALSE
 	return TRUE
 
-/obj/machinery/computer/HolodeckControl/ui_interact(mob/user, ui_key = "main", datum/tgui/ui = null, force_open = FALSE, datum/tgui/master_ui = null, datum/ui_state/state = GLOB.default_state)
-	ui = SStgui.try_update_ui(user, src, ui_key, ui, force_open)
+/obj/machinery/computer/HolodeckControl/ui_state(mob/user)
+	return GLOB.default_state
+
+/obj/machinery/computer/HolodeckControl/ui_interact(mob/user, datum/tgui/ui = null)
+	ui = SStgui.try_update_ui(user, src, ui)
 	if(!ui)
-		ui = new(user, src, ui_key, "Holodeck", name, 400, 500, master_ui, state)
+		ui = new(user, src, "Holodeck", name)
 		ui.autoupdate = TRUE
 		ui.open()
 
@@ -198,6 +201,7 @@
 	to_chat(user, "<span class='notice'>You vastly increase projector power and override the safety and security protocols.</span>")
 	to_chat(user, "Warning! Automatic shutoff and derezing protocols have been corrupted. Please call Nanotrasen maintenance and do not use the simulator.")
 	log_game("[key_name(user)] emagged the Holodeck Control Computer")
+	return TRUE
 
 /obj/machinery/computer/HolodeckControl/emp_act(severity)
 	emergency_shutdown()
@@ -228,8 +232,6 @@
 	icon = 'icons/turf/floors/carpet.dmi'
 	icon_state = "carpet-255"
 	base_icon_state = "carpet"
-	floor_tile = /obj/item/stack/tile/carpet
-	broken_states = list("damaged")
 	smoothing_flags = SMOOTH_BITMASK
 	smoothing_groups = list(SMOOTH_GROUP_TURF, SMOOTH_GROUP_CARPET)
 	canSmoothWith = list(SMOOTH_GROUP_CARPET)
@@ -248,6 +250,9 @@
 	if(smoothing_flags & (SMOOTH_CORNERS|SMOOTH_BITMASK))
 		QUEUE_SMOOTH(src)
 
+/turf/simulated/floor/holofloor/carpet/get_broken_states()
+	return list("damaged")
+
 /turf/simulated/floor/holofloor/grass
 	name = "Lush Grass"
 	icon = 'icons/turf/floors/grass.dmi'
@@ -259,7 +264,6 @@
 	pixel_x = -9
 	pixel_y = -9
 	layer = ABOVE_OPEN_TURF_LAYER
-	floor_tile = /obj/item/stack/tile/grass
 
 /turf/simulated/floor/holofloor/attackby(obj/item/W as obj, mob/user as mob, params)
 	return
@@ -331,6 +335,9 @@
 /obj/item/holo/claymore
 	name = "claymore"
 	desc = "What are you standing around staring at this for? Get to killing!"
+	lefthand_file = 'icons/mob/inhands/weapons_lefthand.dmi'
+	righthand_file = 'icons/mob/inhands/weapons_righthand.dmi'
+	icon = 'icons/obj/weapons/melee.dmi'
 	icon_state = "claymore"
 	item_state = "claymore"
 	hitsound = 'sound/weapons/bladeslice.ogg'
@@ -355,6 +362,9 @@
 /obj/item/holo/esword
 	name = "holographic energy sword"
 	desc = "This looks like a real energy sword!"
+	icon = 'icons/obj/weapons/energy_melee.dmi'
+	lefthand_file = 'icons/mob/inhands/weapons_lefthand.dmi'
+	righthand_file = 'icons/mob/inhands/weapons_righthand.dmi'
 	icon_state = "sword0"
 	hitsound = "swing_hit"
 	force = 3.0

@@ -2,7 +2,7 @@
 
 /datum/action/chameleon_outfit
 	name = "Select Chameleon Outfit"
-	button_icon_state = "chameleon_outfit"
+	button_overlay_icon_state = "chameleon_outfit"
 	var/list/outfit_options //By default, this list is shared between all instances. It is not static because if it were, subtypes would not be able to have their own. If you ever want to edit it, copy it first.
 
 /datum/action/chameleon_outfit/New()
@@ -24,13 +24,13 @@
 		sortTim(standard_outfit_options, GLOBAL_PROC_REF(cmp_text_asc))
 	outfit_options = standard_outfit_options
 
-/datum/action/chameleon_outfit/Trigger()
+/datum/action/chameleon_outfit/Trigger(left_click)
 	return select_outfit(owner)
 
 /datum/action/chameleon_outfit/proc/select_outfit(mob/user)
 	if(!user || !IsAvailable())
 		return FALSE
-	var/selected = input("Select outfit to change into", "Chameleon Outfit") as null|anything in outfit_options
+	var/selected = tgui_input_list(user, "Select outfit to change into", "Chameleon Outfit", outfit_options)
 	if(!IsAvailable() || QDELETED(src) || QDELETED(user))
 		return FALSE
 	var/outfit_type = outfit_options[selected]
@@ -94,10 +94,14 @@
 			qdel(O)
 	..()
 
-/datum/action/item_action/chameleon/change/proc/initialize_disguises()
-	if(button)
+/datum/action/item_action/chameleon/change/UpdateButton(atom/movable/screen/movable/action_button/button, status_only, force)
+	. = ..()
+	if(.)
 		button.name = "Change [chameleon_name] Appearance"
 
+
+/datum/action/item_action/chameleon/change/proc/initialize_disguises()
+	UpdateButtons()
 	chameleon_blacklist |= typecacheof(target.type)
 	for(var/V in typesof(chameleon_type))
 		if(ispath(V) && ispath(V, /obj/item))
@@ -110,7 +114,7 @@
 /datum/action/item_action/chameleon/change/proc/select_look(mob/user)
 	var/obj/item/picked_item
 	var/picked_name
-	picked_name = input("Select [chameleon_name] to change into", "Chameleon [chameleon_name]", picked_name) as null|anything in chameleon_list
+	picked_name = tgui_input_list(user, "Select [chameleon_name] to change into", "Chameleon [chameleon_name]", chameleon_list)
 	if(!picked_name)
 		return
 	picked_item = chameleon_list[picked_name]
@@ -141,7 +145,7 @@
 		update_item(picked_item)
 		var/obj/item/thing = target
 		thing.update_slot_icon()
-	UpdateButtonIcon()
+	UpdateButtons()
 
 /datum/action/item_action/chameleon/change/proc/update_item(obj/item/picked_item)
 	target.name = initial(picked_item.name)
@@ -153,6 +157,7 @@
 
 		I.item_state = initial(picked_item.item_state)
 		I.item_color = initial(picked_item.item_color)
+		I.color = initial(picked_item.color)
 
 		I.icon_override = initial(picked_item.icon_override)
 		if(initial(picked_item.sprite_sheets))
@@ -169,7 +174,7 @@
 
 	target.icon = initial(picked_item.icon)
 
-/datum/action/item_action/chameleon/change/Trigger()
+/datum/action/item_action/chameleon/change/Trigger(left_click)
 	if(!IsAvailable())
 		return
 
@@ -285,7 +290,7 @@
 	chameleon_action.emp_randomise(INFINITY)
 
 /obj/item/clothing/glasses/chameleon
-	name = "Optical Meson Scanner"
+	name = "optical meson scanner"
 	desc = "Used by engineering and mining staff to see basic structural and terrain layouts through walls, regardless of lighting condition."
 	icon_state = "meson"
 	item_state = "meson"
@@ -322,13 +327,20 @@
 	chameleon_action.emp_randomise(INFINITY)
 
 /obj/item/clothing/glasses/chameleon/thermal
-	origin_tech = "magnets=3;syndicate=4"
+	origin_tech = "magnets=3;syndicate=2"
 	vision_flags = SEE_MOBS
 	lighting_alpha = LIGHTING_PLANE_ALPHA_MOSTLY_VISIBLE
 	flash_protect = FLASH_PROTECTION_SENSITIVE
 	prescription_upgradable = TRUE
 
+/obj/item/clothing/glasses/chameleon/night
+	origin_tech = "magnets=3;syndicate=1"
+	see_in_dark = 8
+	prescription_upgradable = TRUE
+	lighting_alpha = LIGHTING_PLANE_ALPHA_MOSTLY_INVISIBLE
+
 /obj/item/clothing/glasses/hud/security/chameleon
+	examine_extensions = list(EXAMINE_HUD_SECURITY_READ, EXAMINE_HUD_SECURITY_WRITE)
 	flash_protect = FLASH_PROTECTION_FLASH
 
 	var/datum/action/item_action/chameleon/change/chameleon_action
@@ -378,9 +390,10 @@
 /obj/item/clothing/gloves/chameleon
 	desc = "These gloves will protect the wearer from electric shock."
 	name = "insulated gloves"
+	siemens_coefficient = 0
+	permeability_coefficient = 0.05
 	icon_state = "yellow"
 	item_state = "ygloves"
-
 	resistance_flags = NONE
 	armor = list(MELEE = 5, BULLET = 5, LASER = 5, ENERGY = 0, BOMB = 0, RAD = 0, FIRE = 50, ACID = 50)
 
@@ -409,14 +422,17 @@
 /obj/item/clothing/head/chameleon
 	name = "grey cap"
 	desc = "It's a baseball hat in a tasteful grey colour."
+	icon = 'icons/obj/clothing/head/softcap.dmi'
+	icon_override = 'icons/mob/clothing/head/softcap.dmi'
 	icon_state = "greysoft"
 	item_color = "grey"
+	dyeable = FALSE
 
 	resistance_flags = NONE
 	armor = list(MELEE = 5, BULLET = 5, LASER = 5, ENERGY = 0, BOMB = 0, RAD = 0, FIRE = 50, ACID = 50)
 
 	sprite_sheets = list(
-		"Vox" = 'icons/mob/clothing/species/vox/head.dmi'
+		"Vox" = 'icons/mob/clothing/species/vox/head/softcap.dmi'
 	)
 
 	var/datum/action/item_action/chameleon/change/chameleon_action
@@ -453,6 +469,7 @@
 	gas_transfer_coefficient = 0.01
 	permeability_coefficient = 0.01
 	flags_cover = MASKCOVERSEYES | MASKCOVERSMOUTH
+	dyeable = FALSE
 
 	sprite_sheets = list(
 		"Vox" = 'icons/mob/clothing/species/vox/mask.dmi',
@@ -462,8 +479,6 @@
 		"Drask" = 'icons/mob/clothing/species/drask/mask.dmi',
 		"Grey" = 'icons/mob/clothing/species/grey/mask.dmi'
 	)
-
-	var/obj/item/voice_changer/voice_changer
 
 	var/datum/action/item_action/chameleon/change/chameleon_action
 
@@ -476,10 +491,7 @@
 	chameleon_action.chameleon_blacklist = list()
 	chameleon_action.initialize_disguises()
 
-	voice_changer = new(src)
-
 /obj/item/clothing/mask/chameleon/Destroy()
-	QDEL_NULL(voice_changer)
 	QDEL_NULL(chameleon_action)
 	return ..()
 
@@ -491,11 +503,29 @@
 	. = ..()
 	chameleon_action.emp_randomise(INFINITY)
 
+/obj/item/clothing/mask/chameleon/voice_change
+	name = "gas mask"
+	desc = "A face-covering mask that can be connected to an air supply. While good for concealing your identity, it isn't good for blocking gas flow."
+	icon_state = "swat"
+	item_state = "swat"
+
+	var/obj/item/voice_changer/voice_changer
+
+/obj/item/clothing/mask/chameleon/voice_change/Destroy()
+	QDEL_NULL(voice_changer)
+	return ..()
+
+/obj/item/clothing/mask/chameleon/voice_change/Initialize(mapload)
+	. = ..()
+
+	voice_changer = new(src)
+
 /obj/item/clothing/shoes/chameleon
 	name = "black shoes"
 	icon_state = "black"
 	item_color = "black"
 	desc = "A pair of black shoes."
+	dyeable = FALSE
 	permeability_coefficient = 0.05
 	resistance_flags = NONE
 	armor = list(MELEE = 5, BULLET = 5, LASER = 5, ENERGY = 0, BOMB = 0, RAD = 0, FIRE = 50, ACID = 50)
@@ -523,7 +553,7 @@
 	icon_state = "black"
 	item_color = "black"
 	desc = "A pair of black shoes."
-	flags = NOSLIP
+	no_slip = TRUE
 
 /obj/item/clothing/shoes/chameleon/noslip/broken/Initialize(mapload)
 	. = ..()
@@ -630,6 +660,7 @@
 	chameleon_action.emp_randomise(INFINITY)
 
 /obj/item/stamp/chameleon
+	dye_color = DYE_RAINBOW
 	var/datum/action/item_action/chameleon/change/chameleon_action
 
 /obj/item/stamp/chameleon/Initialize(mapload)
@@ -646,3 +677,31 @@
 /obj/item/stamp/chameleon/broken/Initialize(mapload)
 	. = ..()
 	chameleon_action.emp_randomise(INFINITY)
+
+/datum/action/item_action/chameleon/change/modsuit/update_item(obj/item/picked_item)
+	. = ..()
+	if(ismodcontrol(target))
+		var/obj/item/mod/control/C = target
+		if(C.current_disguise) //backup check
+			for(var/obj/item/mod/module/chameleon/toreturn in C.contents)
+				toreturn.return_look()
+			return
+		C.current_disguise = TRUE
+		C.item_state = initial(picked_item.item_state)
+		for(var/obj/item/mod/module/chameleon/tosignal in C.contents)
+			tosignal.RegisterSignal(C, COMSIG_MOD_ACTIVATE, TYPE_PROC_REF(/obj/item/mod/module/chameleon, return_look))
+
+/datum/action/item_action/chameleon/change/modsuit/select_look(mob/user)
+	if(ismodcontrol(target))
+		var/obj/item/mod/control/C = target
+		if(C.current_disguise) //backup check
+			for(var/obj/item/mod/module/chameleon/toreturn in C.contents)
+				toreturn.return_look()
+				return
+		if(C.active || C.activating)
+			to_chat(C.wearer, "<span class='warning'>Your suit is already active!</span>")
+			return
+	..()
+
+
+#undef EMP_RANDOMISE_TIME

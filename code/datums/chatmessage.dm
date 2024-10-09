@@ -71,8 +71,6 @@
 	INVOKE_ASYNC(src, PROC_REF(generate_image), text, target, owner, lifespan, italics, size, symbol)
 
 /datum/chatmessage/Destroy()
-	if(REALTIMEOFDAY < (animate_start + animate_lifespan))
-		stack_trace("Del'd before we finished fading, with [(animate_start + animate_lifespan) - REALTIMEOFDAY] time left")
 	if(owned_by)
 		if(owned_by.seen_messages)
 			LAZYREMOVEASSOC(owned_by.seen_messages, message_loc, src)
@@ -134,7 +132,11 @@
 	switch(symbol)
 		if(RUNECHAT_SYMBOL_EMOTE)
 			symbol = "<span style='font-size: 9px; color: #3399FF;'>*</span> "
-			size = size || "small"
+			size ||= "small"
+		if(RUNECHAT_SYMBOL_LOOC)
+			symbol = "<span style='font-size: 5px; color: #6699cc;'><b>\[LOOC]</b></span> "
+			size ||= "small"
+			output_color = "gray"
 		else
 			symbol = null
 
@@ -208,7 +210,7 @@
 	animate_lifespan = lifespan
 
 	// View the message
-	LAZYADDASSOC(owned_by.seen_messages, message_loc, src)
+	LAZYADDASSOCLIST(owned_by.seen_messages, message_loc, src)
 	owned_by.images |= message
 
 	// Fade in
@@ -323,3 +325,20 @@
   */
 /atom/proc/get_runechat_color()
 	return chat_color
+
+#undef CHAT_MESSAGE_SPAWN_TIME
+#undef CHAT_MESSAGE_LIFESPAN
+#undef CHAT_MESSAGE_EOL_FADE
+#undef CHAT_MESSAGE_GRACE_PERIOD
+#undef CHAT_MESSAGE_EXP_DECAY
+#undef CHAT_MESSAGE_HEIGHT_DECAY
+#undef CHAT_MESSAGE_APPROX_LHEIGHT
+#undef CHAT_MESSAGE_WIDTH
+#undef CHAT_MESSAGE_MAX_LENGTH
+#undef CHAT_LAYER_Z_STEP
+#undef CHAT_LAYER_MAX_Z
+#undef WXH_TO_HEIGHT
+#undef CM_COLOR_SAT_MIN
+#undef CM_COLOR_SAT_MAX
+#undef CM_COLOR_LUM_MIN
+#undef CM_COLOR_LUM_MAX

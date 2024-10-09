@@ -27,6 +27,7 @@ CREATE TABLE `characters` (
   `real_name` varchar(55) COLLATE utf8mb4_unicode_ci NOT NULL,
   `name_is_always_random` tinyint(1) NOT NULL,
   `gender` varchar(11) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `body_type` varchar(11) COLLATE utf8mb4_unicode_ci NOT NULL,
   `age` smallint(4) NOT NULL,
   `species` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL,
   `language` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -67,6 +68,8 @@ CREATE TABLE `characters` (
   `organ_data` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
   `rlimb_data` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
   `nanotrasen_relation` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `physique` varchar(45) NULL DEFAULT NULL COLLATE utf8mb4_unicode_ci,
+  `height` varchar(45) NULL DEFAULT NULL COLLATE utf8mb4_unicode_ci,
   `speciesprefs` int(1) NOT NULL,
   `socks` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
   `body_accessory` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -77,6 +80,8 @@ CREATE TABLE `characters` (
   `hair_gradient_colour` varchar(7) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '#000000',
   `hair_gradient_alpha` tinyint(3) UNSIGNED NOT NULL DEFAULT '255',
   `custom_emotes` LONGTEXT COLLATE 'utf8mb4_unicode_ci' DEFAULT NULL,
+  `runechat_color` VARCHAR(7) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '#FFFFFF',
+  `cyborg_brain_type` ENUM('MMI', 'Robobrain', 'Positronic') NOT NULL DEFAULT 'MMI',
   PRIMARY KEY (`id`),
   KEY `ckey` (`ckey`)
 ) ENGINE=InnoDB AUTO_INCREMENT=125467 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -116,6 +121,8 @@ CREATE TABLE `death` (
   `pod` text NOT NULL COMMENT 'Place of death',
   `coord` text NOT NULL COMMENT 'X, Y, Z POD',
   `tod` datetime NOT NULL COMMENT 'Time of death',
+  `death_rid` INT NULL,
+  `last_words` text NULL DEFAULT NULL,
   `server_id` TEXT NULL DEFAULT NULL,
   `job` text NOT NULL,
   `special` text NOT NULL,
@@ -243,7 +250,7 @@ CREATE TABLE `feedback` (
   `datetime` datetime NOT NULL,
   `round_id` int(8) NOT NULL,
   `key_name` varchar(32) NOT NULL,
-  `key_type` enum('text', 'amount', 'tally', 'nested tally', 'associative') NOT NULL,
+  `key_type` ENUM('text', 'amount', 'tally', 'nested tally', 'associative', 'ledger', 'nested ledger') NOT NULL,
   `version` tinyint(3) UNSIGNED NOT NULL,
   `json` LONGTEXT NOT NULL COLLATE 'utf8mb4_general_ci',
   PRIMARY KEY (`id`)
@@ -274,6 +281,8 @@ CREATE TABLE `player` (
   `toggles` int(11) DEFAULT NULL,
   `toggles_2` int(11) DEFAULT NULL,
   `sound` mediumint(8) DEFAULT '31',
+  `light` MEDIUMINT(3) NOT NULL DEFAULT '7',
+  `glowlevel` TINYINT(1) NOT NULL DEFAULT '1',
   `volume_mixer` LONGTEXT COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `lastchangelog` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '0',
   `exp` LONGTEXT COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -398,8 +407,11 @@ CREATE TABLE `notes` (
   `server` varchar(50) NOT NULL,
   `crew_playtime` mediumint(8) UNSIGNED DEFAULT '0',
   `automated` TINYINT(3) UNSIGNED NULL DEFAULT '0',
+  `deleted` TINYINT(4) NOT NULL DEFAULT '0',
+  `deletedby` VARCHAR(32) NULL DEFAULT NULL COLLATE 'utf8mb4_general_ci',
   PRIMARY KEY (`id`),
-  KEY `ckey` (`ckey`)
+  KEY `ckey` (`ckey`),
+  KEY `deleted` (`deleted`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -472,7 +484,17 @@ CREATE TABLE `playtime_history` (
   `ckey` varchar(32) NOT NULL,
   `date` DATE NOT NULL,
   `time_living` SMALLINT NOT NULL,
+  `time_crew` SMALLINT NOT NULL,
+  `time_special` SMALLINT NOT NULL,
   `time_ghost` SMALLINT NOT NULL,
+  `time_command` SMALLINT NOT NULL,
+  `time_engineering` SMALLINT NOT NULL,
+  `time_medical` SMALLINT NOT NULL,
+  `time_science` SMALLINT NOT NULL,
+  `time_supply` SMALLINT NOT NULL,
+  `time_security` SMALLINT NOT NULL,
+  `time_silicon` SMALLINT NOT NULL,
+  `time_service` SMALLINT NOT NULL,
   PRIMARY KEY (`ckey`, `date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -485,7 +507,7 @@ CREATE TABLE `connection_log` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `datetime` datetime NOT NULL,
   `ckey` varchar(32) NOT NULL,
-  `ip` varchar(32) NOT NULL,
+  `ip` INT UNSIGNED NOT NULL,
   `computerid` varchar(32) NOT NULL,
   `server_id` VARCHAR(50) NULL DEFAULT NULL,
   `result` ENUM('ESTABLISHED','DROPPED - IPINTEL','DROPPED - BANNED','DROPPED - INVALID') NOT NULL DEFAULT 'ESTABLISHED' COLLATE 'utf8mb4_general_ci',
@@ -605,3 +627,19 @@ CREATE TABLE `tickets` (
 	CONSTRAINT `all_responses` CHECK (json_valid(`all_responses`)),
 	CONSTRAINT `awho` CHECK (json_valid(`awho`))
 ) COLLATE='utf8mb4_general_ci' ENGINE=InnoDB;
+
+--
+-- Table structure for table `json_datum_saves`
+--
+DROP TABLE IF EXISTS `json_datum_saves`;
+CREATE TABLE `json_datum_saves` (
+	`id` INT(11) NOT NULL AUTO_INCREMENT,
+	`ckey` VARCHAR(64) NOT NULL COLLATE 'utf8mb4_general_ci',
+	`slotname` VARCHAR(32) NOT NULL COLLATE 'utf8mb4_general_ci',
+	`slotjson` LONGTEXT NOT NULL COLLATE 'utf8mb4_general_ci',
+	`created` DATETIME NOT NULL DEFAULT current_timestamp(),
+	`updated` DATETIME NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+	PRIMARY KEY (`id`) USING BTREE,
+	UNIQUE INDEX `ckey_unique` (`ckey`, `slotname`) USING BTREE,
+	INDEX `ckey` (`ckey`) USING BTREE
+) COLLATE = 'utf8mb4_general_ci' ENGINE = InnoDB;

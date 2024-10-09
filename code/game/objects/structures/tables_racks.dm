@@ -21,13 +21,14 @@
 	density = TRUE
 	anchored = TRUE
 	layer = TABLE_LAYER
-	pass_flags = LETPASSTHROW
+	pass_flags_self = LETPASSTHROW | PASSTAKE
 	climbable = TRUE
 	max_integrity = 100
 	integrity_failure = 30
 	smoothing_flags = SMOOTH_BITMASK
 	smoothing_groups = list(SMOOTH_GROUP_TABLES)
 	canSmoothWith = list(SMOOTH_GROUP_TABLES)
+	creates_cover = TRUE
 	var/frame = /obj/structure/table_frame
 	var/framestack = /obj/item/stack/rods
 	var/buildstack = /obj/item/stack/sheet/metal
@@ -36,6 +37,12 @@
 	var/framestackamount = 2
 	var/deconstruction_ready = TRUE
 	var/flipped = FALSE
+	///If this is true, the table will have items slide off it when placed.
+	var/slippery = FALSE
+	/// The minimum level of environment_smash required for simple animals to be able to one-shot this.
+	var/minimum_env_smash = ENVIRONMENT_SMASH_WALLS
+	/// Can this table be flipped?
+	var/can_be_flipped = TRUE
 
 /obj/structure/table/Initialize(mapload)
 	. = ..()
@@ -45,6 +52,11 @@
 /obj/structure/table/examine(mob/user)
 	. = ..()
 	. += deconstruction_hints(user)
+	if(can_be_flipped)
+		if(flipped)
+			. += "<span class='notice'><b>Alt-Shift-Click</b> to right the table again.</span>"
+		else
+			. += "<span class='notice'><b>Alt-Shift-Click</b> to flip over the table.</span>"
 
 /obj/structure/table/proc/deconstruction_hints(mob/user)
 	return "<span class='notice'>The top is <b>screwed</b> on, but the main <b>bolts</b> are also visible.</span>"
@@ -60,7 +72,7 @@
 	if(flipped)
 		var/type = 0
 		var/subtype = null
-		for(var/direction in list(turn(dir,90), turn(dir,-90)) )
+		for(var/direction in list(turn(dir,90), turn(dir,-90)))
 			var/obj/structure/table/T = locate(/obj/structure/table,get_step(src,direction))
 			if(T && T.flipped)
 				type++
@@ -88,6 +100,16 @@
 	if(flipped)
 		clear_smooth_overlays()
 
+// Need to override this to allow flipped tables to be mapped in without the smoothing subsystem resetting the icon_state
+/obj/structure/table/set_smoothed_icon_state(new_junction) 
+	if(flipped)
+		return
+	..()
+
+/obj/structure/table/flipped
+	icon_state = "tableflip0"
+	flipped = TRUE
+
 /obj/structure/table/narsie_act()
 	new /obj/structure/table/wood(loc)
 	qdel(src)
@@ -114,15 +136,12 @@
 /obj/structure/table/proc/item_placed(item)
 	return
 
-/obj/structure/table/CanPass(atom/movable/mover, turf/target, height=0)
-	if(height == 0)
-		return TRUE
+/obj/structure/table/CanPass(atom/movable/mover, turf/target)
 	if(istype(mover,/obj/item/projectile))
 		return (check_cover(mover,target))
-	if(ismob(mover))
-		var/mob/M = mover
-		if(M.flying)
-			return TRUE
+	var/mob/living/living_mover = mover
+	if(istype(living_mover) && (living_mover.flying || (IS_HORIZONTAL(living_mover) && HAS_TRAIT(living_mover, TRAIT_CONTORTED_BODY))))
+		return TRUE
 	if(istype(mover) && mover.checkpass(PASSTABLE))
 		return TRUE
 	if(mover.throwing)
@@ -138,11 +157,10 @@
 			return TRUE
 	return FALSE
 
-/obj/structure/table/CanPathfindPass(obj/item/card/id/ID, dir, caller, no_id = FALSE)
+/obj/structure/table/CanPathfindPass(to_dir, datum/can_pass_info/pass_info)
 	. = !density
-	if(ismovable(caller))
-		var/atom/movable/mover = caller
-		. = . || mover.checkpass(PASSTABLE)
+	if(pass_info.is_movable)
+		. = . || pass_info.pass_flags & PASSTABLE
 
 /**
  * Determines whether a projectile crossing our turf should be stopped.
@@ -178,7 +196,7 @@
 /obj/structure/table/MouseDrop_T(obj/O, mob/user)
 	if(..())
 		return TRUE
-	if((!( isitem(O) ) || user.get_active_hand() != O))
+	if((!isitem(O) || user.get_active_hand() != O))
 		return
 	if(isrobot(user))
 		return
@@ -223,7 +241,7 @@
 	if(isrobot(user))
 		return
 
-	if(user.a_intent != INTENT_HARM && !(I.flags & ABSTRACT))
+	if(user.a_intent == INTENT_HELP && !(I.flags & ABSTRACT))
 		if(user.drop_item())
 			I.Move(loc)
 			var/list/click_params = params2list(params)
@@ -233,9 +251,20 @@
 			//Clamp it so that the icon never moves more than 16 pixels in either direction (thus leaving the table turf)
 			I.pixel_x = clamp(text2num(click_params["icon-x"]) - 16, -(world.icon_size/2), world.icon_size/2)
 			I.pixel_y = clamp(text2num(click_params["icon-y"]) - 16, -(world.icon_size/2), world.icon_size/2)
-			item_placed(I)
+			if(slippery)
+				step_away(I, user)
+				visible_message("<span class='warning'>[I] slips right off [src]!</span>")
+				playsound(loc, 'sound/misc/slip.ogg', 50, TRUE, -1)
+			else //Don't want slippery moving tables to have the item attached to them if it slides off.
+				item_placed(I)
 	else
 		return ..()
+
+/obj/structure/table/attack_animal(mob/living/simple_animal/M)
+	. = ..()
+	if(. && M.environment_smash >= minimum_env_smash)
+		deconstruct(FALSE)
+		M.visible_message("<span class='danger'>[M] smashes [src]!</span>", "<span class='notice'>You smash [src].</span>")
 
 /obj/structure/table/shove_impact(mob/living/target, mob/living/attacker)
 	if(locate(/obj/structure/table) in get_turf(target))
@@ -302,69 +331,86 @@
 			return 0
 	return T.straight_table_check(direction)
 
-/obj/structure/table/verb/do_flip()
-	set name = "Flip table"
-	set desc = "Flips a non-reinforced table"
-	set category = null
-	set src in oview(1)
-
-	if(!can_touch(usr) || ismouse(usr))
+/obj/structure/table/AltShiftClick(mob/living/carbon/human/user)
+	if(user.stat || HAS_TRAIT(user, TRAIT_HANDS_BLOCKED) || !Adjacent(user) || !can_be_flipped || is_ventcrawling(user))
 		return
 
-	if(!flip(get_cardinal_dir(usr,src)))
-		to_chat(usr, "<span class='notice'>It won't budge.</span>")
-		return
+	var/flip_speed = get_flip_speed(user)
 
-	usr.visible_message("<span class='warning'>[usr] flips \the [src]!</span>")
+	if(!flipped)
 
-	if(climbable)
-		structure_shaken()
+		if(flip_speed > 0)
+			user.visible_message("<span class='warning'>[user] starts trying to flip [src]!</span>", "<span class='warning'>You start trying to flip [src][flip_speed >= 5 SECONDS ? " (it'll take about [flip_speed / 10] seconds)." : ""].</span>")
+			if(!do_after(user, flip_speed, TRUE, src))
+				user.visible_message("<span class='notice'>[user] gives up on trying to flip [src].</span>")
+				return
+		if(!flip(get_cardinal_dir(user, src)))
+			to_chat(user, "<span class='notice'>It won't budge.</span>")
+			return
 
-	return
 
-/obj/structure/table/proc/do_put()
-	set name = "Put table back"
-	set desc = "Puts flipped table back"
-	set category = "Object"
-	set src in oview(1)
+		user.visible_message("<span class='warning'>[user] flips [src]!</span>")
 
-	if(!can_touch(usr) || ismouse(usr))
-		return
+		if(climbable)
+			structure_shaken()
+	else
+		if(flip_speed > 0)
+			user.visible_message("<span class='warning'>[user] starts trying to right [src]!</span>", "<span class='warning'>You start trying to right [src][flip_speed >= 5 SECONDS ? " (it'll take about [flip_speed / 10] seconds)." : ""]</span>")
+			if(!do_after(user, flip_speed, TRUE, src))
+				user.visible_message("<span class='notice'>[user] gives up on trying to right [src].</span>")
+				return
+		if(!unflip())
+			to_chat(user, "<span class='notice'>It won't budge.</span>")
+		user.visible_message("<span class='warning'>[user] rights [src]!</span>")
 
-	if(!unflip())
-		to_chat(usr, "<span class='notice'>It won't budge.</span>")
-		return
+/obj/structure/table/proc/get_flip_speed(mob/living/flipper)
+	if(!istype(flipper))
+		return 0 SECONDS // sure
+	if(!issimple_animal(flipper))
+		return 0 SECONDS
+	if(istype(flipper, /mob/living/simple_animal/revenant))
+		return 0 SECONDS  // funny ghost table
+	switch(flipper.mob_size)
+		if(MOB_SIZE_TINY)
+			return 30 SECONDS  // you can do it but you gotta *really* work for it
+		if(MOB_SIZE_SMALL)
+			return 5 SECONDS  // not gonna terrorize anything
+		else
+			return 0 SECONDS
 
 
 /obj/structure/table/proc/flip(direction)
 	if(flipped)
 		return 0
 
-	if( !straight_table_check(turn(direction,90)) || !straight_table_check(turn(direction,-90)) )
-		return 0
-
-	verbs -=/obj/structure/table/verb/do_flip
-	verbs +=/obj/structure/table/proc/do_put
+	if(!straight_table_check(turn(direction, 90)) || !straight_table_check(turn(direction, -90)))
+		return FALSE
 
 	dir = direction
 	if(dir != NORTH)
 		layer = 5
-	var/list/targets = list(get_step(src,dir),get_step(src,turn(dir, 45)),get_step(src,turn(dir, -45)))
+
+	var/list/targets = list(get_step(src, dir), get_step(src, turn(dir, 45)), get_step(src, turn(dir, -45)))
 	for(var/atom/movable/A in get_turf(src))
+		if(isobserver(A))
+			continue
 		if(!A.anchored)
-			spawn(0)
-				A.throw_at(pick(targets),1,1)
+			INVOKE_ASYNC(A, TYPE_PROC_REF(/atom/movable/, throw_at), pick(targets), 1, 1)
 
 	flipped = TRUE
 	smoothing_flags = NONE
 	flags |= ON_BORDER
 	for(var/D in list(turn(direction, 90), turn(direction, -90)))
-		if(locate(/obj/structure/table,get_step(src,D)))
-			var/obj/structure/table/T = locate(/obj/structure/table,get_step(src,D))
+		if(locate(/obj/structure/table, get_step(src, D)))
+			var/obj/structure/table/T = locate(/obj/structure/table, get_step(src, D))
 			T.flip(direction)
 	update_icon()
 
-	return 1
+	creates_cover = FALSE
+	if(isturf(loc))
+		REMOVE_TRAIT(loc, TRAIT_TURF_COVERED, UNIQUE_TRAIT_SOURCE(src))
+
+	return TRUE
 
 /obj/structure/table/proc/unflip()
 	if(!flipped)
@@ -377,9 +423,6 @@
 	if(!can_flip)
 		return 0
 
-	verbs -=/obj/structure/table/proc/do_put
-	verbs +=/obj/structure/table/verb/do_flip
-
 	layer = initial(layer)
 	flipped = FALSE
 	// Initial smoothing flags doesn't add the required SMOOTH_OBJ flag, thats done on init
@@ -391,8 +434,18 @@
 			T.unflip()
 	update_icon()
 
+	creates_cover = TRUE
+	if(isturf(loc))
+		ADD_TRAIT(loc, TRAIT_TURF_COVERED, UNIQUE_TRAIT_SOURCE(src))
+
 	return 1
 
+/obj/structure/table/water_act(volume, temperature, source, method)
+	. = ..()
+	if(HAS_TRAIT(src, TRAIT_OIL_SLICKED))
+		slippery = initial(slippery)
+		remove_atom_colour(FIXED_COLOUR_PRIORITY)
+		REMOVE_TRAIT(src, TRAIT_OIL_SLICKED, "potion")
 
 /*
  * Glass Tables
@@ -410,6 +463,7 @@
 	max_integrity = 70
 	resistance_flags = ACID_PROOF
 	armor = list(MELEE = 0, BULLET = 0, LASER = 0, ENERGY = 0, BOMB = 0, RAD = 0, FIRE = 80, ACID = 100)
+	minimum_env_smash = ENVIRONMENT_SMASH_STRUCTURES
 	var/list/debris = list()
 	var/shardtype = /obj/item/shard
 
@@ -445,6 +499,8 @@
 
 /obj/structure/table/glass/proc/check_break(mob/living/M)
 	if(has_gravity(M) && M.mob_size > MOB_SIZE_SMALL)
+		if(M.buckled && HAS_TRAIT(M.buckled, TRAIT_NO_BREAK_GLASS_TABLES))
+			return
 		table_shatter(M)
 
 /obj/structure/table/glass/flip(direction)
@@ -502,6 +558,7 @@
 	buildstack = /obj/item/stack/sheet/plasmaglass
 	max_integrity = 140
 	shardtype = /obj/item/shard/plasma
+	minimum_env_smash = ENVIRONMENT_SMASH_RWALLS
 
 /obj/structure/table/glass/reinforced
 	name = "reinforced glass table"
@@ -515,6 +572,7 @@
 	deconstruction_ready = FALSE
 	armor = list(MELEE = 10, BULLET = 30, LASER = 30, ENERGY = 100, BOMB = 20, RAD = 0, FIRE = 80, ACID = 70)
 	smoothing_groups = list(SMOOTH_GROUP_REINFORCED_TABLES)
+	minimum_env_smash = ENVIRONMENT_SMASH_RWALLS
 	canSmoothWith = list(SMOOTH_GROUP_REINFORCED_TABLES)
 
 /obj/structure/table/glass/reinforced/deconstruction_hints(mob/user) //look, it was either copy paste these 4 procs, or copy paste all of the glass stuff
@@ -604,7 +662,8 @@
 	if(!total_override)
 		..()
 
-/obj/structure/table/wood/poker //No specialties, Just a mapping object.
+/// No specialties, Just a mapping object.
+/obj/structure/table/wood/poker
 	name = "gambling table"
 	desc = "A seedy table for seedy dealings in seedy places."
 	icon = 'icons/obj/smooth_structures/tables/poker_table.dmi'
@@ -765,13 +824,12 @@
 	icon_state = "tray"
 	buildstack = /obj/item/stack/sheet/mineral/titanium
 	buildstackamount = 2
-	pull_speed = 0
+	can_be_flipped = FALSE
 	var/list/typecache_can_hold = list(/mob, /obj/item)
 	var/list/held_items = list()
 
 /obj/structure/table/tray/Initialize()
 	. = ..()
-	verbs -= /obj/structure/table/verb/do_flip
 	typecache_can_hold = typecacheof(typecache_can_hold)
 	for(var/atom/movable/held in get_turf(src))
 		if(!held.anchored && held.move_resist != INFINITY && is_type_in_typecache(held, typecache_can_hold))
@@ -782,12 +840,12 @@
 
 	. = ..()
 	if(!.) // ..() will return 0 if we didn't actually move anywhere.
-		return .
+		return
 
 	if(direct & (direct - 1)) // This represents a diagonal movement, which is split into multiple cardinal movements. We'll handle moving the items on the cardinals only.
-		return .
+		return
 
-	playsound(loc, pick('sound/items/cartwheel1.ogg', 'sound/items/cartwheel2.ogg'), 100, 1, ignore_walls = FALSE)
+	playsound(loc, pick('sound/items/cartwheel1.ogg', 'sound/items/cartwheel2.ogg'), 100, TRUE, ignore_walls = FALSE)
 
 	var/atom/movable/held
 	for(var/held_uid in held_items)
@@ -845,33 +903,34 @@
 	layer = TABLE_LAYER
 	density = TRUE
 	anchored = TRUE
-	pass_flags = LETPASSTHROW
+	pass_flags_self = LETPASSTHROW | PASSTAKE
 	max_integrity = 20
 
 /obj/structure/rack/examine(mob/user)
 	. = ..()
 	. += "<span class='notice'>It's held together by a couple of <b>bolts</b>.</span>"
 
-/obj/structure/rack/CanPass(atom/movable/mover, turf/target, height=0)
-	if(height==0)
-		return 1
+/obj/structure/rack/CanPass(atom/movable/mover, turf/target)
 	if(!density) //Because broken racks -Agouri |TODO: SPRITE!|
 		return 1
-	if(istype(mover) && mover.checkpass(PASSTABLE))
-		return 1
+	if(istype(mover))
+		if(mover.checkpass(PASSTABLE))
+			return TRUE
+		var/mob/living/living_mover = mover
+		if(istype(living_mover) && IS_HORIZONTAL(living_mover) && HAS_TRAIT(living_mover, TRAIT_CONTORTED_BODY))
+			return TRUE
 	if(mover.throwing)
 		return 1
 	else
 		return 0
 
-/obj/structure/rack/CanPathfindPass(obj/item/card/id/ID, dir, caller, no_id = FALSE)
+/obj/structure/rack/CanPathfindPass(to_dir, datum/can_pass_info/pass_info)
 	. = !density
-	if(ismovable(caller))
-		var/atom/movable/mover = caller
-		. = . || mover.checkpass(PASSTABLE)
+	if(pass_info.is_movable)
+		. = . || pass_info.pass_flags & PASSTABLE
 
 /obj/structure/rack/MouseDrop_T(obj/O, mob/user)
-	if((!( isitem(O) ) || user.get_active_hand() != O))
+	if((!isitem(O) || user.get_active_hand() != O))
 		return
 	if(isrobot(user))
 		return

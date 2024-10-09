@@ -1,8 +1,9 @@
 /* Closets for specific jobs
  * Contains:
  *		Bartender
+*		Chef
  *		Janitor
- *		Lawyer
+ *		Paramedic
  */
 
 /*
@@ -53,8 +54,8 @@
 	new /obj/item/clothing/suit/chef/classic(src)
 	new /obj/item/clothing/suit/chef/classic(src)
 	new /obj/item/clothing/suit/chef/classic(src)
-	new /obj/item/clothing/head/soft/mime(src)
-	new /obj/item/clothing/head/soft/mime(src)
+	new /obj/item/clothing/head/soft/white(src)
+	new /obj/item/clothing/head/soft/white(src)
 	new /obj/item/storage/box/mousetraps(src)
 	new /obj/item/storage/box/mousetraps(src)
 	new /obj/item/clothing/under/rank/civilian/chef(src)
@@ -76,8 +77,6 @@
 	new /obj/item/flashlight(src)
 	new /obj/item/melee/flyswatter(src)
 	new /obj/item/melee/flyswatter(src)
-	new /obj/item/clothing/shoes/galoshes(src)
-	new /obj/item/clothing/shoes/galoshes(src)
 	new /obj/item/soap(src)
 	new /obj/item/soap(src)
 	new /obj/item/reagent_containers/spray/cleaner(src)
@@ -85,8 +84,8 @@
 	new /obj/item/caution(src)
 	new /obj/item/caution(src)
 	new /obj/item/caution(src)
-	new /obj/item/twohanded/push_broom(src)
-	new /obj/item/twohanded/push_broom(src)
+	new /obj/item/push_broom(src)
+	new /obj/item/push_broom(src)
 	new /obj/item/storage/bag/trash(src)
 	new /obj/item/storage/bag/trash(src)
 	new /obj/item/lightreplacer(src)
@@ -95,13 +94,9 @@
 	new /obj/item/holosign_creator/janitor(src)
 	new /obj/item/watertank/janitor(src)
 	new /obj/item/watertank/janitor(src)
-	new /obj/item/storage/belt/janitor(src)
-	new /obj/item/storage/belt/janitor(src)
-	new /obj/item/clothing/gloves/color/black(src)
-	new /obj/item/clothing/head/soft/purple(src)
 	new /obj/item/radio/headset/headset_service(src)
 	new /obj/item/radio/headset/headset_service(src)
-	new /obj/item/clothing/under/rank/civilian/janitor(src)
+	new /obj/item/cartridge/janitor(src)
 	new /obj/item/cartridge/janitor(src)
 
 //Paramedic

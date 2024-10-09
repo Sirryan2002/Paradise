@@ -16,6 +16,7 @@
 	return
 
 /turf/simulated/wall/indestructible/ex_act(severity)
+	SEND_SIGNAL(src, COMSIG_ATOM_EX_ACT, severity)
 	return
 
 /turf/simulated/wall/indestructible/blob_act(obj/structure/blob/B)
@@ -104,12 +105,28 @@
 	base_icon_state = "sandstone_wall"
 	smoothing_flags = SMOOTH_BITMASK
 
+
+GLOBAL_DATUM(title_splash, /turf/simulated/wall/indestructible/splashscreen)
+
 /turf/simulated/wall/indestructible/splashscreen
 	name = "Space Station 13"
 	icon = 'config/title_screens/images/blank.png'
 	icon_state = ""
 	layer = FLY_LAYER
 	flags = NO_SCREENTIPS
+	// Pixel shifts below are needed to centrally position the black placeholder icon within the start area at compile-time. This is overridden when a "real" lobby art image is chosen by SStitlescreen
+	pixel_x = -288
+	pixel_y = -224
+
+// This needs to load immediately. I am sad I cant Initialize() this.
+/turf/simulated/wall/indestructible/splashscreen/New(loc)
+	..()
+	GLOB.title_splash = src
+
+// GC cleanup because some silly bugger will delete this
+/turf/simulated/wall/indestructible/splashscreen/Destroy()
+	GLOB.title_splash = null
+	return ..()
 
 /turf/simulated/wall/indestructible/uranium
 	icon = 'icons/turf/walls/uranium_wall.dmi'
@@ -219,11 +236,13 @@
 /turf/simulated/wall/indestructible/rock
 	name = "dense rock"
 	desc = "An extremely densely-packed rock, most mining tools or explosives would never get through this."
-	icon = 'icons/turf/walls.dmi'
-	icon_state = "rock"
-	smoothing_flags = null
-	smoothing_groups = null
-	canSmoothWith = null
+	icon = 'icons/turf/walls/smoothrocks.dmi'
+	icon_state = "smoothrocks-0"
+	base_icon_state = "smoothrocks"
+	smoothing_flags = SMOOTH_BITMASK | SMOOTH_BORDER
+	smoothing_groups = list(SMOOTH_GROUP_SIMULATED_TURFS, SMOOTH_GROUP_MINERAL_WALLS)
+	canSmoothWith = list(SMOOTH_GROUP_MINERAL_WALLS)
+	color = COLOR_ROCK
 
 /turf/simulated/wall/indestructible/rock/snow
 	name = "mountainside"
@@ -241,6 +260,38 @@
 	smoothing_flags = SMOOTH_BITMASK
 	smoothing_groups = list(SMOOTH_GROUP_SIMULATED_TURFS, SMOOTH_GROUP_WALLS, SMOOTH_GROUP_REINFORCED_WALLS)
 	canSmoothWith = list(SMOOTH_GROUP_WALLS, SMOOTH_GROUP_REGULAR_WALLS, SMOOTH_GROUP_REINFORCED_WALLS)
+
+/turf/simulated/wall/indestructible/titanium
+	icon = 'icons/turf/walls/plastinum_wall.dmi'
+	icon_state = "plastinum_wall-0"
+	base_icon_state = "plastinum_wall"
+	flags_ricochet = RICOCHET_SHINY | RICOCHET_HARD
+	smoothing_flags = SMOOTH_BITMASK | SMOOTH_DIAGONAL_CORNERS
+	smoothing_groups = list(SMOOTH_GROUP_TITANIUM_WALLS, SMOOTH_GROUP_WINDOW_FULLTILE_SHUTTLE)
+	canSmoothWith = list(SMOOTH_GROUP_TITANIUM_WALLS, SMOOTH_GROUP_AIRLOCK, SMOOTH_GROUP_SHUTTLE_PARTS, SMOOTH_GROUP_WINDOW_FULLTILE_SHUTTLE)
+
+/turf/simulated/wall/indestructible/titanium/nodiagonal
+	icon_state = "map-shuttle_nd"
+	smoothing_flags = SMOOTH_BITMASK
+
+/turf/simulated/wall/indestructible/titanium/nosmooth
+	icon_state = "plastinum_wall"
+	smoothing_flags = NONE
+
+/turf/simulated/wall/indestructible/titanium/tileblend
+	fixed_underlay = list("icon" = 'icons/turf/floors.dmi', "icon_state" = "darkredfull")
+
+/turf/simulated/wall/indestructible/titanium/soviet
+	name = "\improper USSP wall"
+	desc = "Like regular titanium, but able to deflect capitalist aggressors!"
+
+/turf/simulated/wall/indestructible/titanium/soviet/nodiagonal
+	icon_state = "map-shuttle_nd"
+	smoothing_flags = SMOOTH_BITMASK
+
+/turf/simulated/wall/indestructible/titanium/soviet/nosmooth
+	icon_state = "plastinum_wall"
+	smoothing_flags = NONE
 
 /turf/simulated/wall/indestructible/syndicate
 	icon = 'icons/turf/walls/plastitanium_wall.dmi'

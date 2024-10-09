@@ -10,40 +10,37 @@ export const AtmosTankControl = (props, context) => {
   let sensors_list = data.sensors || {};
 
   return (
-    <Window resizable>
+    <Window width={400} height={400}>
       <Window.Content scrollable>
-        {Object.keys(sensors_list).map(s => (
+        {Object.keys(sensors_list).map((s) => (
           <Section key={s} title={s}>
             <LabeledList>
-              {(Object.keys(sensors_list[s]).indexOf("pressure") > -1) ? (
-                <LabeledList.Item label="Pressure">
-                  {sensors_list[s]['pressure']} kpa
-                </LabeledList.Item>
-              ) : ""}
-              {(Object.keys(sensors_list[s]).indexOf("temperature") > -1) ? (
-                <LabeledList.Item label="Temperature">
-                  {sensors_list[s]['temperature']} K
-                </LabeledList.Item>
-              ) : ""}
+              {Object.keys(sensors_list[s]).indexOf('pressure') > -1 ? (
+                <LabeledList.Item label="Pressure">{sensors_list[s]['pressure']} kpa</LabeledList.Item>
+              ) : (
+                ''
+              )}
+              {Object.keys(sensors_list[s]).indexOf('temperature') > -1 ? (
+                <LabeledList.Item label="Temperature">{sensors_list[s]['temperature']} K</LabeledList.Item>
+              ) : (
+                ''
+              )}
 
-              {["o2", "n2", "plasma", "co2", "n2o"].map(g => (
-                (Object.keys(sensors_list[s]).indexOf(g) > -1) ? (
-                  <LabeledList.Item label={getGasLabel(g)}>
-                    <ProgressBar
-                      color={getGasColor(g)}
-                      value={sensors_list[s][g]}
-                      minValue={0}
-                      maxValue={100}
-                    >
-                    {toFixed(sensors_list[s][g], 2) + '%'}
+              {['o2', 'n2', 'plasma', 'co2', 'n2o'].map((g) =>
+                Object.keys(sensors_list[s]).indexOf(g) > -1 ? (
+                  <LabeledList.Item key={getGasLabel(g)} label={getGasLabel(g)}>
+                    <ProgressBar color={getGasColor(g)} value={sensors_list[s][g]} minValue={0} maxValue={100}>
+                      {toFixed(sensors_list[s][g], 2) + '%'}
                     </ProgressBar>
                   </LabeledList.Item>
-                ) : ""
-              ))}
+                ) : (
+                  ''
+                )
+              )}
             </LabeledList>
           </Section>
         ))}
-        {(data.inlet && Object.keys(data.inlet).length > 0) ? (
+        {data.inlet && Object.keys(data.inlet).length > 0 ? (
           <Section title="Inlet Control">
             <LabeledList>
               <LabeledList.Item label="Power">
@@ -58,7 +55,7 @@ export const AtmosTankControl = (props, context) => {
               <LabeledList.Item label="Rate">
                 <NumberInput
                   animated
-                  unit={"L/s"}
+                  unit={'L/s'}
                   width={6.1}
                   lineHeight={1.5}
                   step={1}
@@ -75,8 +72,10 @@ export const AtmosTankControl = (props, context) => {
               </LabeledList.Item>
             </LabeledList>
           </Section>
-        ) : ""}
-        {(data.outlet && Object.keys(data.outlet).length > 0) ? (
+        ) : (
+          ''
+        )}
+        {data.outlet && Object.keys(data.outlet).length > 0 ? (
           <Section title="Outlet Control">
             <LabeledList>
               <LabeledList.Item label="Power">
@@ -91,7 +90,7 @@ export const AtmosTankControl = (props, context) => {
               <LabeledList.Item label="Rate">
                 <NumberInput
                   animated
-                  unit={"kPa"}
+                  unit={'kPa'}
                   width={6.1}
                   lineHeight={1.5}
                   step={10}
@@ -108,7 +107,9 @@ export const AtmosTankControl = (props, context) => {
               </LabeledList.Item>
             </LabeledList>
           </Section>
-        ) : ""}
+        ) : (
+          ''
+        )}
       </Window.Content>
     </Window>
   );

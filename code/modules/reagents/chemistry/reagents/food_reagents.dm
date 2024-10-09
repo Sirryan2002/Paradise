@@ -12,14 +12,14 @@
 	var/diet_flags = DIET_OMNI | DIET_HERB | DIET_CARN
 
 /datum/reagent/consumable/on_mob_life(mob/living/M)
-	var/is_vamp = M.mind?.has_antag_datum(/datum/antagonist/vampire)
-	if(ishuman(M) && !is_vamp)
+	if(ishuman(M) && !M.mind?.has_antag_datum(/datum/antagonist/vampire) && !HAS_TRAIT(M, TRAIT_I_WANT_BRAINS))
 		var/mob/living/carbon/human/H = M
 		if(H.can_eat(diet_flags))	//Make sure the species has it's dietflag set, otherwise it can't digest any nutrients
 			H.adjust_nutrition(nutriment_factor)	// For hunger and fatness
 	return ..()
 
-/datum/reagent/consumable/nutriment		// Pure nutriment, universally digestable and thus slightly less effective
+/// Pure nutriment, universally digestable and thus slightly less effective
+/datum/reagent/consumable/nutriment
 	name = "Nutriment"
 	id = "nutriment"
 	description = "A questionable mixture of various pure nutrients commonly found in processed foods."
@@ -31,8 +31,7 @@
 
 /datum/reagent/consumable/nutriment/on_mob_life(mob/living/M)
 	var/update_flags = STATUS_UPDATE_NONE
-	var/is_vamp = M.mind?.has_antag_datum(/datum/antagonist/vampire)
-	if(ishuman(M) && !is_vamp)
+	if(ishuman(M) && !M.mind?.has_antag_datum(/datum/antagonist/vampire) && !HAS_TRAIT(M, TRAIT_I_WANT_BRAINS))
 		var/mob/living/carbon/human/H = M
 		if(H.can_eat(diet_flags))	//Make sure the species has it's dietflag set, otherwise it can't digest any nutrients
 			if(prob(50))
@@ -51,7 +50,7 @@
 	data = counterlist_normalise(supplied_data)
 
 /datum/reagent/consumable/nutriment/on_merge(list/newdata, newvolume)
-	if(!islist(newdata) || !newdata.len)
+	if(!islist(newdata) || !length(newdata))
 		return
 	var/list/taste_amounts = list()
 	var/list/other_taste_amounts = newdata.Copy()
@@ -62,13 +61,15 @@
 	counterlist_normalise(taste_amounts)
 	data = taste_amounts
 
-/datum/reagent/consumable/nutriment/protein			// Meat-based protein, digestable by carnivores and omnivores, worthless to herbivores
+/// Meat-based protein, digestable by carnivores and omnivores, worthless to herbivores
+/datum/reagent/consumable/nutriment/protein
 	name = "Protein"
 	id = "protein"
 	description = "Various essential proteins and fats commonly found in animal flesh and blood."
 	diet_flags = DIET_CARN | DIET_OMNI
 
-/datum/reagent/consumable/nutriment/plantmatter		// Plant-based biomatter, digestable by herbivores and omnivores, worthless to carnivores
+/// Plant-based biomatter, digestable by herbivores and omnivores, worthless to carnivores
+/datum/reagent/consumable/nutriment/plantmatter
 	name = "Plant-matter"
 	id = "plantmatter"
 	description = "Vitamin-rich fibers and natural sugars commonly found in fresh produce."
@@ -111,7 +112,7 @@
 
 /datum/reagent/consumable/sugar/overdose_start(mob/living/M)
 	to_chat(M, "<span class='danger'>You pass out from hyperglycemic shock!</span>")
-	M.emote("collapse")
+	M.emote("faint")
 	..()
 
 /datum/reagent/consumable/sugar/overdose_process(mob/living/M, severity)
@@ -130,6 +131,8 @@
 	nutriment_factor = 2 * REAGENTS_METABOLISM
 	color = "#792300" // rgb: 121, 35, 0
 	taste_description = "soy"
+	goal_department = "Kitchen"
+	goal_difficulty = REAGENT_GOAL_NORMAL
 
 /datum/reagent/consumable/ketchup
 	name = "Ketchup"
@@ -139,6 +142,37 @@
 	nutriment_factor = 5 * REAGENTS_METABOLISM
 	color = "#731008" // rgb: 115, 16, 8
 	taste_description = "ketchup"
+
+/datum/reagent/consumable/mayonnaise
+	name = "Mayonnaise"
+	id = "mayonnaise"
+	description = "A white and oily mixture of mixed egg yolks."
+	reagent_state = LIQUID
+	color = "#DFDFDF" // rgb: 223, 223, 223
+	taste_description = "mayonnaise"
+	goal_department = "Kitchen"
+	goal_difficulty = REAGENT_GOAL_HARD
+
+/datum/reagent/consumable/peanutbutter
+	name = "Peanut Butter"
+	id = "peanutbutter"
+	description = "A rich, creamy spread made by grinding peanuts."
+	reagent_state = LIQUID
+	nutriment_factor = 5 * REAGENTS_METABOLISM
+	color = "#D9A066" // rgb: 217, 160, 102
+	taste_description = "peanuts"
+
+/datum/reagent/consumable/bbqsauce
+	name = "BBQ Sauce"
+	id = "bbqsauce"
+	description = "Sweet, smoky, savory, and gets everywhere. Perfect for grilling."
+	nutriment_factor = 5 * REAGENTS_METABOLISM
+	reagent_state = LIQUID
+	color = "#78280A" // rbg: 120, 40, 10
+	taste_mult = 2.5
+	taste_description = "smokey sweetness"
+	goal_department = "Kitchen"
+	goal_difficulty = REAGENT_GOAL_NORMAL
 
 /datum/reagent/consumable/capsaicin
 	name = "Capsaicin Oil"
@@ -192,56 +226,17 @@
 	if(method == REAGENT_TOUCH)
 		if(ishuman(M))
 			var/mob/living/carbon/human/victim = M
-			var/mouth_covered = 0
-			var/eyes_covered = 0
-			var/obj/item/safe_thing = null
-			if( victim.wear_mask )
-				if(victim.wear_mask.flags_cover & MASKCOVERSEYES)
-					eyes_covered = 1
-					safe_thing = victim.wear_mask
-				if(victim.wear_mask.flags_cover & MASKCOVERSMOUTH)
-					mouth_covered = 1
-					safe_thing = victim.wear_mask
-			if( victim.head )
-				if(victim.head.flags_cover & MASKCOVERSEYES)
-					eyes_covered = 1
-					safe_thing = victim.head
-				if(victim.head.flags_cover & MASKCOVERSMOUTH)
-					mouth_covered = 1
-					safe_thing = victim.head
-			if(victim.glasses)
-				eyes_covered = 1
-				if( !safe_thing )
-					safe_thing = victim.glasses
-			if( eyes_covered && mouth_covered )
-				to_chat(victim, "<span class='danger'>Your [safe_thing] protects you from the pepperspray!</span>")
-				return
-			else if( mouth_covered )	// Reduced effects if partially protected
-				to_chat(victim, "<span class='danger'>Your [safe_thing] protect you from most of the pepperspray!</span>")
-				if(prob(5))
-					victim.emote("scream")
-				victim.EyeBlurry(6 SECONDS)
-				victim.EyeBlind(2 SECONDS)
-				victim.Confused(6 SECONDS)
-				victim.damageoverlaytemp = 60
-				victim.Weaken(6 SECONDS)
-				victim.drop_item()
-				return
-			else if( eyes_covered ) // Eye cover is better than mouth cover
-				to_chat(victim, "<span class='danger'>Your [safe_thing] protects your eyes from the pepperspray!</span>")
-				victim.EyeBlurry(6 SECONDS)
-				victim.damageoverlaytemp = 30
-				return
-			else // Oh dear :D
-				if(prob(5))
-					victim.emote("scream")
-				to_chat(victim, "<span class='danger'>You're sprayed directly in the eyes with pepperspray!</span>")
-				victim.EyeBlurry(10 SECONDS)
-				victim.EyeBlind(4 SECONDS)
-				victim.Confused(12 SECONDS)
-				victim.damageoverlaytemp = 75
-				victim.Weaken(10 SECONDS)
-				victim.drop_item()
+			var/mouth_covered = victim.is_mouth_covered()
+			var/eyes_covered = victim.is_eyes_covered()
+
+			if(!mouth_covered)
+				victim.apply_status_effect(STATUS_EFFECT_PEPPERSPRAYED)
+
+			if(!eyes_covered)
+				to_chat(victim, "<span class='danger'>Your eyes burns!</span>")
+				victim.Stun(0.5 SECONDS)
+				victim.EyeBlurry(20 SECONDS)
+				victim.EyeBlind(8 SECONDS)
 
 /datum/reagent/consumable/frostoil
 	name = "Frost Oil"
@@ -316,12 +311,6 @@
 	color = "#5F3A13"
 	taste_description = "bitter cocoa"
 
-/datum/reagent/consumable/cocoa/on_mob_life(mob/living/M)
-	var/update_flags = STATUS_UPDATE_NONE
-	if(isvulpkanin(M) || istajaran(M) || isfarwa(M) || iswolpin(M))
-		update_flags |= M.adjustToxLoss(2, FALSE)
-	return ..() | update_flags
-
 /datum/reagent/consumable/vanilla
 	name = "Vanilla"
 	id = "vanilla"
@@ -371,18 +360,31 @@
 	color = "#302000" // rgb: 48, 32, 0
 	taste_description = "oil"
 
+/datum/reagent/consumbale/olivepaste
+	name = "Olive Paste"
+	id = "olivepaste"
+	description = "A mushy pile of freshly ground olives."
+	reagent_state = LIQUID
+	color = "#adcf77" //rgb: 173, 207, 119
+	taste_description = "mushy olives"
+
+/datum/reagent/consumable/oliveoil
+	name = "Olive Oil"
+	id = "oliveoil"
+	description = "A high quality oil derived from olives. Suitable for dishes or mixtures requiring oil."
+	reagent_state = LIQUID
+	nutriment_factor = 10 * REAGENTS_METABOLISM
+	color = "#DBCF5C" //rgb: 219, 207, 92
+	taste_description = "olive oil"
+	goal_department = "Kitchen"
+	goal_difficulty = REAGENT_GOAL_NORMAL
+
 /datum/reagent/consumable/cornoil/reaction_turf(turf/simulated/T, volume)
 	if(!istype(T))
 		return
 	if(volume >= 3)
 		T.MakeSlippery()
-	var/hotspot = (locate(/obj/effect/hotspot) in T)
-	if(hotspot)
-		var/datum/gas_mixture/lowertemp = T.remove_air( T.air.total_moles())
-		lowertemp.temperature = max(min(lowertemp.temperature-2000, lowertemp.temperature / 2), 0)
-		lowertemp.react()
-		T.assume_air(lowertemp)
-		qdel(hotspot)
+	T.quench(1000, 2)
 
 /datum/reagent/consumable/enzyme
 	name = "Universal Enzyme"
@@ -391,6 +393,8 @@
 	reagent_state = LIQUID
 	color = "#282314" // rgb: 54, 94, 48
 	taste_description = "sweetness"
+	goal_department = "Kitchen"
+	goal_difficulty = REAGENT_GOAL_HARD
 
 /datum/reagent/consumable/dry_ramen
 	name = "Dry Ramen"
@@ -559,14 +563,11 @@
 
 /datum/reagent/consumable/chocolate/on_mob_life(mob/living/M)
 	M.reagents.add_reagent("sugar", 0.8)
-	var/update_flags = STATUS_UPDATE_NONE
-	if(isvulpkanin(M) || istajaran(M) || isfarwa(M) || iswolpin(M)) // chocolate is bad for dogs and cats, ya know
-		update_flags |= M.adjustToxLoss(2, FALSE)
-	return ..() | update_flags
+	return ..()
 
 /datum/reagent/consumable/chocolate/reaction_turf(turf/T, volume)
 	if(volume >= 5 && !isspaceturf(T))
-		new /obj/item/reagent_containers/food/snacks/choc_pile(T)
+		new /obj/item/food/choc_pile(T)
 
 /datum/reagent/consumable/mugwort
 	name = "Mugwort"
@@ -574,6 +575,7 @@
 	description = "A rather bitter herb once thought to hold magical protective properties."
 	reagent_state = LIQUID
 	color = "#21170E"
+	process_flags = ORGANIC | SYNTHETIC
 	taste_description = "tea"
 	harmless = TRUE
 
@@ -633,7 +635,7 @@
 
 /datum/reagent/consumable/cheese/reaction_turf(turf/T, volume)
 	if(volume >= 5 && !isspaceturf(T))
-		new /obj/item/reagent_containers/food/snacks/cheesewedge(T)
+		new /obj/item/food/cheesewedge(T)
 
 /datum/reagent/consumable/fake_cheese
 	name = "Cheese substitute"
@@ -675,7 +677,23 @@
 
 /datum/reagent/consumable/weird_cheese/reaction_turf(turf/T, volume)
 	if(volume >= 5 && !isspaceturf(T))
-		new /obj/item/reagent_containers/food/snacks/weirdcheesewedge(T)
+		new /obj/item/food/weirdcheesewedge(T)
+
+/datum/reagent/consumable/cheese_curds
+	name = "Cheese Curds"
+	id = "cheese_curds"
+	description = "Some mushed up cheese curds. You're not quite sure why you did this."
+	reagent_state = SOLID
+	color = "#FFFF00"
+	taste_description = "salty cheese"
+
+/datum/reagent/consumable/yogurt
+	name = "yogurt"
+	id = "yogurt"
+	description = "Some yogurt, produced by bacterial fermentation of milk. Yum."
+	reagent_state = LIQUID
+	color = "#FFFFFF"
+	taste_description = "yogurt"
 
 /datum/reagent/consumable/beans
 	name = "Refried beans"
@@ -761,7 +779,7 @@
 /datum/reagent/consumable/meatslurry/reaction_turf(turf/T, volume)
 	if(prob(10) && volume >= 5 && !isspaceturf(T))
 		new /obj/effect/decal/cleanable/blood/gibs/cleangibs(T)
-		playsound(T, 'sound/effects/splat.ogg', 50, 1, -3)
+		playsound(T, 'sound/effects/splat.ogg', 50, TRUE, -3)
 
 /datum/reagent/consumable/mashedpotatoes
 	name = "Mashed potatoes"
@@ -778,6 +796,8 @@
 	reagent_state = LIQUID
 	color = "#B4641B"
 	taste_description = "gravy"
+	goal_department = "Kitchen"
+	goal_difficulty = REAGENT_GOAL_NORMAL
 
 /datum/reagent/consumable/wasabi
 	name = "Wasabi"
@@ -797,7 +817,8 @@
 
 ///Food Related, but non-nutritious
 
-/datum/reagent/questionmark // food poisoning
+/// food poisoning
+/datum/reagent/questionmark
 	name = "????"
 	id = "????"
 	description = "A gross and unidentifiable substance."
@@ -808,8 +829,9 @@
 /datum/reagent/questionmark/reaction_mob(mob/living/carbon/human/H, method = REAGENT_TOUCH, volume)
 	if(istype(H) && method == REAGENT_INGEST)
 		if(H.dna.species.taste_sensitivity < TASTE_SENSITIVITY_NO_TASTE) // If you can taste it, then you know how awful it is.
-			H.Weaken(4 SECONDS)
 			to_chat(H, "<span class='danger'>Ugh! Eating that was a terrible idea!</span>")
+			if(!H.HasDisease(/datum/disease/food_poisoning))
+				H.fakevomit(no_text = TRUE)
 		if(HAS_TRAIT(H, TRAIT_NOHUNGER)) //If you don't eat, then you can't get food poisoning
 			return
 		H.ForceContractDisease(new /datum/disease/food_poisoning(0))
@@ -899,11 +921,11 @@
 
 /datum/reagent/ectoplasm/reaction_turf(turf/T, volume)
 	if(volume >= 10 && !isspaceturf(T))
-		new /obj/item/reagent_containers/food/snacks/ectoplasm(T)
+		new /obj/item/food/ectoplasm(T)
 
 /datum/reagent/consumable/bread/reaction_turf(turf/T, volume)
 	if(volume >= 5 && !isspaceturf(T))
-		new /obj/item/reagent_containers/food/snacks/breadslice(T)
+		new /obj/item/food/breadslice(T)
 
 /datum/reagent/soap
 	name = "Soap"
@@ -1005,3 +1027,12 @@
 	reagent_state = LIQUID
 	color = "#A7EE9F"
 	taste_description = "mint"
+
+/datum/reagent/consumable/vinegar
+	name = "Vinegar"
+	id = "vinegar"
+	description = "Useful for pickling, or putting on chips."
+	taste_description = "vinegar"
+	color = "#ffffff"
+	goal_department = "Kitchen"
+	goal_difficulty = REAGENT_GOAL_NORMAL

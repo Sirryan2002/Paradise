@@ -8,9 +8,6 @@
 	icon_state = "yellow"
 	ambientsounds = list('sound/music/clown.ogg')
 
-/area/ruin/powered/animal_hospital
-	icon_state = "yellow"
-
 /area/ruin/powered/snow_biodome
 	icon_state = "yellow"
 
@@ -21,10 +18,22 @@
 	icon_state = "yellow"
 
 /area/ruin/powered/golem_ship
-	name = "Free Golem Landing"
+	name = "Free Golem Ship"
 	icon_state = "yellow"
 
 /area/ruin/powered/greed
+	icon_state = "yellow"
+
+/area/ruin/powered/envy
+	icon_state = "yellow"
+
+/area/ruin/powered/sloth
+	icon_state = "yellow"
+
+/area/ruin/powered/fountain_hall
+	icon_state = "yellow"
+
+/area/ruin/powered/pizza_party
 	icon_state = "yellow"
 
 /area/ruin/unpowered/hierophant
@@ -47,6 +56,14 @@
 
 //ash walker nest
 /area/ruin/unpowered/ash_walkers
+	icon_state = "red"
+
+/area/ruin/unpowered/althland_processing
+	name = "Processing Facility"
+	icon_state = "red"
+
+/area/ruin/unpowered/althland_excavation
+	name = "Excavation Pit"
 	icon_state = "red"
 
 // This area exists so that lavaland ruins dont overwrite the baseturfs on regular space ruins

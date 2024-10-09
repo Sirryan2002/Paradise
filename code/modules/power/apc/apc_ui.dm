@@ -1,7 +1,10 @@
-/obj/machinery/power/apc/ui_interact(mob/user, ui_key = "main", datum/tgui/ui = null, force_open = FALSE, datum/tgui/master_ui = null, datum/ui_state/state = GLOB.default_state)
-	ui = SStgui.try_update_ui(user, src, ui_key, ui, force_open)
+/obj/machinery/power/apc/ui_state(mob/user)
+	return GLOB.default_state
+
+/obj/machinery/power/apc/ui_interact(mob/user, datum/tgui/ui = null)
+	ui = SStgui.try_update_ui(user, src, ui)
 	if(!ui)
-		ui = new(user, src, ui_key, "APC", name, 510, 460, master_ui, state)
+		ui = new(user, src, "APC", name)
 		ui.open()
 
 /obj/machinery/power/apc/ui_data(mob/user)
@@ -59,9 +62,7 @@
 
 /obj/machinery/power/apc/ui_act(action, params, datum/tgui/ui)
 	var/mob/user = ui.user
-	if(..() || !can_use(user, TRUE))
-		return
-	if(locked && !user.has_unlimited_silicon_privilege && action != "toggle_nightshift" && !user.can_admin_interact())
+	if(..() || !can_use(user, TRUE) || (is_locked(user) && (action != "toggle_nightshift")))
 		return
 	. = TRUE
 	switch(action)

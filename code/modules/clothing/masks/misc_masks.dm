@@ -59,28 +59,6 @@
 		return TRUE
 	return FALSE
 
-/obj/item/clothing/mask/muzzle/Topic(href, href_list)
-	..()
-	if(href_list["locked"])
-		var/mob/living/carbon/wearer = locate(href_list["locked"])
-		var/success = 0
-		if(ishuman(usr))
-			visible_message("<span class='danger'>[usr] tries to [locked ? "unlock" : "lock"] [wearer]'s [name].</span>", \
-							"<span class='userdanger'>[usr] tries to [locked ? "unlock" : "lock"] [wearer]'s [name].</span>")
-			if(do_mob(usr, wearer, POCKET_STRIP_DELAY))
-				if(locked)
-					success = do_unlock(usr)
-				else
-					success = do_lock(usr)
-			if(success)
-				visible_message("<span class='danger'>[usr] [locked ? "locks" : "unlocks"] [wearer]'s [name].</span>", \
-									"<span class='userdanger'>[usr] [locked ? "locks" : "unlocks"] [wearer]'s [name].</span>")
-				if(usr.machine == wearer && in_range(src, usr))
-					wearer.show_inv(usr)
-		else
-			to_chat(usr, "You lack the ability to manipulate the lock.")
-
-
 /obj/item/clothing/mask/muzzle/tapegag
 	name = "tape gag"
 	desc = "MHPMHHH!"
@@ -245,7 +223,7 @@
 	pontificate(user)
 
 /obj/item/clothing/mask/fakemoustache/item_action_slot_check(slot)
-	if(slot == slot_wear_mask)
+	if(slot == SLOT_HUD_WEAR_MASK)
 		return 1
 
 /obj/item/clothing/mask/fakemoustache/proc/pontificate(mob/user)
@@ -423,10 +401,11 @@
 	flags_inv = HIDEFACE
 	flags_cover = MASKCOVERSMOUTH
 	w_class = WEIGHT_CLASS_TINY
-	slot_flags = SLOT_MASK
-	adjusted_flags = SLOT_HEAD
+	slot_flags = SLOT_FLAG_MASK
+	adjusted_flags = SLOT_FLAG_HEAD
 	icon_state = "bandbotany"
 	dyeable = TRUE
+	dyeing_key = DYE_REGISTRY_BANDANA
 	can_toggle = TRUE
 
 	sprite_sheets = list(
@@ -438,7 +417,6 @@
 		"Drask" = 'icons/mob/clothing/species/drask/mask.dmi'
 		)
 	actions_types = list(/datum/action/item_action/adjust)
-	can_toggle = TRUE
 
 /obj/item/clothing/mask/bandana/attack_self(mob/user)
 	adjustmask(user)
@@ -528,7 +506,7 @@
 /obj/item/clothing/mask/cursedclown/equipped(mob/user, slot)
 	..()
 	var/mob/living/carbon/human/H = user
-	if(istype(H) && slot == slot_wear_mask)
+	if(istype(H) && slot == SLOT_HUD_WEAR_MASK)
 		to_chat(H, "<span class='danger'>[src] grips your face!</span>")
 		if(H.mind && H.mind.assigned_role != "Cluwne")
 			H.makeCluwne()

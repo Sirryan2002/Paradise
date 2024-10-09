@@ -2,8 +2,10 @@
 	name = "mime shoes"
 	icon_state = "mime"
 	item_color = "mime"
+	dyeable = TRUE
 
-/obj/item/clothing/shoes/combat //basic syndicate combat boots for nuke ops and mob corpses
+/// basic syndicate combat boots for nuke ops and mob corpses
+/obj/item/clothing/shoes/combat
 	name = "combat boots"
 	desc = "High speed, low drag combat boots."
 	w_class = WEIGHT_CLASS_NORMAL
@@ -13,13 +15,16 @@
 	armor = list(MELEE = 15, BULLET = 15, LASER = 15, ENERGY = 15, BOMB = 50, RAD = 0, FIRE = 115, ACID = 50)
 	strip_delay = 70
 	resistance_flags = NONE
+	knife_slot = TRUE
+	dyeable = FALSE
 
-/obj/item/clothing/shoes/combat/swat //overpowered gimmick boots
+/// overpowered gimmick boots
+/obj/item/clothing/shoes/combat/swat
 	name = "\improper SWAT shoes"
 	desc = "High speed, no drag combat boots."
 	permeability_coefficient = 0.01
 	armor = list(MELEE = 35, BULLET = 20, LASER = 15, ENERGY = 15, BOMB = 50, RAD = 20, FIRE = 450, ACID = 50)
-	flags = NOSLIP
+	no_slip = TRUE
 
 /obj/item/clothing/shoes/sandal
 	name = "sandals"
@@ -28,34 +33,44 @@
 	strip_delay = 50
 	put_on_delay = 50
 	magical = TRUE
+	dyeable = FALSE
 
 /obj/item/clothing/shoes/sandal/marisa
 	name = "magic shoes"
 	desc = "A pair of magic, black shoes."
 	icon_state = "black"
 	resistance_flags = FIRE_PROOF |  ACID_PROOF
+	dyeable = FALSE
 
 /obj/item/clothing/shoes/sandal/magic
 	name = "magical sandals"
 	desc = "A pair of sandals imbued with magic."
 	resistance_flags = FIRE_PROOF |  ACID_PROOF
+	dyeable = FALSE
 
 /obj/item/clothing/shoes/galoshes
 	name = "galoshes"
 	desc = "A pair of yellow rubber boots, designed to prevent slipping on wet surfaces."
 	icon_state = "galoshes"
 	permeability_coefficient = 0.05
-	flags = NOSLIP
+	no_slip = TRUE
 	slowdown = SHOES_SLOWDOWN+1
 	strip_delay = 50
 	put_on_delay = 50
 	resistance_flags = NONE
+	dyeable = FALSE
 	armor = list(MELEE = 0, BULLET = 0, LASER = 0, ENERGY = 0, BOMB = 0, RAD = 0, FIRE = 35, ACID = 150)
 
 /obj/item/clothing/shoes/galoshes/dry
 	name = "absorbent galoshes"
 	desc = "A pair of purple rubber boots, designed to prevent slipping on wet surfaces while also drying them."
 	icon_state = "galoshes_dry"
+
+/// / for red janitor ert.
+/obj/item/clothing/shoes/galoshes/dry/lightweight
+	name = "lightweight absorbent galoshes"
+	desc = "A pair of expensive looking lightweight rubber boots, designed to prevent slipping on wet surfaces while also drying them."
+	slowdown = NONE
 
 /obj/item/clothing/shoes/galoshes/dry/Initialize(mapload)
 	. = ..()
@@ -75,6 +90,11 @@
 	item_state = "clown_shoes"
 	slowdown = SHOES_SLOWDOWN+1
 	item_color = "clown"
+	// "Dyeable" in this case is a bit of an understatement, washing these
+	// with a crayon will give them the appearance and name of normal
+	// shoes, but the functionality of clown shoes.
+	dyeable = TRUE
+
 	var/enabled_waddle = TRUE
 
 /obj/item/clothing/shoes/clown_shoes/Initialize(mapload)
@@ -83,7 +103,7 @@
 
 /obj/item/clothing/shoes/clown_shoes/equipped(mob/user, slot)
 	. = ..()
-	if(slot == slot_shoes && enabled_waddle)
+	if(slot == SLOT_HUD_SHOES && enabled_waddle)
 		user.AddElement(/datum/element/waddling)
 
 /obj/item/clothing/shoes/clown_shoes/dropped(mob/user)
@@ -98,6 +118,10 @@
 		return
 	toggle_waddle(user)
 
+/obj/item/clothing/shoes/clown_shoes/machine_wash(obj/machinery/washing_machine/washer)
+	. = ..()
+	playsound(src, 'sound/items/bikehorn.ogg', 25, TRUE, 1)
+
 /obj/item/clothing/shoes/clown_shoes/proc/toggle_waddle(mob/living/user)
 	if(!enabled_waddle)
 		to_chat(user, "<span class='notice'>You switch off the waddle dampeners!</span>")
@@ -107,28 +131,37 @@
 		enabled_waddle = FALSE
 
 /obj/item/clothing/shoes/clown_shoes/nodrop
+	dyeable = FALSE
 	flags = NODROP
 
 /obj/item/clothing/shoes/clown_shoes/magical
 	name = "magical clown shoes"
 	desc = "Standard-issue shoes of the wizarding class clown. Damn they're huge! And powerful! Somehow."
+	dyeable = FALSE
 	magical = TRUE
+
+/obj/item/clothing/shoes/clown_shoes/magical/nodrop
+	desc = "Standard-issue shoes of the wizarding class clown. Damn they're huge! And stuck to your feet!"
+	flags = NODROP
 
 /obj/item/clothing/shoes/clown_shoes/slippers
 	actions_types = list(/datum/action/item_action/slipping)
 	enabled_waddle = FALSE
 	slowdown = 0
+
 	var/slide_distance = 6
 	var/recharging_rate = 8 SECONDS
 	var/recharging_time = 0
 
 /obj/item/clothing/shoes/clown_shoes/slippers/item_action_slot_check(slot, mob/user)
-	if(slot == slot_shoes)
+	if(slot == SLOT_HUD_SHOES)
 		return TRUE
 
 /obj/item/clothing/shoes/clown_shoes/slippers/proc/slide_one(mob/living/user, progress, prev_dir , prev_flags)
 	user.dir = prev_dir
 	step(user, user.dir)
+	for(var/mob/living/carbon/crossed in user.loc)
+		crossed.slip(src, 16 SECONDS, 0, FALSE, TRUE, "trip")
 	if(progress == slide_distance)
 		user.stand_up()
 		user.pass_flags = prev_flags
@@ -167,6 +200,7 @@
 	strip_delay = 50
 	put_on_delay = 50
 	resistance_flags = NONE
+	dyeable = FALSE
 
 /obj/item/clothing/shoes/jackboots/jacksandals
 	name = "jacksandals"
@@ -174,18 +208,35 @@
 	can_cut_open = 0
 	icon_state = "jacksandal"
 	item_color = "jacksandal"
+	dyeable = FALSE
+
+/obj/item/clothing/shoes/jackboots/noisy
+	name = "heavy jackboots"
+	desc = "Outdated heavier versions of the standard Nanotrasen-issue Security combat boots. Pick up that can."
+	dyeable = FALSE
+
+/obj/item/clothing/shoes/jackboots/noisy/Initialize(mapload)
+	. = ..()
+	AddComponent(/datum/component/squeak, list('sound/effects/jackboot1.ogg' = 1, 'sound/effects/jackboot2.ogg' = 1), 50, falloff_exponent = 20)
 
 /obj/item/clothing/shoes/workboots
 	name = "work boots"
 	desc = "Thick-soled boots for industrial work environments."
 	can_cut_open = 1
 	icon_state = "workboots"
+	dyeable = FALSE
 
 /obj/item/clothing/shoes/workboots/mining
 	name = "mining boots"
 	desc = "Steel-toed mining boots for mining in hazardous environments. Very good at keeping toes uncrushed."
 	icon_state = "explorer"
 	resistance_flags = FIRE_PROOF
+	cold_protection = FEET|LEGS
+	min_cold_protection_temperature = SHOES_MIN_TEMP_PROTECT
+	heat_protection = FEET|LEGS
+	max_heat_protection_temperature = SHOES_MAX_TEMP_PROTECT
+	knife_slot = TRUE
+	dyeable = FALSE
 
 /obj/item/clothing/shoes/winterboots
 	name = "winter boots"
@@ -196,6 +247,7 @@
 	min_cold_protection_temperature = SHOES_MIN_TEMP_PROTECT
 	heat_protection = FEET|LEGS
 	max_heat_protection_temperature = SHOES_MAX_TEMP_PROTECT
+	dyeable = FALSE
 
 /obj/item/clothing/shoes/cult
 	name = "boots"
@@ -209,29 +261,34 @@
 	heat_protection = FEET
 	max_heat_protection_temperature = SHOES_MAX_TEMP_PROTECT
 	magical = TRUE
+	dyeable = FALSE
 
 /obj/item/clothing/shoes/cyborg
 	name = "cyborg boots"
 	desc = "Shoes for a cyborg costume"
 	icon_state = "boots"
+	dyeable = FALSE
 
 /obj/item/clothing/shoes/slippers
 	name = "bunny slippers"
 	desc = "Fluffy!"
 	icon_state = "slippers"
 	item_state = "slippers"
+	dyeable = FALSE
 
 /obj/item/clothing/shoes/slippers_worn
 	name = "worn bunny slippers"
 	desc = "Fluffy..."
 	icon_state = "slippers_worn"
 	item_state = "slippers_worn"
+	dyeable = FALSE
 
 /obj/item/clothing/shoes/laceup
 	name = "laceup shoes"
 	desc = "The height of fashion, and they're pre-polished!"
 	icon_state = "laceups"
 	put_on_delay = 50
+	dyeable = FALSE
 
 /obj/item/clothing/shoes/roman
 	name = "roman sandals"
@@ -240,17 +297,20 @@
 	item_state = "roman"
 	strip_delay = 100
 	put_on_delay = 100
+	dyeable = FALSE
 
 /obj/item/clothing/shoes/centcom
 	name = "dress shoes"
 	desc = "They appear impeccably polished."
 	icon_state = "laceups"
+	dyeable = FALSE
 
 /obj/item/clothing/shoes/griffin
 	name = "griffon boots"
 	desc = "A pair of costume boots fashioned after bird talons."
 	icon_state = "griffinboots"
 	item_state = "griffinboots"
+	dyeable = FALSE
 
 
 /obj/item/clothing/shoes/fluff/noble_boot
@@ -259,12 +319,14 @@
 	icon_state = "noble_boot"
 	item_color = "noble_boot"
 	item_state = "noble_boot"
+	dyeable = FALSE
 
 /obj/item/clothing/shoes/furboots
 	name = "fur boots"
 	desc = "Warm, furry boots."
 	icon_state = "furboots"
 	item_state = "furboots"
+	dyeable = FALSE
 
 /obj/item/clothing/shoes/sandal/white
 	name = "white sandals"
@@ -304,6 +366,7 @@
 	icon_override = 'icons/goonstation/mob/clothing/feet.dmi'
 	lefthand_file = 'icons/goonstation/mob/inhands/clothing_lefthand.dmi'
 	righthand_file = 'icons/goonstation/mob/inhands/clothing_righthand.dmi'
+	dyeable = FALSE
 
 /obj/item/clothing/shoes/singery
 	name = "yellow performer's boots"
@@ -316,12 +379,14 @@
 	desc = "These boots were made for dancing."
 	icon_state = "bsing"
 	put_on_delay = 50
+	dyeable = FALSE
 
 /obj/item/clothing/shoes/cowboy
 	name = "cowboy boots"
 	desc = "A pair a' brown boots."
 	icon_state = "cowboy_brown"
 	item_color = "cowboy_brown"
+	dyeable = FALSE
 
 /obj/item/clothing/shoes/cowboy/black
 	name = "black cowboy boots"
@@ -374,6 +439,7 @@
 	item_state = "clothwrap"
 	force = 0
 	w_class = WEIGHT_CLASS_SMALL
+	dyeable = FALSE
 
 /obj/item/clothing/shoes/bhop
 	name = "jump boots"
@@ -385,13 +451,16 @@
 	actions_types = list(/datum/action/item_action/bhop)
 	permeability_coefficient = 0.05
 	can_cut_open = FALSE
+	knife_slot = TRUE
+	dyeable = FALSE
+
 	var/jumpdistance = 5 //-1 from to see the actual distance, e.g 4 goes over 3 tiles
 	var/jumpspeed = 3
-	var/recharging_rate = 60 //default 6 seconds between each dash
+	var/recharging_rate = 6 SECONDS //default 6 seconds between each dash
 	var/recharging_time = 0 //time until next dash
 
 /obj/item/clothing/shoes/bhop/item_action_slot_check(slot)
-	if(slot == slot_shoes)
+	if(slot == SLOT_HUD_SHOES)
 		return TRUE
 
 /obj/item/clothing/shoes/bhop/ui_action_click(mob/user, action)
@@ -408,7 +477,7 @@
 		user.flying = TRUE
 		do_callback  = TRUE
 	if(user.throw_at(target, jumpdistance, jumpspeed, spin = FALSE, diagonals_first = TRUE, callback = do_callback ? VARSET_CALLBACK(user, flying, FALSE) : null))
-		playsound(src, 'sound/effects/stealthoff.ogg', 50, 1, 1)
+		playsound(src, 'sound/effects/stealthoff.ogg', 50, TRUE, 1)
 		user.visible_message("<span class='warning'>[usr] dashes forward into the air!</span>")
 		recharging_time = world.time + recharging_rate
 	else

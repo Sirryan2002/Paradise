@@ -36,7 +36,7 @@
 	/// Locked by an ID card
 	var/locked = FALSE
 
-	var/projectile_type = /obj/item/projectile/beam/emitter
+	var/projectile_type = /obj/item/projectile/beam/emitter/hitscan
 	var/projectile_sound = 'sound/weapons/emitter.ogg'
 	var/datum/effect_system/spark_spread/sparks
 
@@ -57,6 +57,7 @@
 	. = ..()
 	if(panel_open)
 		. += "<span class='notice'>The maintenance panel is open.</span>"
+	. += "<span class='notice'><b>Alt-Click</b> to rotate [src].</span>"
 
 /obj/machinery/power/emitter/RefreshParts()
 	var/max_firedelay = 120
@@ -74,23 +75,14 @@
 		power_usage -= 50 * M.rating
 	active_power_consumption = power_usage
 
-/obj/machinery/power/emitter/verb/rotate()
-	set name = "Rotate"
-	set category = "Object"
-	set src in oview(1)
+/obj/machinery/power/emitter/AltClick(mob/user)
+	if(user.stat || HAS_TRAIT(user, TRAIT_HANDS_BLOCKED) || !Adjacent(user))
+		return
 
 	if(anchored)
-		to_chat(usr, "It is fastened to the floor!")
+		to_chat(user, "<span class='notice'>It is fastened to the floor!</span>")
 		return
 	dir = turn(dir, 90)
-
-/obj/machinery/power/emitter/AltClick(mob/user)
-	if(user.incapacitated())
-		to_chat(user, "<span class='warning'>You can't do that right now!</span>")
-		return
-	if(!Adjacent(user))
-		return
-	rotate()
 
 /obj/machinery/power/emitter/Destroy()
 	msg_admin_attack("Emitter deleted at ([x],[y],[z] - [ADMIN_JMP(src)]) [usr ? "Broken by [key_name_admin(usr)]" : ""]", ATKLOG_FEW)
@@ -112,6 +104,7 @@
 		if(user)
 			user.visible_message("<span class='warning'>[user] shorts out the lock on [src].</span>",
 				"<span class='warning'>You short out the lock on [src].</span>")
+		return TRUE
 
 /obj/machinery/power/emitter/attack_hand(mob/user)
 	add_fingerprint(user)
@@ -141,7 +134,7 @@
 		investigate_log("turned <font color='green'>on</font> by [key_name(user)]", "singulo")
 
 	to_chat(user, "You turn [src] [toggle].")
-	message_admins("Emitter turned [toggle] by [key_name_admin(user)] in ([x], [y], [z] - <A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[x];Y=[y];Z=[z]'>JMP</a>)")
+	message_admins("Emitter turned [toggle] by [key_name_admin(user)] in ([x], [y], [z] - <A href='byond://?_src_=holder;adminplayerobservecoodjump=1;X=[x];Y=[y];Z=[z]'>JMP</a>)")
 	log_game("Emitter turned [toggle] by [key_name(user)] in [x], [y], [z]")
 	update_icon()
 
@@ -156,25 +149,23 @@
 		step(src, get_dir(M, src))
 
 /obj/machinery/power/emitter/attackby(obj/item/I, mob/user, params)
-	if(istype(I, /obj/item/card/id) || istype(I, /obj/item/pda))
-		if(emagged)
-			to_chat(user, "<span class='warning'>The lock seems to be broken.</span>")
-			return
-		if(allowed(user))
-			if(active)
-				locked = !locked
-				to_chat(user, "<span class='notice'>The controls are now [locked ? "locked" : "unlocked"].</span>")
-			else
-				locked = FALSE //just in case it somehow gets locked
-				to_chat(user, "<span class='warning'>The controls can only be locked when [src] is online!</span>")
-		else
-			to_chat(user, "<span class='warning'>Access denied.</span>")
+	if(!istype(I, /obj/item/card/id) && !istype(I, /obj/item/pda))
+		return ..()
+
+	if(emagged)
+		to_chat(user, "<span class='warning'>The lock seems to be broken.</span>")
 		return
 
-	if(exchange_parts(user, I))
+	if(!allowed(user))
+		to_chat(user, "<span class='warning'>Access denied.</span>")
 		return
 
-	return ..()
+	if(active)
+		locked = !locked
+		to_chat(user, "<span class='notice'>The controls are now [locked ? "locked" : "unlocked"].</span>")
+	else
+		locked = FALSE //just in case it somehow gets locked
+		to_chat(user, "<span class='warning'>The controls can only be locked when [src] is online!</span>")
 
 /obj/machinery/power/emitter/wrench_act(mob/living/user, obj/item/I)
 	. = TRUE
@@ -313,6 +304,7 @@
 	else
 		fire_delay = rand(minimum_fire_delay, maximum_fire_delay)
 		shot_number = 0
+
 	P.setDir(dir)
 	P.starting = loc
 	P.Angle = null

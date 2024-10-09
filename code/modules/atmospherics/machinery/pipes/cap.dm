@@ -19,7 +19,6 @@
 /obj/machinery/atmospherics/pipe/cap/examine(mob/user)
 	. = ..()
 	. += "<span class='notice'>Largely cosmetic as pipes automatically seal themselves off from leaking gases if not connected to another pipe. Will prevent a nasty ventcrawler from paying you a visit however.</span>"
-	return "This is a cosmetic attachment, as pipes currently do not spill their contents into the air."
 
 /obj/machinery/atmospherics/pipe/cap/hide(i)
 	if(level == 1 && issimulatedturf(loc))
@@ -61,7 +60,7 @@
 /obj/machinery/atmospherics/pipe/cap/update_overlays()
 	. = ..()
 	alpha = 255
-	. += SSair.icon_manager.get_atmos_icon("pipe", , pipe_color, "cap" + icon_connect_type)
+	. += GLOB.pipe_icon_manager.get_atmos_icon("pipe", null, pipe_color, "cap" + icon_connect_type)
 
 /obj/machinery/atmospherics/pipe/cap/atmos_init()
 	..()

@@ -2,12 +2,18 @@
 //Keep this sorted alphabetically
 
 #ifdef UNIT_TESTS
+#include "atmos\test_ventcrawl.dm"
+#include "games\test_cards.dm"
+#include "jobs\test_job_globals.dm"
 #include "aicard_icons.dm"
 #include "announcements.dm"
+#include "areas_apcs.dm"
 #include "component_tests.dm"
 #include "config_sanity.dm"
 #include "crafting_lists.dm"
+#include "element_tests.dm"
 #include "emotes.dm"
+#include "init_sanity.dm"
 #include "log_format.dm"
 #include "map_templates.dm"
 #include "map_tests.dm"
@@ -18,6 +24,7 @@
 #include "spawn_humans.dm"
 #include "spell_targeting_test.dm"
 #include "sql.dm"
+#include "status_effect_ids.dm"
 #include "subsystem_init.dm"
 #include "subsystem_metric_sanity.dm"
 #include "test_runner.dm"

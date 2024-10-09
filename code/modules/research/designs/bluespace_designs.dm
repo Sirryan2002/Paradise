@@ -78,7 +78,7 @@
 	req_tech = list("bluespace" = 1)
 	build_type = PROTOLATHE
 	materials = list(MAT_METAL = 300, MAT_GLASS = 200)
-	build_path = /obj/item/radio/beacon
+	build_path = /obj/item/beacon
 	category = list("Bluespace")
 
 /datum/design/brpd
@@ -89,4 +89,14 @@
 	build_type = PROTOLATHE
 	materials = list(MAT_METAL = 75000, MAT_GLASS = 37500, MAT_SILVER = 3000)
 	build_path = /obj/item/rpd/bluespace
+	category = list("Bluespace")
+
+/datum/design/bluespaceshotglass
+	name = "Bluespace Shot Glass"
+	desc = "For when you need to make the Bartender's life extra hell."
+	req_tech = list("bluespace" = 5, "materials" = 3, "plasmatech" = 4)
+	id = "bluespaceshotglass"
+	build_type = PROTOLATHE
+	materials = list(MAT_METAL = 1000, MAT_BLUESPACE = 500)
+	build_path = /obj/item/reagent_containers/drinks/drinkingglass/shotglass/bluespace
 	category = list("Bluespace")

@@ -21,7 +21,6 @@
 	new /obj/item/reagent_containers/glass/bottle/charcoal(src)
 	new /obj/item/reagent_containers/glass/bottle/charcoal(src)
 
-
 /obj/structure/closet/secure_closet/medical2
 	name = "anesthetic locker"
 	desc = "Used to knock people out."
@@ -98,17 +97,25 @@
 
 // Why the hell is this in the closets folder?
 /obj/item/storage/pill_bottle/psychiatrist/populate_contents()
-	new /obj/item/reagent_containers/food/pill/haloperidol(src)
-	new /obj/item/reagent_containers/food/pill/haloperidol(src)
-	new /obj/item/reagent_containers/food/pill/haloperidol(src)
-	new /obj/item/reagent_containers/food/pill/methamphetamine(src)
-	new /obj/item/reagent_containers/food/pill/methamphetamine(src)
-	new /obj/item/reagent_containers/food/pill/methamphetamine(src)
-	new /obj/item/reagent_containers/food/pill/patch/nicotine(src)
-	new /obj/item/reagent_containers/food/pill/patch/nicotine(src)
-	new /obj/item/reagent_containers/food/pill/patch/nicotine(src)
-	new /obj/item/reagent_containers/food/pill/hydrocodone(src)
-	new /obj/item/reagent_containers/food/pill/hydrocodone(src)
+	new /obj/item/reagent_containers/pill/haloperidol(src)
+	new /obj/item/reagent_containers/pill/haloperidol(src)
+	new /obj/item/reagent_containers/pill/haloperidol(src)
+	new /obj/item/reagent_containers/pill/methamphetamine(src)
+	new /obj/item/reagent_containers/pill/methamphetamine(src)
+	new /obj/item/reagent_containers/pill/methamphetamine(src)
+	new /obj/item/reagent_containers/pill/happy_psych(src)
+	new /obj/item/reagent_containers/pill/happy_psych(src)
+	new /obj/item/reagent_containers/pill/happy_psych(src)
+	new /obj/item/reagent_containers/patch/nicotine(src)
+	new /obj/item/reagent_containers/patch/nicotine(src)
+	new /obj/item/reagent_containers/patch/nicotine(src)
+	new /obj/item/reagent_containers/pill/hydrocodone(src)
+	new /obj/item/reagent_containers/pill/hydrocodone(src)
+	new /obj/item/reagent_containers/pill/mannitol(src)
+	new /obj/item/reagent_containers/pill/mannitol(src)
+	new /obj/item/reagent_containers/pill/mannitol(src)
+	new /obj/item/reagent_containers/pill/mannitol(src)
+	new /obj/item/reagent_containers/pill/mannitol(src)
 
 /obj/structure/closet/secure_closet/psychiatrist
 	name = "psychiatrist's locker"
@@ -128,7 +135,7 @@
 	new /obj/item/storage/pill_bottle/psychiatrist(src)
 	new /obj/random/plushie(src)
 	for(var/i in 0 to 3)
-		var/candy = pick(subtypesof(/obj/item/reagent_containers/food/snacks/candy/fudge))
+		var/candy = pick(subtypesof(/obj/item/food/candy/fudge))
 		new candy(src)
 
 /obj/structure/closet/secure_closet/CMO
@@ -156,7 +163,7 @@
 	new /obj/item/reagent_containers/hypospray/CMO(src)
 	new /obj/item/organ/internal/cyberimp/eyes/hud/medical(src)
 	new /obj/item/door_remote/chief_medical_officer(src)
-	new /obj/item/reagent_containers/food/drinks/mug/cmo(src)
+	new /obj/item/reagent_containers/drinks/mug/cmo(src)
 	new /obj/item/clothing/accessory/medal/medical(src)
 	new /obj/item/storage/briefcase(src)
 	new /obj/item/clothing/mask/gas(src)
@@ -189,24 +196,26 @@
 
 /obj/structure/closet/secure_closet/paramedic
 	name = "paramedic EVA gear"
-	desc = "A locker with a Paramedic EVA suit."
+	desc = "A locker with a Rescue MODsuit."
 	icon_state = "med"
 	open_door_sprite = "med_door"
 	icon_opened = "med_open"
 	req_access = list(ACCESS_PARAMEDIC)
 
 /obj/structure/closet/secure_closet/paramedic/populate_contents()
-	new /obj/item/clothing/suit/space/eva/paramedic(src)
-	new /obj/item/clothing/head/helmet/space/eva/paramedic(src)
-	new /obj/item/sensor_device(src)
+	new /obj/item/radio/headset/headset_med/para(src)
+	new /obj/item/mod/control/pre_equipped/rescue(src)
 	new /obj/item/key/ambulance(src)
-	new /obj/item/pinpointer/crew(src)
 	new /obj/item/handheld_defibrillator(src)
+	new /obj/item/storage/bag/garment/paramedic(src)
 	new /obj/item/defibrillator/loaded(src)
 	new /obj/item/storage/belt/medical(src)
 	new /obj/item/storage/firstaid/adv(src)
-	new /obj/item/clothing/glasses/hud/health/sunglasses(src)
 	new /obj/item/storage/toolbox/emergency(src)
+	new /obj/item/fulton_core(src)
+	new /obj/item/extraction_pack(src)
+	new /obj/item/gps/mining(src)
+	new /obj/item/pickaxe/drill(src)
 
 /obj/structure/closet/secure_closet/reagents
 	name = "chemical storage closet"
@@ -223,3 +232,20 @@
 	new /obj/item/reagent_containers/glass/bottle/reagent/acetone(src)
 	new /obj/item/reagent_containers/glass/bottle/reagent/acid(src)
 	new /obj/item/reagent_containers/glass/bottle/reagent/diethylamine(src)
+
+/obj/structure/closet/secure_closet/genetics
+	name = "genetics test subject locker"
+	desc = "Storage for lesser form cubes."
+	icon_state = "genetics"
+	open_door_sprite = "med_door"
+	icon_opened = "med_open"
+	req_access = list(ACCESS_GENETICS)
+
+/obj/structure/closet/secure_closet/genetics/populate_contents()
+	new /obj/item/storage/box/monkeycubes(src)
+	new /obj/item/storage/box/monkeycubes/farwacubes(src)
+	new /obj/item/storage/box/monkeycubes/neaeracubes(src)
+	new /obj/item/storage/box/monkeycubes/nian_worme_cubes(src)
+	new /obj/item/storage/box/monkeycubes/stokcubes(src)
+	new /obj/item/storage/box/monkeycubes/wolpincubes(src)
+

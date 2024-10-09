@@ -44,17 +44,23 @@ research holder datum.
 **	Includes all the helper procs and basic tech processing.  **
 ***************************************************************/
 
-/datum/research								//Holder for all the existing, archived, and known tech. Individual to console.
+/// Holder for all the existing, archived, and known tech. Individual to each network controller.
+/datum/research
+	// These lists hold datum/tech
 
-									//Datum/tech go here.
-									// Possible is a list of direct datum references
-									// known is a list of id -> datum mappings
-	var/list/possible_tech = list()			//List of all tech in the game that players have access to (barring special events).
-	var/list/known_tech = list()				//List of locally known tech.
-	var/list/possible_designs = list()		//List of all designs
-	var/list/known_designs = list()			//List of available designs
+
+	// Possible is a list of direct datum references known is a list of id -> datum mappings
+	var/list/possible_tech = list()
+	/// List of locally known tech.
+	var/list/known_tech = list()
+
+
+	/// List of all designs
+	var/list/possible_designs = list()
+	/// List of available designs
+	var/list/known_designs = list()
 	/// List of designs that have been blacklisted by the server controller
-	var/list/blacklisted_designs = list()		
+	var/list/blacklisted_designs = list()
 	/// Used during the rnd sync system, to ensure that blacklists are reverted, then cleared.
 	var/list/unblacklisted_designs = list()
 
@@ -76,7 +82,7 @@ research holder datum.
 //Checks to see if tech has all the required pre-reqs.
 //Input: datum/tech; Output: 0/1 (false/true)
 /datum/research/proc/TechHasReqs(datum/tech/T)
-	if(T.req_tech.len == 0)
+	if(length(T.req_tech) == 0)
 		return TRUE
 	for(var/req in T.req_tech)
 		var/datum/tech/known = known_tech[req]
@@ -89,7 +95,9 @@ research holder datum.
 /datum/research/proc/DesignHasReqs(datum/design/D)
 	if(D.id in blacklisted_designs)
 		return FALSE
-	if(D.req_tech.len == 0)
+	if(D.requires_whitelist && !(known_designs[D.id]))
+		return FALSE
+	if(length(D.req_tech) == 0)
 		return TRUE
 	for(var/req in D.req_tech)
 		var/datum/tech/known = known_tech[req]
@@ -107,8 +115,13 @@ research holder datum.
 		return
 	known_tech[T.id] = T
 
+/datum/research/proc/find_possible_tech_with_id(id)
+	for(var/datum/tech/T in possible_tech)
+		if(T.id == id)
+			return T
+
 /datum/research/proc/CanAddDesign2Known(datum/design/D)
-	if (D.id in known_designs)
+	if(D.id in known_designs)
 		return FALSE
 	if(D.id in blacklisted_designs)
 		return FALSE
@@ -247,13 +260,16 @@ research holder datum.
 **	Includes all the various technoliges and what they make.  **
 ***************************************************************/
 
-/datum/tech	//Datum of individual technologies.
+/// Datum of individual technologies.
+/datum/tech
 	var/name = "name"					//Name of the technology.
 	var/desc = "description"			//General description of what it does and what it makes.
 	var/id = "id"						//An easily referenced ID. Must be alphanumeric, lower-case, and no symbols.
 	var/level = 1						//A simple number scale of the research level. Level 0 = Secret tech.
 	var/max_level = 1          // Maximum level this can be at (for job objectives)
 	var/rare = 1						//How much CentCom wants to get that tech. Used in supply shuttle tech cost calculation.
+	/// Name of the FontAwesome icon to represent the tech
+	var/ui_icon = null
 	var/list/req_tech = list()			//List of ids associated values of techs required to research this tech. "id" = #
 
 
@@ -264,12 +280,14 @@ research holder datum.
 	desc = "Development of new and improved materials."
 	id = "materials"
 	max_level = 7
+	ui_icon = "layer-group"
 
 /datum/tech/engineering
 	name = "Engineering Research"
 	desc = "Development of new and improved engineering parts and methods."
 	id = "engineering"
 	max_level = 7
+	ui_icon = "tools"
 
 /datum/tech/plasmatech
 	name = "Plasma Research"
@@ -277,12 +295,14 @@ research holder datum.
 	id = "plasmatech"
 	max_level = 7
 	rare = 3
+	ui_icon = "fire"
 
 /datum/tech/powerstorage
 	name = "Power Manipulation Technology"
 	desc = "The various technologies behind the storage and generation of electicity."
 	id = "powerstorage"
 	max_level = 7
+	ui_icon = "bolt"
 
 /datum/tech/bluespace
 	name = "'Bluespace' Research"
@@ -290,37 +310,44 @@ research holder datum.
 	id = "bluespace"
 	max_level = 7
 	rare = 2
+	ui_icon = "gem"
 
 /datum/tech/biotech
 	name = "Biological Technology"
 	desc = "Research into the deeper mysteries of life and organic substances."
 	id = "biotech"
 	max_level = 7
+	ui_icon = "seedling"
 
 /datum/tech/combat
 	name = "Combat Systems Research"
 	desc = "The development of offensive and defensive systems."
 	id = "combat"
 	max_level = 7
+	ui_icon = "shield-alt"
 
 /datum/tech/magnets
 	name = "Electromagnetic Spectrum Research"
 	desc = "Research into the electromagnetic spectrum. No clue how they actually work, though."
 	id = "magnets"
 	max_level = 7
+	ui_icon = "magnet"
 
 /datum/tech/programming
 	name = "Data Theory Research"
 	desc = "The development of new computer and artificial intelligence and data storage systems."
 	id = "programming"
 	max_level = 7
+	ui_icon = "server"
 
-/datum/tech/toxins //not meant to be raised by deconstruction, do not give objects toxins as an origin_tech
+/// not meant to be raised by deconstruction, do not give objects toxins as an origin_tech
+/datum/tech/toxins
 	name = "Toxins Research"
 	desc = "Research into plasma based explosive devices. Upgrade through testing explosives in the toxins lab."
 	id = "toxins"
 	max_level = 7
 	rare = 2
+	ui_icon = "explosion"
 
 /datum/tech/syndicate
 	name = "Illegal Technologies Research"
@@ -328,6 +355,7 @@ research holder datum.
 	id = "syndicate"
 	max_level = 0 // Don't count towards maxed research, since it's illegal.
 	rare = 4
+	ui_icon = "user-astronaut"
 
 /datum/tech/abductor
 	name = "Alien Technologies Research"
@@ -335,6 +363,7 @@ research holder datum.
 	id = "abductor"
 	rare = 5
 	level = 0
+	ui_icon = "satellite"
 
 /*
 datum/tech/arcane
@@ -363,47 +392,39 @@ datum/tech/robotics
 	req_tech = list("materials" = 3, "programming" = 3)
 */
 
-/datum/tech/proc/getCost(current_level = null)
-	// Calculates tech disk's supply points sell cost
-	if(!current_level)
-		current_level = initial(level)
-
-	if(current_level >= level)
-		return 0
-
-	var/cost = 0
-	for(var/i = current_level + 1, i <= level, i++)
-		if(i == initial(level))
-			continue
-		cost += i*5*rare
-
-	return cost
-
 /obj/item/disk/tech_disk
 	name = "\improper Technology Disk"
 	desc = "A disk for storing technology data for further research."
 	icon_state = "datadisk2"
 	materials = list(MAT_METAL=30, MAT_GLASS=10)
-	var/datum/tech/stored
+	var/tech_id = null
+	var/tech_name = null
+	// These variables are copied from /datum/tech. They must be copied and cached
+	// to prevent retroactively updating all disks when a new research level is unlocked
+	/// The level of the copied technology. Please see /datum/tech.level
+	var/tech_level = 0
+	/// The rarity of the copied technology. Affects sell price. Please see /datum/tech.rare
+	var/tech_rarity = 0
 	var/default_name = "\improper Technology Disk"
 	var/default_desc = "A disk for storing technology data for further research."
-
-/obj/item/disk/tech_disk/Initialize(mapload)
-	. = ..()
-	pixel_x = rand(-5, 5)
-	pixel_y = rand(-5, 5)
 
 /obj/item/disk/tech_disk/proc/load_tech(datum/tech/T)
 	name = "[default_name] \[[T]\]"
 	desc = T.desc + "\n <span class='notice'>Level: [T.level]</span>"
 	// NOTE: This is just a reference to the tech on the system it grabbed it from
 	// This seems highly fragile
-	stored = T
+	tech_id = T.id
+	tech_name = T.name
+	tech_level = T.level
+	tech_rarity = T.rare
 
 /obj/item/disk/tech_disk/proc/wipe_tech()
 	name = default_name
 	desc = default_desc
-	stored = null
+	tech_id = null
+	tech_name = null
+	tech_level = 0
+	tech_rarity = 0
 
 /obj/item/disk/design_disk
 	name = "\improper Component Design Disk"
@@ -415,11 +436,6 @@ datum/tech/robotics
 	// Otherwise, I'd use "initial()"
 	var/default_name = "\improper Component Design Disk"
 	var/default_desc = "A disk for storing device design data for construction in lathes."
-
-/obj/item/disk/design_disk/Initialize(mapload)
-	. = ..()
-	pixel_x = rand(-5, 5)
-	pixel_y = rand(-5, 5)
 
 /obj/item/disk/design_disk/proc/load_blueprint(datum/design/D)
 	name = "[default_name] \[[D]\]"

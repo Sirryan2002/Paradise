@@ -1,7 +1,3 @@
-#define kW *1000
-#define MW kW *1000
-#define GW MW *1000
-
 /// Power Channel for equipment power users
 #define PW_CHANNEL_EQUIPMENT	1
 /// Power chanel for lighting power users
@@ -62,3 +58,11 @@
 #define MACHINE_ELECTRIFIED_THROW	4
 #define MACHINE_ELECTRIFIED_YEET	5
 #define MACHINE_ELECTRIFIED_FUCK_ME_UP_CHIEF 6
+
+#define KW * 1e3
+#define MW * 1e6
+#define GW * 1e9
+
+#define KJ * 1e3
+#define MJ * 1e6
+#define GJ * 1e9

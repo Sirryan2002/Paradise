@@ -4,23 +4,6 @@
 	icon_state = "mining"
 	has_gravity = TRUE
 
-/area/mine/explored
-	name = "Mine"
-	icon_state = "explored"
-	always_unpowered = TRUE
-	requires_power = TRUE
-	poweralm = FALSE
-	apc_starts_off = TRUE
-	outdoors = TRUE
-	ambientsounds = MINING_SOUNDS
-	flags = NONE
-	sound_environment = SOUND_AREA_STANDARD_STATION
-	min_ambience_cooldown = 70 SECONDS
-	max_ambience_cooldown = 220 SECONDS
-
-/area/mine/dangerous/explored/golem
-	name = "Small Asteroid"
-
 /area/mine/unexplored
 	name = "Mine"
 	icon_state = "unexplored"
@@ -47,9 +30,6 @@
 /area/mine/unexplored/cere/command
 	name = "Command Asteroid"
 
-/area/mine/unexplored/cere/docking
-	name = "Docking Asteroid"
-
 /area/mine/unexplored/cere/engineering
 	name = "Engineering Asteroid"
 
@@ -62,47 +42,91 @@
 /area/mine/unexplored/cere/orbiting
 	name = "Near Station Asteroids"
 
-/area/mine/lobby
+/**********************Outpost areas**************************/
+
+/area/mine/outpost
 	name = "Mining Station"
+	icon_state = "mining"
+	sound_environment = SOUND_AREA_STANDARD_STATION
+	request_console_name = "Mining Outpost"
+	request_console_flags = RC_SUPPLY
 
-/area/mine/storage
-	name = "Mining Station Storage"
-
-/area/mine/production
-	name = "Mining Station Starboard Wing"
-	icon_state = "mining_production"
-
-/area/mine/abandoned
-	name = "Abandoned Mining Station"
-
-/area/mine/comms
-	name = "Mining Station Communications"
-
-/area/mine/living_quarters
-	name = "Mining Station Port Wing"
-	icon_state = "mining_living"
-
-/area/mine/eva
-	name = "Mining Station EVA"
+/area/mine/outpost/airlock
+	name = "Mining Station Airlock"
 	icon_state = "mining_eva"
 
-/area/mine/maintenance
+/area/mine/outpost/cafeteria
+	name = "Mining Station Cafeteria"
+	icon_state = "mining_living"
+
+/// subtype of /surface so storms hit there
+/area/lavaland/surface/outdoors/outpost/catwalk
+	name = "Mining Station Catwalk"
+	icon_state = "mining"
+
+/area/mine/outpost/comms
 	name = "Mining Station Communications"
+	icon_state = "tcomms"
 
-/area/mine/cafeteria
-	name = "Mining station Cafeteria"
+/area/mine/outpost/custodial
+	name = "Mining Station Custodial Storage"
+	icon_state = "janitor"
 
-/area/mine/hydroponics
-	name = "Mining station Hydroponics"
+/// basically engi and atmos combined. I'm keeping it as "engineering" code wise, but "Life Support" sounds cooler in-game
+/area/mine/outpost/engineering
+	name = "Mining Station Life Support"
+	icon_state = "engi"
 
-/area/mine/sleeper
-	name = "Mining station Emergency Sleeper"
+/area/mine/outpost/hallway
+	name = "Mining Station Central Wing"
+	icon_state = "hallC"
 
-/area/mine/north_outpost
-	name = "North Mining Outpost"
+/area/mine/outpost/hallway/east
+	name = "Mining Station East Wing"
+	icon_state = "hallS"
 
-/area/mine/west_outpost
-	name = "West Mining Outpost"
+/area/mine/outpost/hallway/west
+	name = "Mining Station West Wing"
+	icon_state = "hallP"
+
+/area/mine/outpost/lockers
+	name = "Mining Station Locker Room"
+	icon_state = "locker"
+
+/area/mine/outpost/storage
+	name = "Mining Station Storage"
+	icon_state = "storage"
+
+/area/mine/outpost/maintenance
+	name = "Mining Station Maintenance"
+	icon_state = "maintcentral"
+
+/area/mine/outpost/maintenance/south
+	name = "Mining Station South Maintenance"
+	icon_state = "amaint"
+
+/area/mine/outpost/maintenance/east
+	name = "Mining Station East Maintenance"
+	icon_state = "smaint"
+
+/area/mine/outpost/medbay
+	name = "Mining Station Infirmary"
+	icon_state = "medbay"
+
+/area/mine/outpost/mechbay
+	name = "Mining Station Mechbay"
+	icon_state = "mechbay"
+
+/area/mine/outpost/production
+	name = "Mining Station Production Room"
+	icon_state = "mining_production"
+
+/area/mine/outpost/quartermaster
+	name = "Mining Station Quartermaster's Office"
+	icon_state = "qm"
+	request_console_flags = RC_ASSIST | RC_INFO
+	request_console_name = "Quartermaster's Desk"
+	request_console_announces = TRUE
 
 /area/mine/laborcamp
 	name = "Labor Camp"
@@ -112,15 +136,6 @@
 	name = "Labor Camp Security"
 	icon_state = "security"
 	ambientsounds = HIGHSEC_SOUNDS
-
-/area/mine/podbay
-	name = "Mining Podbay"
-
-/area/mine/airlock
-	name = "Mining Airlock"
-
-/area/mine/mechbay
-	name = "Mining Mechbay Storage"
 
 
 /**********************Lavaland Areas**************************/
@@ -141,26 +156,16 @@
 	min_ambience_cooldown = 70 SECONDS
 	max_ambience_cooldown = 220 SECONDS
 
-/area/lavaland/underground
-	name = "Lavaland Caves"
-	icon_state = "unexplored"
-	always_unpowered = TRUE
-	requires_power = TRUE
-	poweralm = FALSE
-	apc_starts_off = TRUE
-	ambientsounds = MINING_SOUNDS
-	min_ambience_cooldown = 70 SECONDS
-	max_ambience_cooldown = 220 SECONDS
-
 /area/lavaland/surface/outdoors
 	name = "Lavaland Wastes"
 	outdoors = TRUE
 
-/area/lavaland/surface/outdoors/unexplored //monsters and ruins spawn here
+/// monsters and ruins spawn here
+/area/lavaland/surface/outdoors/unexplored
 	icon_state = "unexplored"
 
-/area/lavaland/surface/outdoors/unexplored/danger //megafauna will also spawn here
+/// megafauna will also spawn here
+/area/lavaland/surface/outdoors/unexplored/danger
 	icon_state = "danger"
 
 /area/lavaland/surface/outdoors/explored
-	name = "Lavaland Labor Camp"

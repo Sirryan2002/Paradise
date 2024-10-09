@@ -4,29 +4,17 @@ import { Window } from '../layouts';
 
 export const ParticleAccelerator = (props, context) => {
   const { act, data } = useBackend(context);
-  const {
-    assembled,
-    power,
-    strength,
-    max_strength
-  } = data;
+  const { assembled, power, strength, max_strength } = data;
   return (
-    <Window>
+    <Window width={350} height={160}>
       <Window.Content>
-        <Section title="Control Panel"
-          buttons={(
-            <Button
-              icon={"sync"}
-              content={"Connect"}
-              onClick={() => act('scan')} />
-            )}>
+        <Section
+          title="Control Panel"
+          buttons={<Button icon={'sync'} content={'Connect'} onClick={() => act('scan')} />}
+        >
           <LabeledList>
             <LabeledList.Item label="Status" mb="5px">
-              <Box color={assembled ? "good" : "bad"}>
-                {assembled
-                  ? "Operational"
-                  : "Error: Verify Configuration"}
-              </Box>
+              <Box color={assembled ? 'good' : 'bad'}>{assembled ? 'Operational' : 'Error: Verify Configuration'}</Box>
             </LabeledList.Item>
             <LabeledList.Item label="Power">
               <Button
@@ -34,20 +22,23 @@ export const ParticleAccelerator = (props, context) => {
                 content={power ? 'On' : 'Off'}
                 selected={power}
                 disabled={!assembled}
-                onClick={() => act('power')} />
+                onClick={() => act('power')}
+              />
             </LabeledList.Item>
             <LabeledList.Item label="Strength">
               <Button
                 icon="backward"
                 disabled={!assembled || strength === 0}
                 onClick={() => act('remove_strength')}
-                mr="4px"/>
-                  {strength}
+                mr="4px"
+              />
+              {strength}
               <Button
                 icon="forward"
                 disabled={!assembled || strength === max_strength}
                 onClick={() => act('add_strength')}
-                ml="4px"/>
+                ml="4px"
+              />
             </LabeledList.Item>
           </LabeledList>
         </Section>

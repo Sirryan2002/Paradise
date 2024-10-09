@@ -14,7 +14,6 @@
 
 /obj/structure/blob/core/Initialize(mapload, client/new_overmind = null, new_rate = 2, offspring)
 	. = ..()
-	GLOB.blob_cores += src
 	START_PROCESSING(SSobj, src)
 	GLOB.poi_list |= src
 	adjustcolors(color) //so it atleast appears
@@ -38,8 +37,9 @@
 
 
 /obj/structure/blob/core/Destroy()
-	GLOB.blob_cores -= src
 	if(overmind)
+		if(overmind.mind)
+			SSticker.mode.blob_overminds -= overmind.mind
 		overmind.blob_core = null
 	overmind = null
 	STOP_PROCESSING(SSobj, src)
@@ -119,6 +119,7 @@
 		var/mob/camera/blob/B = new(loc)
 		B.is_offspring = is_offspring
 		B.key = C.key
+		dust_if_respawnable(C)
 		B.blob_core = src
 		overmind = B
 		color = overmind.blob_reagent_datum.color

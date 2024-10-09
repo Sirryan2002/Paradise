@@ -62,11 +62,26 @@
 	name = "bath_salts"
 	id = "bath_salts"
 	result = "bath_salts"
-	required_reagents = list("????" = 1, "saltpetre" = 1, "msg" = 1, "cleaner" = 1, "enzyme" = 1, "mugwort" = 1, "mercury" = 1)
+	required_reagents = list("????" = 1, "saltpetre" = 1, "msg" = 1, "cleaner" = 1, "enzyme" = 1, "sodiumchloride" = 1, "mercury" = 1)
 	result_amount = 6
 	min_temp = T0C + 100
 	mix_message = "Tiny cubic crystals precipitate out of the mixture. Huh."
 	mix_sound = 'sound/goonstation/misc/fuse.ogg'
+
+/datum/chemical_reaction/mephedrone
+	name = "Mephedrone"
+	id = "mephedrone"
+	result = "mephedrone"
+	required_reagents = list("bath_salts" = 5, "carpotoxin" = 5, "teslium" = 5)
+	result_amount = 10
+	min_temp = T0C + 100
+	mix_message = "The mixture fizzes into a vibrant red solution that doesn't stay still."
+	mix_sound = 'sound/goonstation/misc/fuse.ogg'
+
+/datum/chemical_reaction/mephedrone/on_reaction(datum/reagents/holder) //Will make it harder for botany, need a chem heater or will suffer, and mixing in plants wont work
+	var/turf/T = get_turf(holder.my_atom)
+	fireflash(holder.my_atom, 3, 500)
+	explosion(T, 0, 0, 2, 2, flame_range = 2)
 
 /datum/chemical_reaction/jenkem
 	name = "Jenkem"
@@ -90,6 +105,14 @@
 	result = "aranesp"
 	required_reagents = list("epinephrine" = 1, "atropine" = 1, "insulin" = 1)
 	result_amount = 3
+
+/datum/chemical_reaction/happiness
+	name = "Happiness"
+	id = "happiness"
+	result = "happiness"
+	required_reagents = list("space_drugs" = 1, "nitrogen" = 1, "oxygen" = 1, "sacid" = 2)
+	required_catalysts = list("plasma" = 5)
+	result_amount = 5
 
 /datum/chemical_reaction/fliptonium
 	name = "fliptonium"

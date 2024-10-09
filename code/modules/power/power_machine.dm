@@ -41,7 +41,8 @@
 	* Should always be producing or consuming the amount given, figure out how much or little that should be before
 	* calling these procs to keep it clean :P
 */
-/// Adds power to the queued power cycle, will become the available power next power cycle
+
+/// Adds available power to the next powernet process (Watts)
 /obj/machinery/power/proc/produce_direct_power(amount)
 	SHOULD_CALL_PARENT(TRUE)
 	if(powernet)
@@ -51,7 +52,8 @@
 		return amount
 	return 0
 
-/// Adds power demand to the powernet, machines should use this
+/// Adds power demand to the powernet (Watts)
+/// machines should use this proc
 /obj/machinery/power/proc/consume_direct_power(amount)
 	if(!powernet)
 		return 0
@@ -60,19 +62,20 @@
 	powernet.power_demand += amount
 	return amount
 
-/// Gets surplus power available on this machines powernet, machines should use this proc
+/// Gets surplus power available on this machine's powernet (Watts)
 /obj/machinery/power/proc/get_surplus()
 	return powernet ? powernet.calculate_surplus() : 0
 
-/// Gets surplus power or power debt on this machines powernet, machines should use this proc
+/// Gets surplus power available on this machine's powernet (Watts)
 /obj/machinery/power/proc/get_power_balance()
 	return powernet ? powernet.calculate_power_balance() : 0
 
-/// Gets power available (NOT EXTRA) on this cables powernet, machines should use this
+/// Gets power available (NOT EXTRA) on this cables powernet (Watts)
+/// machines should use this proc
 /obj/machinery/power/proc/get_available_power()
 	return powernet ? powernet.available_power : 0
 
-/// Adds queued power demand to be met next process cycle
+/// Adds queued power demand to be met next process cycle (Watts)
 /obj/machinery/power/proc/add_queued_power_demand(amount)
 	if(!powernet)
 		return 0
@@ -81,11 +84,11 @@
 	powernet.queued_power_demand += amount
 	return amount
 
-/// Gets surplus power queued for next process cycle on this cables powernet
+/// Gets surplus power queued for next process cycle on this cables powernet (Watts)
 /obj/machinery/power/proc/get_queued_surplus()
 	return powernet?.calculate_queued_surplus()
 
-/// Gets available (NOT EXTRA) power queued for next process cycle on this machines powernet
+/// Gets available (NOT EXTRA) power queued for next process cycle on this machine's powernet (Watts)
 /obj/machinery/power/proc/get_queued_available_power()
 	return powernet?.queued_power_production
 

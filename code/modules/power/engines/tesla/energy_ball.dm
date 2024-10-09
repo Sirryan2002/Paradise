@@ -4,7 +4,8 @@
 #define COIL (ROD + 1)
 #define ROD (RIDE + 1)
 #define RIDE (LIVING + 1)
-#define LIVING (MACHINERY + 1)
+#define LIVING (APC + 1)
+#define APC (MACHINERY + 1)
 #define MACHINERY (BLOB + 1)
 #define BLOB (STRUCTURE + 1)
 #define STRUCTURE (1)
@@ -31,8 +32,15 @@
 	var/produced_power
 	var/energy_to_raise = 32
 	var/energy_to_lower = -20
-	var/list/shocked_things = list()
 	var/obj/singularity/energy_ball/parent_energy_ball
+	/// Turf where the tesla will move to if it's loose
+	var/turf/target_turf
+	/// Direction we have to go to go towards the target turf
+	var/movement_dir
+	/// Variable that defines whether it has a field generator close enough
+	var/has_close_field = FALSE
+	/// How many tiles do we move per movement step?
+	var/steps_per_move = 8
 
 /obj/singularity/energy_ball/Initialize(mapload, starting_energy = 50, is_miniball = FALSE)
 	miniball = is_miniball
@@ -45,6 +53,7 @@
 	else
 		// This gets added by the parent call
 		GLOB.poi_list -= src
+	all_possible_areas = findUnrestrictedEventArea()
 
 /obj/singularity/energy_ball/ex_act(severity, target)
 	return
@@ -65,7 +74,6 @@
 		GLOB.poi_list -= src
 
 	QDEL_LIST_CONTENTS(orbiting_balls)
-	shocked_things.Cut()
 	return ..()
 
 /obj/singularity/energy_ball/admin_investigate_setup()
@@ -77,13 +85,10 @@
 	if(!parent_energy_ball)
 		handle_energy()
 
-		move_the_basket_ball(4 + length(orbiting_balls) * 1.5)
-
 		playsound(loc, 'sound/magic/lightningbolt.ogg', 100, TRUE, extrarange = 30, channel = CHANNEL_ENGINE)
 
 		pixel_x = 0
 		pixel_y = 0
-		shocked_things.Cut(1, length(shocked_things) / 1.3)
 		var/list/shocking_info = list()
 		tesla_zap(src, 3, TESLA_DEFAULT_POWER, shocked_targets = shocking_info)
 
@@ -91,11 +96,10 @@
 		pixel_y = -32
 		for(var/ball in orbiting_balls)
 			var/range = rand(1, clamp(length(orbiting_balls), 2, 3))
-			var/list/temp_shock = list()
 			//We zap off the main ball instead of ourselves to make things looks proper
-			tesla_zap(src, range, TESLA_MINI_POWER / 7 * range, shocked_targets = temp_shock)
-			shocking_info += temp_shock
-		shocked_things += shocking_info
+			tesla_zap(src, range, TESLA_MINI_POWER / 7 * range)
+
+		move_the_basket_ball()
 	else
 		energy = 0 // ensure we dont have miniballs of miniballs //But it'll be cool broooooooooooooooo
 
@@ -104,22 +108,114 @@
 	if(length(orbiting_balls))
 		. += "There are [length(orbiting_balls)] mini-balls orbiting it."
 
-/obj/singularity/energy_ball/proc/move_the_basket_ball(move_amount)
-	var/list/dirs = GLOB.alldirs.Copy()
-	if(length(shocked_things))
-		for(var/i in 1 to 30)
-			var/atom/real_thing = pick(shocked_things)
-			dirs += get_dir(src, real_thing) //Carry some momentum yeah? Just a bit tho
-	for(var/i in 0 to move_amount)
-		var/move_dir = pick(dirs) //ensures teslas don't just sit around
-		if(target && prob(10))
-			move_dir = get_dir(src,target)
-		var/turf/T = get_step(src, move_dir)
+/obj/singularity/energy_ball/proc/move_the_basket_ball()
+	has_close_field = FALSE
+	for(var/i in 1 to length(GLOB.field_generator_fields))
+		var/temp_distance = get_dist(src, GLOB.field_generator_fields[i])
+		if(temp_distance <= 15)
+			has_close_field = TRUE
+			break
+	if(has_close_field)
+		var/turf/T = get_step(src, pick(GLOB.alldirs))
 		if(can_move(T))
 			forceMove(T)
-			setDir(move_dir)
 			for(var/mob/living/carbon/C in loc)
 				dust_mobs(C)
+		return
+
+	if(!target_turf || loc == target_turf)
+		find_the_basket()
+		return
+
+	var/turf/move_target = next_move_target()
+	movement_beam(move_target, 1.5 SECONDS)
+	sleep(0.5 SECONDS)
+	// MORE POWER
+	movement_beam(move_target, 1 SECONDS)
+	sleep(0.5 SECONDS)
+	walk_towards(src, move_target, 0, 10)
+
+/datum/move_with_corner
+	var/turf/start
+	var/turf/end
+	var/turf/corner
+	var/pre_corner_x_unit
+	var/pre_corner_y_unit
+	var/pre_corner_dist
+	var/post_corner_x_unit
+	var/post_corner_y_unit
+	var/post_corner_dist
+
+/datum/move_with_corner/New(atom/start_in, atom/end_in)
+	start = start_in
+	end = end_in
+	pre_corner_x_unit = (end.x > start.x) ? 1 : -1
+	pre_corner_y_unit = (end.y > start.y) ? 1 : -1
+	if(start.x == end.x)
+		// Moving along y
+		corner = end
+		pre_corner_x_unit = 0
+		pre_corner_dist = abs(start.y - end.y)
+		return
+	if(start.y == end.y)
+		// Moving along x
+		corner = end
+		pre_corner_y_unit = 0
+		pre_corner_dist = abs(start.x - end.x)
+		return
+
+	pre_corner_dist = min(abs(start.x-end.x), abs(start.y-end.y))
+	corner = locate(start.x + pre_corner_x_unit * pre_corner_dist, start.y + pre_corner_y_unit * pre_corner_dist, start.z)
+
+	if(start.x + pre_corner_x_unit * pre_corner_dist == end.x)
+		// x finished first, move along y
+		post_corner_x_unit = 0
+		post_corner_dist = abs(start.y - end.y) - pre_corner_dist
+	else
+		// y finished first, move along x
+		post_corner_y_unit = 0
+		post_corner_dist = abs(start.x - end.x) - pre_corner_dist
+
+/datum/move_with_corner/proc/get_early_end(dist)
+	if(dist <= pre_corner_dist)
+		return locate(start.x + pre_corner_x_unit * dist, start.y + pre_corner_y_unit * dist, start.z)
+	else if(dist == pre_corner_dist)
+		return corner
+	else if(dist >= pre_corner_dist + post_corner_dist)
+		return end
+
+	var/remaining_dist = dist - pre_corner_dist
+	return locate(corner.x + remaining_dist * post_corner_x_unit, corner.y + remaining_dist * post_corner_y_unit, corner.z)
+
+/obj/singularity/energy_ball/proc/next_move_target()
+	var/datum/move_with_corner/path = new(loc, target_turf)
+	return path.get_early_end(steps_per_move)
+
+/obj/singularity/energy_ball/proc/movement_beam(turf/move_target, duration)
+	var/datum/move_with_corner/path = new(loc, move_target)
+
+	loc.Beam(path.corner, "lightning[rand(1, 12)]", 'icons/effects/effects.dmi', duration, INFINITY)
+	if(path.corner != move_target)
+		path.corner.Beam(move_target, "lightning[rand(1, 12)]", 'icons/effects/effects.dmi', duration, INFINITY)
+
+/obj/singularity/energy_ball/proc/find_the_basket()
+	var/area/where_to_move = pick(all_possible_areas) // Grabs a random area that isn't restricted
+	var/turf/target_area_turfs = get_area_turfs(where_to_move) // Grabs the turfs from said area
+	target_turf = pick(target_area_turfs) // Grabs a single turf from the entire list
+
+/obj/singularity/energy_ball/Move(target, direction)
+	// Energy balls move through everything, make it a forceMove.
+	if(miniball)
+		return ..()
+	forceMove(target, direction)
+	return TRUE
+
+// This handles mobs crossing us. For us crossing mobs, see /mob/living/Crossed.
+// (It also dusts them.)
+/obj/singularity/energy_ball/Crossed(atom/thing)
+	if(isliving(thing))
+		var/mob/victim = thing
+		victim.dust()
 
 /obj/singularity/energy_ball/proc/handle_energy()
 	if(energy >= energy_to_raise)
@@ -255,8 +351,8 @@
 	//This also means we have no need to track distance, as the doview() proc does it all for us.
 
 	//Darkness fucks oview up hard. I've tried dview() but it doesn't seem to work
-	//I hate existance
-	for(var/a in typecache_filter_multi_list_exclusion(oview(zap_range + 2, source), things_to_shock, blacklisted_tesla_types))
+	//I hate existance // Range() lets us see through walls, please direct all screaming players to me - DGL
+	for(var/a in typecache_filter_multi_list_exclusion(range(zap_range + 2, source), things_to_shock, blacklisted_tesla_types))
 		var/atom/A = a
 		if(!(zap_flags & ZAP_ALLOW_DUPLICATES) && LAZYACCESS(shocked_targets, A))
 			continue
@@ -293,6 +389,13 @@
 			if(L.stat != DEAD && !(HAS_TRAIT(L, TRAIT_TESLA_SHOCKIMMUNE)) && !(L.flags_2 & SHOCKED_2))
 				closest_type = LIVING
 				closest_atom = A
+
+		else if(closest_type >= APC)
+			continue
+
+		else if(istype(A, /obj/machinery/power/apc))
+			closest_type = APC
+			closest_atom = A
 
 		else if(closest_type >= MACHINERY)
 			continue
@@ -357,12 +460,16 @@
 		tesla_zap(closest_atom, next_range, power * 0.5, zap_flags, shocked_targets)
 		shocked_targets += shocked_copy
 	else
-		tesla_zap(closest_atom, next_range, power, zap_flags, shocked_targets)
+		tesla_zap(closest_atom, next_range, power, zap_flags)
 
 #undef COIL
 #undef ROD
 #undef RIDE
 #undef LIVING
+#undef APC
 #undef MACHINERY
 #undef BLOB
 #undef STRUCTURE
+
+#undef TESLA_DEFAULT_POWER
+#undef TESLA_MINI_POWER

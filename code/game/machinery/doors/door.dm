@@ -22,6 +22,7 @@
 	// Whether the door is bolted or not.
 	var/locked = FALSE
 	var/glass = FALSE
+	var/reinforced_glass = FALSE
 	var/welded = FALSE
 	var/normalspeed = TRUE
 	var/auto_close_time = 150
@@ -36,6 +37,8 @@
 	var/unres_sides = 0
 	//Multi-tile doors
 	var/width = 1
+	/// List. Player view blocking fillers for multi-tile doors.
+	var/list/fillers
 	//Whether nonstandard door sounds (cmag laughter) are off cooldown.
 	var/sound_ready = TRUE
 	var/sound_cooldown = 1 SECONDS
@@ -45,10 +48,17 @@
 	var/polarized_glass = FALSE
 	var/polarized_on
 
+	/// How many levels of foam do we have on us? Capped at 5
+	var/foam_level = 0
+
+	/// How much this door reduces superconductivity to when closed.
+	var/superconductivity = DOOR_HEAT_TRANSFER_COEFFICIENT
+
+
 /obj/machinery/door/Initialize(mapload)
 	. = ..()
 	set_init_door_layer()
-	update_dir()
+	update_bounds()
 	update_freelook_sight()
 	spark_system = new /datum/effect_system/spark_spread
 	spark_system.set_up(2, 1, src)
@@ -61,7 +71,7 @@
 	explosion_block = EXPLOSION_BLOCK_PROC
 
 	update_icon()
-	air_update_turf(1)
+	recalculate_atmos_connectivity()
 
 /obj/machinery/door/proc/set_init_door_layer()
 	if(density)
@@ -71,32 +81,23 @@
 
 /obj/machinery/door/setDir(newdir)
 	..()
-	update_dir()
+	update_bounds()
 
 /obj/machinery/door/power_change()
 	if(!..())
 		return
 	update_icon()
 
-/obj/machinery/door/proc/update_dir()
-	if(width > 1)
-		if(dir in list(EAST, WEST))
-			bound_width = width * world.icon_size
-			bound_height = world.icon_size
-		else
-			bound_width = world.icon_size
-			bound_height = width * world.icon_size
-
 /obj/machinery/door/Destroy()
 	density = FALSE
-	air_update_turf(1)
+	recalculate_atmos_connectivity()
 	update_freelook_sight()
 	GLOB.airlocks -= src
 	QDEL_NULL(spark_system)
 	return ..()
 
 /obj/machinery/door/Bumped(atom/AM)
-	if(operating || emagged)
+	if(operating || emagged || foam_level)
 		return
 	if(ismob(AM))
 		var/mob/B = AM
@@ -104,9 +105,6 @@
 			return
 		if(isliving(AM))
 			var/mob/living/M = AM
-			if(world.time - M.last_bumped <= 10)
-				return	//Can bump-open one airlock per second. This is to prevent shock spam.
-			M.last_bumped = world.time
 			if(M.restrained() && !check_access(null))
 				return
 			if(M.mob_size > MOB_SIZE_TINY)
@@ -116,9 +114,6 @@
 	if(ismecha(AM))
 		var/obj/mecha/mecha = AM
 		if(density)
-			if(mecha.occupant)
-				if(world.time - mecha.occupant.last_bumped <= 10)
-					return
 			if(mecha.occupant && allowed(mecha.occupant) || check_access_list(mecha.operation_req_access))
 				if(HAS_TRAIT(src, TRAIT_CMAGGED))
 					cmag_switch(FALSE, mecha.occupant)
@@ -136,15 +131,9 @@
 	. = ..()
 	move_update_air(T)
 
-	if(width > 1)
-		if(dir in list(EAST, WEST))
-			bound_width = width * world.icon_size
-			bound_height = world.icon_size
-		else
-			bound_width = world.icon_size
-			bound_height = width * world.icon_size
+	update_bounds()
 
-/obj/machinery/door/CanPass(atom/movable/mover, turf/target, height=0)
+/obj/machinery/door/CanPass(atom/movable/mover, turf/target)
 	if(istype(mover))
 		if(mover.checkpass(PASSDOOR) && !locked)
 			return TRUE
@@ -152,13 +141,23 @@
 			return !opacity
 	return !density
 
-/obj/machinery/door/CanAtmosPass()
+/obj/machinery/door/CanAtmosPass(direction)
 	return !density
+
+/obj/machinery/door/get_superconductivity(direction)
+	if(!density)
+		return ..()
+	if(heat_proof)
+		return ZERO_HEAT_TRANSFER_COEFFICIENT
+	return superconductivity
 
 /obj/machinery/door/proc/bumpopen(mob/user)
 	if(operating)
 		return
 	add_fingerprint(user)
+
+	if(foam_level)
+		return
 
 	if(density && !emagged)
 		if(allowed(user))
@@ -182,8 +181,12 @@
 	if(isterrorspider(user))
 		return
 
+	if(foam_level)
+		return
+
 	if(!HAS_TRAIT(user, TRAIT_FORCE_DOORS))
 		return FALSE
+
 	var/datum/antagonist/vampire/V = user.mind?.has_antag_datum(/datum/antagonist/vampire)
 	if(V && HAS_TRAIT_FROM(user, TRAIT_FORCE_DOORS, VAMPIRE_TRAIT))
 		if(!V.bloodusable)
@@ -219,7 +222,7 @@
 
 /obj/machinery/door/proc/try_to_activate_door(mob/user)
 	add_fingerprint(user)
-	if(operating || emagged)
+	if(operating || emagged || foam_level)
 		return
 	if(requiresID() && (allowed(user) || user.can_advanced_admin_interact()))
 		if(density)
@@ -360,7 +363,7 @@
 			else
 				flick("doorc1", src)
 		if("deny")
-			if(!stat)
+			if(stat == CONSCIOUS)
 				flick("door_deny", src)
 
 /obj/machinery/door/proc/open()
@@ -372,14 +375,20 @@
 	operating = DOOR_OPENING
 	do_animate("opening")
 	set_opacity(0)
+	if(width > 1)
+		set_fillers_opacity(0)
 	sleep(5)
 	density = FALSE
+	if(width > 1)
+		set_fillers_density(FALSE)
 	sleep(5)
 	layer = initial(layer)
 	update_icon()
 	set_opacity(0)
+	if(width > 1)
+		set_fillers_opacity(0)
 	operating = NONE
-	air_update_turf(1)
+	recalculate_atmos_connectivity()
 	update_freelook_sight()
 	if(autoclose)
 		autoclose_in(normalspeed ? auto_close_time : auto_close_time_dangerous)
@@ -405,12 +414,16 @@
 	layer = closingLayer
 	sleep(5)
 	density = TRUE
+	if(width > 1)
+		set_fillers_density(TRUE)
 	sleep(5)
 	update_icon()
 	if(!glass || polarized_on)
 		set_opacity(TRUE)
+		if(width > 1)
+			set_fillers_opacity(TRUE)
 	operating = NONE
-	air_update_turf(1)
+	recalculate_atmos_connectivity()
 	update_freelook_sight()
 	if(safe)
 		CheckForMobs()
@@ -502,3 +515,101 @@
 /obj/machinery/door/zap_act(power, zap_flags)
 	zap_flags &= ~ZAP_OBJ_DAMAGE
 	. = ..()
+
+/obj/machinery/door/CanPathfindPass(to_dir, datum/can_pass_info/pass_info)
+	if(!locateUID(pass_info.caller_uid))
+		return ..()
+	if(pass_info.pass_flags & PASSDOOR && !locked)
+		return TRUE
+	if(pass_info.pass_flags & PASSGLASS)
+		return !opacity
+	return ..()
+
+/**
+ * Checks which way the airlock is facing and adjusts the direction accordingly.
+ * For use with multi-tile airlocks.
+ */
+/obj/machinery/door/proc/get_adjusted_dir(dir)
+	if(dir in list(EAST, WEST))
+		return EAST
+	else
+		return NORTH
+
+/**
+ * Sets the bounds of the airlock. For use with multi-tile airlocks.
+ * If the airlock is multi-tile, it will set the bounds to be the size of the airlock.
+ * If the airlock doesn't already have fillers, it will create them.
+ * If the airlock already has fillers, it will move them to the correct location.
+ */
+/obj/machinery/door/proc/update_bounds()
+	if(width <= 1)
+		return
+
+	QDEL_LIST_CONTENTS(fillers)
+
+	if(dir in list(EAST, WEST))
+		bound_width = width * world.icon_size
+		bound_height = world.icon_size
+	else
+		bound_width = world.icon_size
+		bound_height = width * world.icon_size
+
+	LAZYINITLIST(fillers)
+
+	var/adjusted_dir = get_adjusted_dir(dir)
+	var/obj/last_filler = src
+	for(var/i = 1, i < width, i++)
+		var/obj/airlock_filler_object/filler
+
+		if(length(fillers) < i)
+			filler = new
+			filler.pair_airlock(src)
+			fillers.Add(filler)
+		else
+			filler = fillers[i]
+
+		filler.loc = get_step(last_filler, adjusted_dir)
+		filler.density = density
+		filler.set_opacity(opacity)
+
+		last_filler = filler
+
+/obj/machinery/door/proc/set_fillers_density(density)
+	if(!length(fillers))
+		return
+
+	for(var/obj/airlock_filler_object/filler as anything in fillers)
+		filler.density = density
+
+/obj/machinery/door/proc/set_fillers_opacity(opacity)
+	if(!length(fillers))
+		return
+
+	for(var/obj/airlock_filler_object/filler as anything in fillers)
+		filler.set_opacity(opacity)
+
+#define MAX_FOAM_LEVEL 5
+// Adds foam to the airlock, which will block it from being opened
+/obj/machinery/door/proc/foam_up()
+	if(!foam_level)
+		new /obj/structure/barricade/foam(get_turf(src))
+		foam_level++
+		return
+
+	if(foam_level == MAX_FOAM_LEVEL)
+		return
+
+	for(var/obj/structure/barricade/foam/blockage in loc.contents)
+		blockage.foam_level = min(++blockage.foam_level, 5)
+		// The last level will increase the integrity by 50 instead of 25
+		if(foam_level == 4)
+			blockage.obj_integrity += 50
+			blockage.max_integrity += 50
+		else
+			blockage.obj_integrity += 25
+			blockage.max_integrity += 25
+		foam_level++
+		blockage.icon_state = "foamed_[foam_level]"
+		blockage.update_icon_state()
+
+#undef MAX_FOAM_LEVEL

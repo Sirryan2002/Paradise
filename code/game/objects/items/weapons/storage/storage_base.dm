@@ -26,8 +26,8 @@
 	var/max_combined_w_class = 14
 	/// The number of storage slots in this container.
 	var/storage_slots = 7
-	var/obj/screen/storage/boxes = null
-	var/obj/screen/close/closer = null
+	var/atom/movable/screen/storage/boxes = null
+	var/atom/movable/screen/close/closer = null
 
 	/// Set this to make it possible to use this item in an inverse way, so you can have the item in your hand and click items on the floor to pick them up.
 	var/use_to_pickup = FALSE
@@ -41,7 +41,6 @@
 	var/pickup_all_on_tile = TRUE
 	/// Sound played when used. `null` for no sound.
 	var/use_sound = "rustle"
-
 	/// What kind of [/obj/item/stack] can this be folded into. (e.g. Boxes and cardboard)
 	var/foldable = null
 	/// How much of the stack item do you get.
@@ -50,36 +49,31 @@
 	/// Lazy list of mobs which are currently viewing the storage inventory.
 	var/list/mobs_viewing
 
+	// Allow storage items of the same size to be put inside
+	var/allow_same_size = FALSE
+
 /obj/item/storage/Initialize(mapload)
 	. = ..()
 	can_hold = typecacheof(can_hold)
 	cant_hold = typecacheof(cant_hold) - typecacheof(cant_hold_override)
 
-	if(allow_quick_empty)
-		verbs += /obj/item/storage/verb/quick_empty
-	else
-		verbs -= /obj/item/storage/verb/quick_empty
-
-	if(allow_quick_gather)
-		verbs += /obj/item/storage/verb/toggle_gathering_mode
-	else
-		verbs -= /obj/item/storage/verb/toggle_gathering_mode
-
 	populate_contents()
 
-	boxes = new /obj/screen/storage()
+	boxes = new /atom/movable/screen/storage()
 	boxes.name = "storage"
 	boxes.master = src
 	boxes.icon_state = "block"
 	boxes.screen_loc = "7,7 to 10,8"
 	boxes.layer = HUD_LAYER
 	boxes.plane = HUD_PLANE
-	closer = new /obj/screen/close()
+	closer = new /atom/movable/screen/close()
 	closer.master = src
 	closer.icon_state = "backpack_close"
 	closer.layer = ABOVE_HUD_LAYER
 	closer.plane = ABOVE_HUD_PLANE
 	orient2hud()
+
+	ADD_TRAIT(src, TRAIT_ADJACENCY_TRANSPARENT, ROUNDSTART_TRAIT)
 
 /obj/item/storage/Destroy()
 	for(var/obj/O in contents)
@@ -89,6 +83,13 @@
 	QDEL_NULL(closer)
 	LAZYCLEARLIST(mobs_viewing)
 	return ..()
+
+/obj/item/storage/examine(mob/user)
+	. = ..()
+	if(allow_quick_empty)
+		. += "<span class='notice'>You can use [src] in hand to empty it's entire contents.</span>"
+	if(allow_quick_gather)
+		. += "<span class='notice'>You can <b>Alt-Shift-Click</b> [src] to switch it's gathering method.</span>"
 
 /obj/item/storage/forceMove(atom/destination)
 	. = ..()
@@ -112,7 +113,7 @@
 	if(over_object == M && Adjacent(M)) // this must come before the screen objects only block
 		if(M.s_active)
 			M.s_active.close(M)
-		show_to(M)
+		open(M)
 		return
 
 	if((istype(over_object, /obj/structure/table) || isfloorturf(over_object)) && length(contents) \
@@ -124,7 +125,7 @@
 		if(isfloorturf(over_object))
 			if(get_turf(M) != T)
 				return // Can only empty containers onto the floor under you
-			if(alert(M, "Empty [src] onto [T]?", "Confirm", "Yes", "No") != "Yes")
+			if(tgui_alert(M, "Empty [src] onto [T]?", "Confirm", list("Yes", "No")) != "Yes")
 				return
 			if(!(M && over_object && length(contents) && loc == M && !M.stat && !M.restrained() && !HAS_TRAIT(M, TRAIT_HANDS_BLOCKED) && get_turf(M) == T))
 				return // Something happened while the player was thinking
@@ -137,11 +138,10 @@
 		update_icon() // For content-sensitive icons
 		return
 
-	if(!(istype(over_object, /obj/screen)))
+	if(!is_screen_atom(over_object))
 		return ..()
 	if(!(loc == M) || (loc && loc.loc == M))
 		return
-	playsound(loc, "rustle", 50, 1, -5)
 	if(!M.restrained() && !M.stat)
 		switch(over_object.name)
 			if("r_hand")
@@ -157,13 +157,11 @@
 	if(over_object == usr && in_range(src, usr) || usr.contents.Find(src))
 		if(usr.s_active)
 			usr.s_active.close(usr)
-		show_to(usr)
+		open(usr)
 
 /obj/item/storage/AltClick(mob/user)
-	. = ..()
 	if(ishuman(user) && Adjacent(user) && !user.incapacitated(FALSE, TRUE))
-		show_to(user)
-		playsound(loc, "rustle", 50, TRUE, -5)
+		open(user)
 		add_fingerprint(user)
 	else if(isobserver(user))
 		show_to(user)
@@ -201,14 +199,11 @@
 	orient2hud(user) // this only needs to happen to make .contents show properly as screen objects.
 	if(user.s_active)
 		user.s_active.hide_from(user) // If there's already an interface open, close it.
-	user.client.screen -= boxes
-	user.client.screen -= closer
-	user.client.screen -= contents
-	user.client.screen += boxes
-	user.client.screen += closer
-	user.client.screen += contents
+	user.client.screen |= boxes
+	user.client.screen |= closer
+	user.client.screen |= contents
 	user.s_active = src
-	LAZYADDOR(mobs_viewing, user)
+	LAZYDISTINCTADD(mobs_viewing, user)
 
 /**
   * Hides the current container interface from `user`.
@@ -236,12 +231,21 @@
 /obj/item/storage/proc/update_viewers()
 	for(var/_M in mobs_viewing)
 		var/mob/M = _M
-		if(!QDELETED(M) && M.s_active == src && (M in range(1, loc)))
+		if(!QDELETED(M) && M.s_active == src && Adjacent(M))
 			continue
 		hide_from(M)
+	for(var/obj/item/storage/child in src)
+		child.update_viewers()
+
+/obj/item/storage/Moved(atom/oldloc, dir, forced = FALSE)
+	. = ..()
+	update_viewers()
 
 /obj/item/storage/proc/open(mob/user)
-	if(use_sound)
+	if(isobserver(user))
+		show_to(user)
+		return
+	if(use_sound && isliving(user))
 		playsound(loc, use_sound, 50, TRUE, -5)
 
 	if(user.s_active)
@@ -331,7 +335,7 @@
 		for(var/obj/item/I in contents)
 			var/found = FALSE
 			for(var/datum/numbered_display/ND in numbered_contents)
-				if(ND.sample_object.type == I.type && ND.sample_object.name == I.name)
+				if(ND.sample_object.should_stack_with(I))
 					ND.number++
 					found = TRUE
 					break
@@ -410,7 +414,7 @@
 		return FALSE
 
 	if(I.w_class >= w_class && isstorage(I))
-		if(!istype(src, /obj/item/storage/backpack/holding))	//BoHs should be able to hold backpacks again. The override for putting a BoH in a BoH is in backpack.dm.
+		if(!allow_same_size)	//BoHs should be able to hold backpacks again. The override for putting a BoH in a BoH is in backpack.dm.
 			if(!stop_messages)
 				to_chat(usr, "<span class='warning'>[src] cannot hold [I] as it's a storage item of the same size.</span>")
 			return FALSE //To prevent the stacking of same sized storage items.
@@ -427,47 +431,61 @@
   * This doesn't perform any checks of whether an item can be inserted. That's done by [/obj/item/storage/proc/can_be_inserted]
   * Arguments:
   * * obj/item/I - The item to be inserted
+  * * mob/user - The mob performing the insertion
   * * prevent_warning - Stop the insertion message being displayed. Intended for cases when you are inserting multiple items at once.
   */
-/obj/item/storage/proc/handle_item_insertion(obj/item/I, prevent_warning = FALSE)
+/obj/item/storage/proc/handle_item_insertion(obj/item/I, mob/user, prevent_warning = FALSE)
 	if(!istype(I))
 		return FALSE
-	if(usr)
-		if(!usr.unEquip(I, silent = TRUE))
+	if(user)
+		if(!Adjacent(user) && !isnewplayer(user))
 			return FALSE
-		usr.update_icons()	//update our overlays
-	if(silent)
+		if(!user.unEquip(I, silent = TRUE))
+			return FALSE
+		user.update_icons()	//update our overlays
+	if(QDELING(I))
+		return FALSE
+	if(silent || HAS_TRAIT(I, TRAIT_SILENT_INSERTION))
 		prevent_warning = TRUE
 	I.forceMove(src)
 	if(QDELING(I))
 		return FALSE
 	I.on_enter_storage(src)
-	if(QDELING(I))
-		return FALSE
 
 	for(var/_M in mobs_viewing)
 		var/mob/M = _M
 		if((M.s_active == src) && M.client)
 			M.client.screen += I
+	if(user)
+		if(user.client && user.s_active != src)
+			user.client.screen -= I
+		if(length(user.observers))
+			for(var/mob/observer in user.observers)
+				if(observer.client && observer.s_active != src)
+					observer.client.screen -= I
+		I.dropped(user, TRUE)
+	add_fingerprint(user)
 
-	if(usr)
-		if(usr.client && usr.s_active != src)
-			usr.client.screen -= I
-		I.dropped(usr, TRUE)
-		add_fingerprint(usr)
+	if(!prevent_warning)
+		// all mobs with clients attached, sans the item's user
 
-		if(!prevent_warning && !istype(I, /obj/item/gun/energy/kinetic_accelerator/crossbow))
-			for(var/mob/M in viewers(usr, null))
-				if(M == usr)
-					to_chat(usr, "<span class='notice'>You put [I] into [src].</span>")
-				else if(M in range(1)) //If someone is standing close enough, they can tell what it is...
-					M.show_message("<span class='notice'>[usr] puts [I] into [src].</span>")
-				else if(I && I.w_class >= WEIGHT_CLASS_NORMAL) //Otherwise they can only see large or normal items from a distance...
-					M.show_message("<span class='notice'>[usr] puts [I] into [src].</span>")
+		// the item's user will always get a notification
+		to_chat(user, "<span class='notice'>You put [I] into [src].</span>")
 
-		orient2hud(usr)
-		if(usr.s_active)
-			usr.s_active.show_to(usr)
+		// if the item less than normal sized, only people within 1 tile get the message, otherwise, everybody in view gets it
+		if(I.w_class < WEIGHT_CLASS_NORMAL)
+			for(var/mob/M in range(1, user))
+				if(in_range(M, user))
+					M.show_message("<span class='notice'>[user] puts [I] into [src].</span>")
+		else
+			// restrict player list to include only those in view
+			for(var/mob/M in oviewers(7, user))
+				M.show_message("<span class='notice'>[user] puts [I] into [src].</span>")
+
+	orient2hud(user)
+	if(user.s_active)
+		user.s_active.show_to(user)
+
 	I.mouse_opacity = MOUSE_OPACITY_OPAQUE //So you can click on the area around the item to equip it, instead of having to pixel hunt
 	I.in_inventory = TRUE
 	update_icon()
@@ -514,7 +532,6 @@
 		I.maptext = ""
 	I.on_exit_storage(src)
 	update_icon()
-	I.mouse_opacity = initial(I.mouse_opacity)
 	return TRUE
 
 /obj/item/storage/Exited(atom/A, loc)
@@ -536,6 +553,8 @@
 		var/obj/item/hand_labeler/labeler = I
 		if(labeler.mode)
 			return FALSE
+	if(user.a_intent != INTENT_HELP && issimulatedturf(loc)) // Stops you from putting your baton in the storage on accident
+		return FALSE
 	. = TRUE //no afterattack
 	if(isrobot(user))
 		return //Robots can't interact with storage items.
@@ -545,12 +564,9 @@
 			return TRUE
 		return FALSE
 
-	handle_item_insertion(I)
-
+	handle_item_insertion(I, user)
 
 /obj/item/storage/attack_hand(mob/user)
-	playsound(loc, "rustle", 50, TRUE, -5)
-
 	if(ishuman(user))
 		var/mob/living/carbon/human/H = user
 		if(!H.get_active_hand())
@@ -567,7 +583,7 @@
 	if(loc == user)
 		if(user.s_active)
 			user.s_active.close(user)
-		show_to(user)
+		open(user)
 	else
 		..()
 	add_fingerprint(user)
@@ -582,9 +598,7 @@
 		show_to(user)
 	return ..()
 
-/obj/item/storage/verb/toggle_gathering_mode()
-	set name = "Switch Gathering Method"
-	set category = "Object"
+/obj/item/storage/AltShiftClick(mob/living/carbon/human/user)
 
 	pickup_all_on_tile = !pickup_all_on_tile
 	switch(pickup_all_on_tile)
@@ -592,17 +606,6 @@
 			to_chat(usr, "[src] now picks up all items in a tile at once.")
 		if(FALSE)
 			to_chat(usr, "[src] now picks up one item at a time.")
-
-/obj/item/storage/verb/quick_empty()
-	set name = "Empty Contents"
-	set category = "Object"
-
-	if((!ishuman(usr) && (loc != usr)) || usr.stat || usr.restrained())
-		return
-	if(!removal_allowed_check(usr))
-		return
-
-	drop_inventory(usr)
 
 /obj/item/storage/proc/drop_inventory(user)
 	var/turf/T = get_turf(src)
@@ -720,7 +723,7 @@
 		// But then again a tesseract would destroy the server anyways
 		// Also I wish I could just insert a list instead of it reading it the wrong way
 		content_list.len++
-		content_list[content_list.len] = AM.serialize()
+		content_list[length(content_list)] = AM.serialize()
 	return data
 
 /obj/item/storage/deserialize(list/data)

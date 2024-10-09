@@ -13,7 +13,7 @@
 	density = FALSE
 	max_integrity = 300
 	resistance_flags = FIRE_PROOF
-	heat_proof = TRUE
+	heat_proof = FALSE
 	glass = TRUE
 	explosion_block = 1
 	safe = FALSE
@@ -23,6 +23,7 @@
 	assemblytype = /obj/structure/firelock_frame
 	blocks_emissive = EMISSIVE_BLOCK_GENERIC
 	armor = list(MELEE = 30, BULLET = 30, LASER = 20, ENERGY = 20, BOMB = 10, RAD = 100, FIRE = 95, ACID = 70)
+	superconductivity = ZERO_HEAT_TRANSFER_COEFFICIENT
 	/// How long does opening by hand take, in deciseconds.
 	var/manual_open_time = 5 SECONDS
 	var/can_crush = TRUE
@@ -289,6 +290,14 @@
 		F.update_icon()
 	qdel(src)
 
+/obj/machinery/door/firedoor/CanPass(atom/movable/mover, turf/target)
+	if(..())
+		return TRUE
+	if(isliving(mover) && !locked)
+		var/mob/living/living_mover = mover
+		if(HAS_TRAIT(living_mover, TRAIT_CONTORTED_BODY) && IS_HORIZONTAL(living_mover))
+			return TRUE
+
 /obj/machinery/door/firedoor/border_only
 	icon = 'icons/obj/doors/edge_doorfire.dmi'
 	flags = ON_BORDER
@@ -299,7 +308,7 @@
 	opacity = TRUE
 	density = TRUE
 
-/obj/machinery/door/firedoor/border_only/CanPass(atom/movable/mover, turf/target, height=0)
+/obj/machinery/door/firedoor/border_only/CanPass(atom/movable/mover, turf/target)
 	if(istype(mover) && mover.checkpass(PASSGLASS))
 		return 1
 	if(get_dir(loc, target) == dir) //Make sure looking at appropriate border
@@ -313,13 +322,17 @@
 	if(get_dir(loc, target) == dir)
 		return !density
 	else
-		return 1
+		return TRUE
 
-/obj/machinery/door/firedoor/border_only/CanAtmosPass(turf/T)
-	if(get_dir(loc, T) == dir)
+/obj/machinery/door/firedoor/border_only/CanAtmosPass(direction)
+	if(direction == dir)
 		return !density
-	else
-		return 1
+	return TRUE
+
+/obj/machinery/door/firedoor/border_only/get_superconductivity(direction)
+	if(direction == dir && density)
+		return FALSE
+	return ..()
 
 /obj/machinery/door/firedoor/temperature_expose(datum/gas_mixture/air, exposed_temperature, exposed_volume)
 	..()
@@ -330,7 +343,6 @@
 	name = "heavy firelock"
 	icon = 'icons/obj/doors/doorfire.dmi'
 	glass = FALSE
-	opacity = TRUE
 	explosion_block = 2
 	assemblytype = /obj/structure/firelock_frame/heavy
 	max_integrity = 550

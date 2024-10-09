@@ -1,5 +1,6 @@
 /obj/structure/girder
 	name = "girder"
+	desc = "The basis of any wall, and therefore any space station or ship."
 	icon_state = "girder"
 	anchored = TRUE
 	density = TRUE
@@ -13,6 +14,10 @@
 	var/metalUsed = 2 //used to determine amount returned in deconstruction
 	var/metal_type = /obj/item/stack/sheet/metal
 
+/obj/structure/girder/Initialize(mapload)
+	. = ..()
+	AddComponent(/datum/component/debris, DEBRIS_SPARKS, -20, 10)
+
 /obj/structure/girder/examine(mob/user)
 	. = ..()
 	switch(state)
@@ -21,14 +26,14 @@
 		if(GIRDER_REINF_STRUTS)
 			. += "<span class='notice'>The support struts are <i>unscrewed</i> and the inner <b>grille</b> is intact.</span>"
 		if(GIRDER_NORMAL)
-			if(can_displace)
-				. += "<span class='notice'>The bolts are <b>lodged</b> in place.</span>"
+			. += "<span class='notice'>The bolts are <b>lodged</b> in place.</span>"
 		if(GIRDER_DISPLACED)
 			. += "<span class='notice'>The bolts are <i>loosened</i>, but the <b>screws</b> are holding [src] together.</span>"
 		if(GIRDER_DISASSEMBLED)
 			. += "<span class='notice'>[src] is disassembled! You probably shouldn't be able to see this examine message.</span>"
 	. += "<span class='notice'>Various types of metal sheets can be used on this to create different kinds of walls.</span>"
-	. += "<span class='notice'>Apply a crowbar to this item to cause any walls to be made to be false walls. Use a wrench on this item to deconstruct it.</span>"
+	if(can_displace)
+		. += "<span class='notice'>Apply a crowbar to this item to cause any walls to be made to be false walls. Use a wrench on this item to deconstruct it.</span>"
 
 
 /obj/structure/girder/proc/refundMetal(metalAmount) //refunds metal used in construction when deconstructed
@@ -64,7 +69,7 @@
 		refundMetal(metalUsed)
 		qdel(src)
 
-	else if(istype(W, /obj/item/twohanded/required/pyro_claws))
+	else if(istype(W, /obj/item/pyro_claws))
 		playsound(loc, W.usesound, 100, 1)
 		to_chat(user, "<span class='notice'>You melt the girder!</span>")
 		refundMetal(metalUsed)
@@ -77,11 +82,17 @@
 		if(!isfloorturf(loc))
 			to_chat(user, "<span class='warning'>A floor must be present to build a false wall!</span>")
 			return
-		if (locate(/obj/structure/falsewall) in loc.contents)
+		if(locate(/obj/structure/falsewall) in loc.contents)
 			to_chat(user, "<span class='warning'>There is already a false wall present!</span>")
+			return
+		if(islava(loc))
+			to_chat(user, "<span class='warning'>You can't do that while [src] is in lava!</span>")
 			return
 		if(istype(W, /obj/item/stack/sheet/runed_metal))
 			to_chat(user, "<span class='warning'>You can't seem to make the metal bend.</span>")
+			return
+		if(istype(W, /obj/item/stack/sheet/bamboo)) // pending wall resprite(tm)
+			to_chat(user, "<span class='warning'>The bamboo doesn't seem to fit around the girder.</span>")
 			return
 
 		if(istype(W,/obj/item/stack/rods))
@@ -104,7 +115,7 @@
 					to_chat(user, "<span class='warning'>You need at least five rods to add plating!</span>")
 					return
 				to_chat(user, "<span class='notice'>You start adding plating...</span>")
-				if (do_after(user, 40, target = src))
+				if(do_after(user, 40, target = src))
 					if(!loc || !S || S.get_amount() < 5)
 						return
 					S.use(5)
@@ -395,22 +406,21 @@
 		refundMetal(metalUsed)
 		qdel(src)
 
-/obj/structure/girder/CanPass(atom/movable/mover, turf/target, height=0)
-	if(height==0)
-		return 1
+/obj/structure/girder/CanPass(atom/movable/mover, turf/target)
+	if(istype(mover) && mover.checkpass(PASSGIRDER))
+		return TRUE
 	if(istype(mover) && mover.checkpass(PASSGRILLE))
 		return prob(girderpasschance)
 	else
-		if(istype(mover, /obj/item/projectile))
+		if(isprojectile(mover))
 			return prob(girderpasschance)
 		else
 			return 0
 
-/obj/structure/girder/CanPathfindPass(obj/item/card/id/ID, dir, caller, no_id = FALSE)
+/obj/structure/girder/CanPathfindPass(to_dir, datum/can_pass_info/pass_info)
 	. = !density
-	if(ismovable(caller))
-		var/atom/movable/mover = caller
-		. = . || mover.checkpass(PASSGRILLE)
+	if(pass_info.is_movable)
+		. = . || pass_info.pass_flags & PASSGRILLE
 
 /obj/structure/girder/deconstruct(disassembled = TRUE)
 	if(!(flags & NODECONSTRUCT))
@@ -427,6 +437,7 @@
 	name = "displaced girder"
 	icon_state = "displaced"
 	anchored = FALSE
+	can_displace = FALSE
 	state = GIRDER_DISPLACED
 	girderpasschance = 25
 	max_integrity = 120
@@ -435,6 +446,7 @@
 	name = "reinforced girder"
 	icon_state = "reinforced"
 	state = GIRDER_REINF
+	can_displace = FALSE
 	girderpasschance = 0
 	max_integrity = 350
 
@@ -449,11 +461,11 @@
 
 /obj/structure/girder/cult/Initialize(mapload)
 	. = ..()
-	icon_state = SSticker.cultdat?.cult_girder_icon_state
+	icon_state = GET_CULT_DATA(cult_girder_icon_state, initial(icon_state))
 
 /obj/structure/girder/cult/attackby(obj/item/W, mob/user, params)
 	add_fingerprint(user)
-	if(istype(W, /obj/item/melee/cultblade/dagger) && iscultist(user)) //Cultists can demolish cult girders instantly with their dagger
+	if(istype(W, /obj/item/melee/cultblade/dagger) && IS_CULTIST(user)) //Cultists can demolish cult girders instantly with their dagger
 		user.visible_message("<span class='warning'>[user] strikes [src] with [W]!</span>", "<span class='notice'>You demolish [src].</span>")
 		refundMetal(metalUsed)
 		qdel(src)

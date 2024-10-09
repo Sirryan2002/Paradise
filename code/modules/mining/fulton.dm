@@ -24,14 +24,14 @@ GLOBAL_LIST_EMPTY(total_extraction_beacons)
 		if(EP.beacon_network in beacon_networks)
 			possible_beacons += EP
 
-	if(!possible_beacons.len)
+	if(!length(possible_beacons))
 		to_chat(user, "There are no extraction beacons in existence!")
 		return
 
 	else
 		var/A
 
-		A = input("Select a beacon to connect to", "Balloon Extraction Pack", A) as null|anything in possible_beacons
+		A = tgui_input_list(user, "Select a beacon to connect to", "Balloon Extraction Pack", possible_beacons)
 
 		if(!A)
 			return
@@ -48,6 +48,9 @@ GLOBAL_LIST_EMPTY(total_extraction_beacons)
 		if(!area.outdoors)
 			to_chat(user, "<span class='warning'>[src] can only be used on things that are outdoors!</span>")
 			return
+		if(area.tele_proof || !is_teleport_allowed(A.z))
+			to_chat(user, "<span class='warning'>Bluespace distortions prevent the fulton from inflating!</span>")
+			return
 	if(!flag)
 		return
 	if(!istype(A))
@@ -63,10 +66,7 @@ GLOBAL_LIST_EMPTY(total_extraction_beacons)
 		to_chat(user, "<span class='notice'>You start attaching the pack to [A]...</span>")
 		if(do_after(user, 50, target = A))
 			to_chat(user, "<span class='notice'>You attach the pack to [A] and activate it.</span>")
-			if(loc == user && istype(user.back, /obj/item/storage/backpack))
-				var/obj/item/storage/backpack/B = user.back
-				if(B.can_be_inserted(src, stop_messages = TRUE))
-					B.handle_item_insertion(src)
+			user.equip_to_slot_if_possible(src, SLOT_HUD_IN_BACKPACK, FALSE, TRUE)
 			uses_left--
 			if(uses_left <= 0)
 				user.drop_item(src)
@@ -77,7 +77,7 @@ GLOBAL_LIST_EMPTY(total_extraction_beacons)
 			if(isliving(A))
 				var/mob/living/M = A
 				M.Weaken(32 SECONDS) // Keep them from moving during the duration of the extraction
-				M.buckled = 0 // Unbuckle them to prevent anchoring problems
+				unbuckle_mob(M, force = TRUE) // Unbuckle them to prevent anchoring problems
 			else
 				A.anchored = TRUE
 				A.density = FALSE
@@ -94,7 +94,7 @@ GLOBAL_LIST_EMPTY(total_extraction_beacons)
 			balloon.appearance_flags = RESET_COLOR | RESET_ALPHA | RESET_TRANSFORM
 			holder_obj.cut_overlay(balloon2)
 			holder_obj.add_overlay(balloon)
-			playsound(holder_obj.loc, 'sound/items/fultext_deploy.ogg', 50, 1, -3)
+			playsound(holder_obj.loc, 'sound/items/fultext_deploy.ogg', 50, TRUE, -3)
 			animate(holder_obj, pixel_z = 10, time = 20)
 			sleep(20)
 			animate(holder_obj, pixel_z = 15, time = 10)
@@ -105,7 +105,7 @@ GLOBAL_LIST_EMPTY(total_extraction_beacons)
 			sleep(10)
 			animate(holder_obj, pixel_z = 10, time = 10)
 			sleep(10)
-			playsound(holder_obj.loc, 'sound/items/fultext_launch.ogg', 50, 1, -3)
+			playsound(holder_obj.loc, 'sound/items/fultext_launch.ogg', 50, TRUE, -3)
 			animate(holder_obj, pixel_z = 1000, time = 30)
 			if(ishuman(A))
 				var/mob/living/carbon/human/L = A
@@ -180,6 +180,10 @@ GLOBAL_LIST_EMPTY(total_extraction_beacons)
 	name = "extraction holder"
 	desc = "you shouldnt see this"
 	var/atom/movable/stored_obj
+
+/obj/effect/extraction_holder/Initialize()
+	. = ..()
+	ADD_TRAIT(src, TRAIT_EFFECT_CAN_TELEPORT, ROUNDSTART_TRAIT)
 
 /obj/item/extraction_pack/proc/check_for_living_mobs(atom/A)
 	if(isliving(A))

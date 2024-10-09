@@ -4,10 +4,8 @@
 #define RAD_COLLECTOR_STORED_OUT 0.04	// (this * 100)% of stored power outputted per tick. Doesn't actualy change output total, lower numbers just means collectors output for longer in absence of a source
 #define RAD_COLLECTOR_OUTPUT min(stored_energy, (stored_energy * RAD_COLLECTOR_STORED_OUT) + 1000) //Produces at least 1000 watts if it has more than that stored
 
-GLOBAL_LIST_EMPTY(rad_collectors)
-
 /obj/machinery/power/rad_collector
-	name = "\improper radiation collector array"
+	name = "radiation collector array"
 	desc = "A device which uses Hawking Radiation and plasma to produce power."
 	icon = 'icons/obj/singularity.dmi'
 	icon_state = "ca"
@@ -26,24 +24,16 @@ GLOBAL_LIST_EMPTY(rad_collectors)
 	var/drainratio = 1
 	var/powerproduction_drain = 0.001
 
-/obj/machinery/power/rad_collector/Initialize(mapload)
-	. = ..()
-	GLOB.rad_collectors += src
-
-/obj/machinery/power/rad_collector/Destroy()
-	GLOB.rad_collectors -= src
-	return ..()
-
 /obj/machinery/power/rad_collector/process()
 	if(!loaded_tank)
 		return
-	if(!loaded_tank.air_contents.toxins)
+	if(!loaded_tank.air_contents.toxins())
 		investigate_log("<font color='red'>out of fuel</font>.", "singulo")
 		playsound(src, 'sound/machines/ding.ogg', 50, TRUE)
 		eject()
 	else
-		var/gasdrained = min(powerproduction_drain * drainratio, loaded_tank.air_contents.toxins)
-		loaded_tank.air_contents.toxins -= gasdrained
+		var/gasdrained = min(powerproduction_drain * drainratio, loaded_tank.air_contents.toxins())
+		loaded_tank.air_contents.set_toxins(loaded_tank.air_contents.toxins() - gasdrained)
 
 		var/power_produced = RAD_COLLECTOR_OUTPUT
 		produce_direct_power(power_produced)
@@ -55,15 +45,31 @@ GLOBAL_LIST_EMPTY(rad_collectors)
 		if(!locked)
 			toggle_power()
 			user.visible_message("[user.name] turns the [name] [active ? "on" : "off"].", "You turn the [name] [active ? "on" : "off"].")
-			investigate_log("turned [active ? "<font color='green'>on</font>" : "<font color='red'>off</font>"] by [user.key]. [loaded_tank ? "Fuel: [round(loaded_tank.air_contents.toxins / 0.29)]%" : "<font color='red'>It is empty</font>"].", "singulo")
+			investigate_log("turned [active ? "<font color='green'>on</font>" : "<font color='red'>off</font>"] by [user.key]. [loaded_tank ? "Fuel: [round(loaded_tank.air_contents.toxins() / 0.29)]%" : "<font color='red'>It is empty</font>"].", "singulo")
 		else
 			to_chat(user, "<span class='warning'>The controls are locked!</span>")
 
+/obj/machinery/power/rad_collector/wrench_act(mob/living/user, obj/item/I)
+	. = TRUE
+	if(loaded_tank)
+		to_chat(user, "<span class='notice'>Remove the plasma tank first.</span>")
+		return TRUE
+	var/turf/T = get_turf(src)
+	for(var/obj/machinery/power/rad_collector/can_wrench in T.contents)
+		if(can_wrench.anchored && !anchored)
+			to_chat(user, "<span class='notice'>You can't wrench down [src] here!</span>")
+			return
+	I.play_tool_sound(src)
+	anchored = !anchored
+	user.visible_message("[user.name] [anchored ? "secures" : "unsecures"] the [name].", "You [anchored ? "secure" : "undo"] the external bolts.", "You hear a ratchet")
+	if(anchored)
+		connect_to_network()
+	else
+		disconnect_from_network()
+
 
 /obj/machinery/power/rad_collector/attackby(obj/item/I, mob/user, params)
-	if(istype(I, /obj/item/analyzer) && loaded_tank)
-		atmosanalyzer_scan(loaded_tank.air_contents, user)
-	else if(istype(I, /obj/item/tank/internals/plasma))
+	if(istype(I, /obj/item/tank/internals/plasma))
 		if(!anchored)
 			to_chat(user, "<span class='warning'>[src] needs to be secured to the floor first.</span>")
 			return TRUE
@@ -74,21 +80,10 @@ GLOBAL_LIST_EMPTY(rad_collectors)
 			loaded_tank = I
 			I.forceMove(src)
 			update_icons()
-	else if(iscrowbar(I))
+	else if(I.tool_behaviour == TOOL_CROWBAR)
 		if(loaded_tank && !locked)
 			eject()
 			return TRUE
-	else if(iswrench(I))
-		if(loaded_tank)
-			to_chat(user, "<span class='notice'>Remove the plasma tank first.</span>")
-			return TRUE
-		playsound(loc, I.usesound, 75, TRUE)
-		anchored = !anchored
-		user.visible_message("[user.name] [anchored ? "secures" : "unsecures"] the [name].", "You [anchored ? "secure" : "undo"] the external bolts.", "You hear a ratchet")
-		if(anchored)
-			connect_to_network()
-		else
-			disconnect_from_network()
 	else if(istype(I, /obj/item/card/id) || istype(I, /obj/item/pda))
 		if(allowed(user))
 			if(active)
@@ -102,6 +97,11 @@ GLOBAL_LIST_EMPTY(rad_collectors)
 			return TRUE
 	else
 		return ..()
+
+/obj/machinery/power/rad_collector/return_analyzable_air()
+	if(loaded_tank)
+		return loaded_tank.return_analyzable_air()
+	return null
 
 /obj/machinery/power/rad_collector/examine(mob/user)
 	. = ..()

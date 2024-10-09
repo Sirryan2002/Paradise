@@ -23,7 +23,7 @@
 
 /mob/living/silicon/robot/syndicate/New(loc)
 	..()
-	cell = new /obj/item/stock_parts/cell/hyper(src)
+	cell = new /obj/item/stock_parts/cell/bluespace(src)
 
 /mob/living/silicon/robot/syndicate/init(alien = FALSE, mob/living/silicon/ai/ai_to_sync_to = null)
 	laws = new /datum/ai_laws/syndicate_override
@@ -65,6 +65,10 @@
 	brute_mod = 0.8
 	burn_mod = 0.8
 	var/obj/item/borg_chameleon/cham_proj = null
+	silicon_subsystems = list(
+		/mob/living/silicon/robot/proc/set_mail_tag,
+		/mob/living/silicon/robot/proc/self_diagnosis,
+		/mob/living/silicon/proc/subsystem_law_manager)
 	playstyle_string = "<span class='userdanger'>You are a Syndicate saboteur cyborg!</span><br>\
 						<b>You are equipped with robust engineering tools to aid you in your mission: help the operatives secure the nuclear authentication disk. \
 						Your built-in mail tagger will allow you to stealthily traverse the disposal network across the station. \
@@ -129,11 +133,6 @@
 		cham_proj.disrupt(src)
 
 /mob/living/silicon/robot/syndicate/saboteur/bullet_act()
-	if(cham_proj)
-		cham_proj.disrupt(src)
-	..()
-
-/mob/living/silicon/robot/syndicate/saboteur/attackby()
 	if(cham_proj)
 		cham_proj.disrupt(src)
 	..()

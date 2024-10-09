@@ -24,18 +24,21 @@
 		floating = FALSE
 		animate(src, transform = ntransform, time = (lying_prev == 0 || lying_angle == 0) ? 2 : 0, pixel_y = final_pixel_y, dir = final_dir, easing = (EASE_IN|EASE_OUT))
 
+/mob/living/carbon/regenerate_icons()
+	SEND_SIGNAL(src, COMSIG_CARBON_REGENERATE_ICONS, src)
+	return ..()
 
 /mob/living/carbon/proc/handle_transform_change()
 	return
 
 //update whether handcuffs appears on our hud.
-/mob/living/carbon/proc/update_hud_handcuffed()
-	if(hud_used)
-		var/obj/screen/inventory/R = hud_used.inv_slots[slot_r_hand]
-		var/obj/screen/inventory/L = hud_used.inv_slots[slot_l_hand]
-		if(R && L)
-			R.update_icon()
-			L.update_icon()
+/mob/living/carbon/proc/update_hands_hud()
+	if(!hud_used)
+		return
+	var/atom/movable/screen/inventory/R = hud_used.inv_slots[SLOT_HUD_RIGHT_HAND]
+	R?.update_icon()
+	var/atom/movable/screen/inventory/L = hud_used.inv_slots[SLOT_HUD_LEFT_HAND]
+	L?.update_icon()
 
 /mob/living/carbon/update_inv_r_hand(ignore_cuffs)
 	if(handcuffed && !ignore_cuffs)
@@ -46,6 +49,8 @@
 			r_hand.screen_loc = ui_rhand
 			client.screen += r_hand
 
+		update_observer_view(r_hand)
+
 /mob/living/carbon/update_inv_l_hand(ignore_cuffs)
 	if(handcuffed && !ignore_cuffs)
 		drop_l_hand()
@@ -54,14 +59,15 @@
 		if(client && hud_used && hud_used.hud_version != HUD_STYLE_NOHUD)
 			l_hand.screen_loc = ui_lhand
 			client.screen += l_hand
+		update_observer_view(l_hand)
 
 /mob/living/carbon/update_inv_wear_mask()
 	if(istype(wear_mask, /obj/item/clothing/mask))
 		update_hud_wear_mask(wear_mask)
 
 /mob/living/carbon/update_inv_back()
-	if(client && hud_used && hud_used.inv_slots[slot_back])
-		var/obj/screen/inventory/inv = hud_used.inv_slots[slot_back]
+	if(client && hud_used && hud_used.inv_slots[SLOT_HUD_BACK])
+		var/atom/movable/screen/inventory/inv = hud_used.inv_slots[SLOT_HUD_BACK]
 		inv.update_icon()
 
 	if(back)
@@ -82,3 +88,18 @@
 //update whether our back item appears on our hud.
 /mob/living/carbon/proc/update_hud_back(obj/item/I)
 	return
+
+/mob/living/carbon/proc/update_observer_view(obj/item/worn_item, inventory)
+	if(!length(observers))
+		return
+	for(var/mob/dead/observe as anything in observers)
+		if(observe.client && observe.client.eye == src)
+			if(observe.hud_used)
+				if(inventory && !observe.hud_used.inventory_shown)
+					continue
+				observe.client.screen += worn_item
+		else
+			observers -= observe
+			if(!length(observers))
+				observers.Cut()
+				break

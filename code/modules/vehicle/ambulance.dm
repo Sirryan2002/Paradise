@@ -19,14 +19,14 @@
 
 /datum/action/ambulance_alarm
 	name = "Toggle Sirens"
-	icon_icon = 'icons/obj/vehicles.dmi'
-	button_icon_state = "docwagon2"
+	button_overlay_icon = 'icons/obj/vehicles.dmi'
+	button_overlay_icon_state = "docwagon2"
 	check_flags = AB_CHECK_RESTRAINED | AB_CHECK_STUNNED | AB_CHECK_LYING | AB_CHECK_CONSCIOUS
 	var/toggle_cooldown = 40
 	var/cooldown = 0
 
 
-/datum/action/ambulance_alarm/Trigger()
+/datum/action/ambulance_alarm/Trigger(left_click)
 	if(!..())
 		return FALSE
 
@@ -109,7 +109,6 @@
 	icon = 'icons/vehicles/CargoTrain.dmi'
 	icon_state = "ambulance"
 	anchored = FALSE
-	pull_speed = 0
 
 /obj/structure/bed/amb_trolley/examine(mob/user)
 	. = ..()

@@ -10,11 +10,11 @@
 	var/bomb_cooldown = 0
 	var/default_bomb_cooldown = 20 SECONDS
 
-/mob/living/simple_animal/hostile/guardian/bomb/Stat()
-	..()
-	if(statpanel("Status"))
-		if(bomb_cooldown >= world.time)
-			stat(null, "Bomb Cooldown Remaining: [max(round((bomb_cooldown - world.time)*0.1, 0.1), 0)] seconds")
+/mob/living/simple_animal/hostile/guardian/bomb/get_status_tab_items()
+	var/list/status_tab_data = ..()
+	. = status_tab_data
+	if(bomb_cooldown >= world.time)
+		status_tab_data[++status_tab_data.len] = list("Bomb Cooldown Remaining:", "[max(round((bomb_cooldown - world.time) * 0.1, 0.1), 0)] seconds")
 
 /mob/living/simple_animal/hostile/guardian/bomb/AltClickOn(atom/movable/A)
 	if(!istype(A))
@@ -22,8 +22,8 @@
 	if(get_dist(get_turf(src), get_turf(A)) > 1)
 		to_chat(src, "<span class='danger'>You're too far from [A] to disguise it as a bomb.</span>")
 		return
-	if(isobj(A))
-		if(bomb_cooldown <= world.time && !stat)
+	if(isobj(A) && can_plant(A))
+		if(bomb_cooldown <= world.time && stat == CONSCIOUS)
 			var/obj/item/guardian_bomb/B = new /obj/item/guardian_bomb(get_turf(A))
 			add_attack_logs(src, A, "booby trapped (summoner: [summoner])")
 			to_chat(src, "<span class='danger'>Success! Bomb on [A] armed!</span>")
@@ -35,12 +35,22 @@
 		else
 			to_chat(src, "<span class='danger'>Your power is on cooldown! You must wait another [max(round((bomb_cooldown - world.time)*0.1, 0.1), 0)] seconds before you can place next bomb.</span>")
 
+/mob/living/simple_animal/hostile/guardian/bomb/proc/can_plant(atom/movable/A)
+	if(ismecha(A))
+		var/obj/mecha/target = A
+		if(target.occupant)
+			to_chat(src, "<span class='warning'>You can't disguise piloted mechs as a bomb!</span>")
+			return FALSE
+	if(istype(A, /obj/machinery/disposal)) // Have no idea why they just destroy themselves
+		to_chat(src, "<span class='warning'>You can't disguise disposal units as a bomb!</span>")
+		return FALSE
+	return TRUE
+
 /obj/item/guardian_bomb
 	name = "bomb"
 	desc = "You shouldn't be seeing this!"
 	var/obj/stored_obj
 	var/mob/living/spawner
-
 
 /obj/item/guardian_bomb/proc/disguise(obj/A)
 	A.forceMove(src)
@@ -76,13 +86,29 @@
 	to_chat(spawner, "<span class='danger'>Success! Your trap on [src] caught [user]!</span>")
 	stored_obj.forceMove(get_turf(loc))
 	playsound(get_turf(src),'sound/effects/explosion2.ogg', 200, 1)
-	user.ex_act(2)
+	user.ex_act(EXPLODE_HEAVY)
+	user.Stun(3 SECONDS)//A bomb went off in your hands. Actually lets people follow up with it if they bait someone, right now it is unreliable.
 	qdel(src)
 
 /obj/item/guardian_bomb/attackby(obj/item/W, mob/living/user)
 	detonate(user)
 
 /obj/item/guardian_bomb/attack_hand(mob/user)
+	detonate(user)
+
+/obj/item/guardian_bomb/MouseDrop_T(obj/item/I, mob/living/user)
+	detonate(user)
+
+/obj/item/guardian_bomb/AltClick(mob/living/user)
+	detonate(user)
+
+/obj/item/guardian_bomb/MouseDrop(mob/living/user)
+	detonate(user)
+
+/obj/item/guardian_bomb/Bumped(mob/living/user)
+	detonate(user)
+
+/obj/item/guardian_bomb/can_be_pulled(mob/living/user)
 	detonate(user)
 
 /obj/item/guardian_bomb/examine(mob/user)

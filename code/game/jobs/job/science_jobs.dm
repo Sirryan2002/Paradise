@@ -4,21 +4,38 @@
 	department_flag = JOBCAT_MEDSCI
 	total_positions = 1
 	spawn_positions = 1
-	is_science = 1
+	job_department_flags = DEP_FLAG_COMMAND | DEP_FLAG_SCIENCE
 	supervisors = "the captain"
 	department_head = list("Captain")
 	selection_color = "#ffddff"
 	req_admin_notify = 1
 	department_account_access = TRUE
-	access = list(ACCESS_RD, ACCESS_HEADS, ACCESS_TOX, ACCESS_GENETICS, ACCESS_MORGUE,
-					ACCESS_TOX_STORAGE, ACCESS_TECH_STORAGE, ACCESS_TELEPORTER, ACCESS_SEC_DOORS,
-					ACCESS_RESEARCH, ACCESS_ROBOTICS, ACCESS_XENOBIOLOGY, ACCESS_AI_UPLOAD,
-					ACCESS_RC_ANNOUNCE, ACCESS_KEYCARD_AUTH, ACCESS_TCOMSAT, ACCESS_EXPEDITION, ACCESS_XENOARCH, ACCESS_MINISAT, ACCESS_MINERAL_STOREROOM, ACCESS_NETWORK)
-	minimal_access = list(ACCESS_EVA, ACCESS_RD, ACCESS_HEADS, ACCESS_TOX, ACCESS_GENETICS, ACCESS_MORGUE,
-					ACCESS_TOX_STORAGE, ACCESS_TECH_STORAGE, ACCESS_TELEPORTER, ACCESS_SEC_DOORS,
-					ACCESS_RESEARCH, ACCESS_ROBOTICS, ACCESS_XENOBIOLOGY, ACCESS_AI_UPLOAD,
-					ACCESS_RC_ANNOUNCE, ACCESS_KEYCARD_AUTH, ACCESS_TCOMSAT, ACCESS_EXPEDITION, ACCESS_XENOARCH, ACCESS_MINISAT, ACCESS_MAINT_TUNNELS, ACCESS_MINERAL_STOREROOM, ACCESS_NETWORK)
+	access = list(
+		ACCESS_AI_UPLOAD,
+		ACCESS_EVA,
+		ACCESS_EXPEDITION,
+		ACCESS_GENETICS,
+		ACCESS_HEADS,
+		ACCESS_KEYCARD_AUTH,
+		ACCESS_MAINT_TUNNELS,
+		ACCESS_MINERAL_STOREROOM,
+		ACCESS_MINISAT,
+		ACCESS_MORGUE,
+		ACCESS_RC_ANNOUNCE,
+		ACCESS_RD,
+		ACCESS_RESEARCH,
+		ACCESS_ROBOTICS,
+		ACCESS_SEC_DOORS,
+		ACCESS_TCOMSAT,
+		ACCESS_TECH_STORAGE,
+		ACCESS_TELEPORTER,
+		ACCESS_TOX_STORAGE,
+		ACCESS_TOX,
+		ACCESS_XENOBIOLOGY,
+		ACCESS_WEAPONS
+	)
 	minimal_player_age = 21
+	blacklisted_disabilities = list(DISABILITY_FLAG_BLIND, DISABILITY_FLAG_DEAF, DISABILITY_FLAG_MUTE, DISABILITY_FLAG_DIZZY)
 	exp_map = list(EXP_TYPE_SCIENCE = 1200)
 	// All science-y guys get bonuses for maxing out their tech.
 	required_objectives = list(
@@ -47,19 +64,24 @@
 	satchel = /obj/item/storage/backpack/satchel_tox
 	dufflebag = /obj/item/storage/backpack/duffel/science
 
-
 /datum/job/scientist
 	title = "Scientist"
 	flag = JOB_SCIENTIST
 	department_flag = JOBCAT_MEDSCI
 	total_positions = 6
 	spawn_positions = 6
-	is_science = 1
+	job_department_flags = DEP_FLAG_SCIENCE
 	supervisors = "the research director"
 	department_head = list("Research Director")
 	selection_color = "#ffeeff"
-	access = list(ACCESS_ROBOTICS, ACCESS_TOX, ACCESS_TOX_STORAGE, ACCESS_RESEARCH, ACCESS_XENOBIOLOGY, ACCESS_XENOARCH, ACCESS_MINERAL_STOREROOM)
-	minimal_access = list(ACCESS_TOX, ACCESS_TOX_STORAGE, ACCESS_RESEARCH, ACCESS_XENOBIOLOGY, ACCESS_XENOARCH, ACCESS_MAINT_TUNNELS, ACCESS_MINERAL_STOREROOM)
+	access = list(
+		ACCESS_MAINT_TUNNELS,
+		ACCESS_MINERAL_STOREROOM,
+		ACCESS_RESEARCH,
+		ACCESS_TOX_STORAGE,
+		ACCESS_TOX,
+		ACCESS_XENOBIOLOGY
+	)
 	alt_titles = list("Xenoarcheologist", "Anomalist", "Plasma Researcher", "Xenobiologist", "Chemical Researcher")
 	minimal_player_age = 3
 	exp_map = list(EXP_TYPE_CREW = 300)
@@ -85,19 +107,24 @@
 	satchel = /obj/item/storage/backpack/satchel_tox
 	dufflebag = /obj/item/storage/backpack/duffel/science
 
-
 /datum/job/roboticist
 	title = "Roboticist"
 	flag = JOB_ROBOTICIST
 	department_flag = JOBCAT_MEDSCI
 	total_positions = 2
 	spawn_positions = 2
-	is_science = 1
+	job_department_flags = DEP_FLAG_SCIENCE
 	supervisors = "the research director"
 	department_head = list("Research Director")
 	selection_color = "#ffeeff"
-	access = list(ACCESS_ROBOTICS, ACCESS_TOX, ACCESS_TOX_STORAGE, ACCESS_TECH_STORAGE, ACCESS_MORGUE, ACCESS_RESEARCH, ACCESS_MINERAL_STOREROOM) //As a job that handles so many corpses, it makes sense for them to have morgue access.
-	minimal_access = list(ACCESS_ROBOTICS, ACCESS_TECH_STORAGE, ACCESS_MORGUE, ACCESS_RESEARCH, ACCESS_MAINT_TUNNELS, ACCESS_MINERAL_STOREROOM) //As a job that handles so many corpses, it makes sense for them to have morgue access.
+	access = list(
+		ACCESS_MAINT_TUNNELS,
+		ACCESS_MINERAL_STOREROOM,
+		ACCESS_MORGUE, // As a job that handles so many corpses, it makes sense for them to have morgue access.
+		ACCESS_RESEARCH,
+		ACCESS_ROBOTICS,
+		ACCESS_TECH_STORAGE
+	)
 	alt_titles = list("Biomechanical Engineer","Mechatronic Engineer")
 	minimal_player_age = 3
 	exp_map = list(EXP_TYPE_CREW = 180)
@@ -120,3 +147,7 @@
 	l_ear = /obj/item/radio/headset/headset_sci
 	id = /obj/item/card/id/roboticist
 	pda = /obj/item/pda/roboticist
+
+	backpack = /obj/item/storage/backpack/robotics
+	satchel = /obj/item/storage/backpack/satchel_robo
+	dufflebag = /obj/item/storage/backpack/duffel/robotics

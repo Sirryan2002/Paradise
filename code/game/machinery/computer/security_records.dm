@@ -71,10 +71,13 @@
 	add_fingerprint(user)
 	ui_interact(user)
 
-/obj/machinery/computer/secure_data/ui_interact(mob/user, ui_key = "main", datum/tgui/ui = null, force_open = TRUE, datum/tgui/master_ui = null, datum/ui_state/state = GLOB.default_state)
-	ui = SStgui.try_update_ui(user, src, ui_key, ui, force_open)
+/obj/machinery/computer/secure_data/ui_state(mob/user)
+	return GLOB.default_state
+
+/obj/machinery/computer/secure_data/ui_interact(mob/user, datum/tgui/ui = null)
+	ui = SStgui.try_update_ui(user, src, ui)
 	if(!ui)
-		ui = new(user, src, ui_key, "SecurityRecords", name, 800, 800)
+		ui = new(user, src, "SecurityRecords", name)
 		ui.open()
 		ui.set_autoupdate(FALSE)
 
@@ -397,6 +400,13 @@
 				<br>\nPhysical Status: [record_general.fields["p_stat"]]
 				<br>\nMental Status: [record_general.fields["m_stat"]]<br>"}
 		P.name = "paper - 'Security Record: [record_general.fields["name"]]'"
+		var/obj/item/photo/photo = new(loc)
+		var/icon/new_photo = icon('icons/effects/64x32.dmi', "records")
+		new_photo.Blend(icon(record_general.fields["photo"], dir = SOUTH), ICON_OVERLAY, 0)
+		new_photo.Blend(icon(record_general.fields["photo"], dir = WEST), ICON_OVERLAY, 32)
+		new_photo.Scale(new_photo.Width() * 3, new_photo.Height() * 3)
+		photo.img = new_photo
+		photo.name = "photo - 'Security Record: [record_general.fields["name"]]'"
 	else
 		P.info += "<b>General Record Lost!</b><br>"
 	if(record_security && GLOB.data_core.security.Find(record_security))

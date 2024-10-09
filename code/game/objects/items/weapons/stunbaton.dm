@@ -1,11 +1,12 @@
 /obj/item/melee/baton
 	name = "stunbaton"
 	desc = "A stun baton for incapacitating people with."
+	icon = 'icons/obj/weapons/baton.dmi'
 	icon_state = "stunbaton"
 	var/base_icon = "stunbaton"
 	item_state = null
 	belt_icon = "stunbaton"
-	slot_flags = SLOT_BELT
+	slot_flags = SLOT_FLAG_BELT
 	force = 10
 	throwforce = 7
 	origin_tech = "combat=2"
@@ -56,7 +57,7 @@
 		cell = new(src)
 
 /obj/item/melee/baton/suicide_act(mob/user)
-	user.visible_message("<span class='suicide'>[user] is putting the live [name] in [user.p_their()] mouth! It looks like [user.p_theyre()] trying to commit suicide.</span>")
+	user.visible_message("<span class='suicide'>[user] is putting the live [name] in [user.p_their()] mouth! It looks like [user.p_theyre()] trying to commit suicide!</span>")
 	return FIRELOSS
 
 /obj/item/melee/baton/update_icon_state()
@@ -66,6 +67,7 @@
 		icon_state = "[base_icon]_nocell"
 	else
 		icon_state = "[base_icon]"
+
 /obj/item/melee/baton/examine(mob/user)
 	. = ..()
 	if(isrobot(user))
@@ -81,11 +83,11 @@
 /obj/item/melee/baton/get_cell()
 	return cell
 
-/obj/item/melee/baton/mob_can_equip(mob/user, slot, disable_warning = TRUE)
-	if(turned_on && (slot == slot_belt || slot == slot_s_store))
+/obj/item/melee/baton/mob_can_equip(mob/user, slot, disable_warning = TRUE) // disable the warning
+	if(turned_on && (slot == SLOT_HUD_BELT || slot == SLOT_HUD_SUIT_STORE))
 		to_chat(user, "<span class='warning'>You can't equip [src] while it's active!</span>")
 		return FALSE
-	return ..(user, slot, disable_warning = TRUE) // call parent but disable warning
+	return ..()
 
 /obj/item/melee/baton/can_enter_storage(obj/item/storage/S, mob/user)
 	if(turned_on)
@@ -108,6 +110,7 @@
 		cell = null
 		turned_on = FALSE
 		update_icon(UPDATE_ICON_STATE)
+		return
 	if(cell.charge < (hitcost)) // If after the deduction the baton doesn't have enough charge for a stun hit it turns off.
 		turned_on = FALSE
 		update_icon()
@@ -158,6 +161,10 @@
 	update_icon()
 	add_fingerprint(user)
 
+/obj/item/melee/baton/throw_impact(mob/living/carbon/human/hit_mob)
+	. = ..()
+	if(!. && turned_on && istype(hit_mob))
+		thrown_baton_stun(hit_mob)
 
 /obj/item/melee/baton/attack(mob/M, mob/living/user)
 	if(turned_on && HAS_TRAIT(user, TRAIT_CLUMSY) && prob(50))
@@ -165,7 +172,9 @@
 			user.visible_message("<span class='danger'>[user] accidentally hits [user.p_themselves()] with [src]!</span>",
 							"<span class='userdanger'>You accidentally hit yourself with [src]!</span>")
 		return
-
+	if(user.mind?.martial_art?.no_baton && user.mind?.martial_art?.can_use(user))
+		to_chat(user, user.mind.martial_art.no_baton_reason)
+		return
 	if(issilicon(M)) // Can't stunbaton borgs and AIs
 		return ..()
 
@@ -174,11 +183,15 @@
 	var/mob/living/L = M
 
 	if(user.a_intent == INTENT_HARM)
+		. = ..() // Whack them too if in harm intent
+		if(!isnull(.)) // Attack returns null when successful
+			return
 		if(turned_on)
-			baton_stun(L, user)
-		return ..() // Whack them too if in harm intent
+			baton_stun(L, user, ignore_shield_check = TRUE)
+		return
 
 	if(!turned_on)
+		user.do_attack_animation(L)
 		L.visible_message("<span class='warning'>[user] has prodded [L] with [src]. Luckily it was off.</span>",
 			"<span class='danger'>[L == user ? "You prod yourself" : "[user] has prodded you"] with [src]. Luckily it was off.</span>")
 		return
@@ -186,11 +199,10 @@
 	if(baton_stun(L, user))
 		user.do_attack_animation(L)
 
-/// returning false results in no baton attack animation, returning true results in an animation.
-/obj/item/melee/baton/proc/baton_stun(mob/living/L, mob/user, skip_cooldown = FALSE)
+/// returning false results in no baton attack animation, returning true results in an animation. If ignore_shield_check is true, the baton will not run check shields, and will hit if not on cooldown.
+/obj/item/melee/baton/proc/baton_stun(mob/living/L, mob/user, skip_cooldown = FALSE, ignore_shield_check = FALSE)
 	if(cooldown > world.time && !skip_cooldown)
 		return FALSE
-
 	var/user_UID = user.UID()
 	if(HAS_TRAIT_FROM(L, TRAIT_WAS_BATONNED, user_UID)) // prevents double baton cheese.
 		return FALSE
@@ -198,12 +210,12 @@
 	cooldown = world.time + initial(cooldown) // tracks the world.time when hitting will be next available.
 	if(ishuman(L))
 		var/mob/living/carbon/human/H = L
-		if(H.check_shields(src, 0, "[user]'s [name]", MELEE_ATTACK)) //No message; check_shields() handles that
+		if(!ignore_shield_check && H.check_shields(src, 0, "[user]'s [name]", MELEE_ATTACK)) //No message; check_shields() handles that
 			playsound(L, 'sound/weapons/genhit.ogg', 50, TRUE)
 			return FALSE
 		H.Confused(10 SECONDS)
 		H.Jitter(10 SECONDS)
-		H.adjustStaminaLoss(stam_damage)
+		H.apply_damage(stam_damage, STAMINA)
 		H.SetStuttering(10 SECONDS)
 
 	ADD_TRAIT(L, TRAIT_WAS_BATONNED, user_UID) // so one person cannot hit the same person with two separate batons
@@ -218,6 +230,40 @@
 		L.visible_message("<span class='danger'>[user] has stunned [L] with [src]!</span>",
 			"<span class='userdanger'>[L == user ? "You stun yourself" : "[user] has stunned you"] with [src]!</span>")
 		add_attack_logs(user, L, "stunned")
+	playsound(src, 'sound/weapons/egloves.ogg', 50, TRUE, -1)
+	deductcharge(hitcost)
+	return TRUE
+
+/obj/item/melee/baton/proc/thrown_baton_stun(mob/living/carbon/human/L)
+	if(cooldown > world.time)
+		return FALSE
+
+	var/user_UID = thrownby
+	var/mob/user = locateUID(thrownby)
+	if(!istype(user) || (user.mind?.martial_art?.no_baton && user.mind?.martial_art?.can_use(user)))
+		return
+
+	if(HAS_TRAIT_FROM(L, TRAIT_WAS_BATONNED, user_UID))
+		return FALSE
+
+	cooldown = world.time + initial(cooldown)
+	if(L.check_shields(src, 0, "[user]'s [name]", MELEE_ATTACK))
+		playsound(L, 'sound/weapons/genhit.ogg', 50, TRUE)
+		return FALSE
+	L.Confused(4 SECONDS)
+	L.Jitter(4 SECONDS)
+	L.apply_damage(30, STAMINA)
+	L.SetStuttering(4 SECONDS)
+
+	ADD_TRAIT(L, TRAIT_WAS_BATONNED, user_UID) // so one person cannot hit the same person with two separate batons
+	addtimer(CALLBACK(src, PROC_REF(baton_delay), L, user_UID), 2 SECONDS)
+
+	SEND_SIGNAL(L, COMSIG_LIVING_MINOR_SHOCK, 33)
+
+	L.lastattacker = user.real_name
+	L.lastattackerckey = user.ckey
+	L.visible_message("<span class='danger'>[src] stuns [L]!</span>")
+	add_attack_logs(user, L, "stunned")
 	playsound(src, 'sound/weapons/egloves.ogg', 50, TRUE, -1)
 	deductcharge(hitcost)
 	return TRUE
@@ -239,6 +285,11 @@
 		return TRUE
 	..()
 
+/// baton used for security bots
+/obj/item/melee/baton/infinite_cell
+	hitcost = 0
+	turned_on = TRUE
+
 //Makeshift stun baton. Replacement for stun gloves.
 /obj/item/melee/baton/cattleprod
 	name = "stunprod"
@@ -250,7 +301,8 @@
 	knockdown_duration = 6 SECONDS
 	w_class = WEIGHT_CLASS_BULKY
 	hitcost = 2000
-	slot_flags = SLOT_BACK | SLOT_BELT
+	slot_flags = SLOT_FLAG_BACK | SLOT_FLAG_BELT
+	flags_2 = ALLOW_BELT_NO_JUMPSUIT_2 //Look, you can strap it to your back. You can strap it to your waist too.
 	var/obj/item/assembly/igniter/sparkler = null
 
 /obj/item/melee/baton/cattleprod/Initialize(mapload)
@@ -261,6 +313,11 @@
 	QDEL_NULL(sparkler)
 	return ..()
 
-/obj/item/melee/baton/cattleprod/baton_stun(mob/living/L, mob/user, skip_cooldown = FALSE)
+/obj/item/melee/baton/cattleprod/baton_stun(mob/living/L, mob/user, skip_cooldown = FALSE, ignore_shield_check = FALSE)
 	if(sparkler.activate())
 		return ..()
+
+/obj/item/melee/baton/loaded/borg_stun_arm
+	name = "electrically-charged arm"
+	desc = "A piece of scrap metal wired directly to your power cell."
+	hitcost = 100

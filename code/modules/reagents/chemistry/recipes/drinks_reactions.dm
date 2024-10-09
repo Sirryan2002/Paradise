@@ -600,10 +600,10 @@
 	result_amount = 2
 	mix_sound = 'sound/goonstation/misc/drinkfizz.ogg'
 
-/datum/chemical_reaction/irishcarbomb
-	name = "Irish Car Bomb"
-	id = "irishcarbomb"
-	result = "irishcarbomb"
+/datum/chemical_reaction/dublindrop
+	name = "Dublin Drop"
+	id = "dublindrop"
+	result = "dublindrop"
 	required_reagents = list("ale" = 1, "irishcream" = 1)
 	result_amount = 2
 	mix_sound = 'sound/goonstation/misc/drinkfizz.ogg'
@@ -1028,7 +1028,7 @@
 	name = "Islay Whiskey"
 	id = "islaywhiskey"
 	result = "islaywhiskey"
-	required_reagents = list("eznutriment" = 1, "whiskey" = 1, "nutriment" = 1)
+	required_reagents = list("eznutrient" = 1, "whiskey" = 1, "nutriment" = 1)
 	result_amount = 3
 	mix_sound = 'sound/goonstation/misc/drinkfizz.ogg'
 

@@ -6,7 +6,7 @@
 	icon_state = "screwdriver_map"
 	belt_icon = "screwdriver"
 	flags = CONDUCT
-	slot_flags = SLOT_BELT
+	slot_flags = SLOT_FLAG_BELT
 	force = 5
 	w_class = WEIGHT_CLASS_TINY
 	throwforce = 5
@@ -47,7 +47,7 @@
 		icon_state = "screwdriver_[param_color]"
 		belt_icon = "screwdriver_[param_color]"
 
-	if (prob(75))
+	if(prob(75))
 		src.pixel_y = rand(0, 16)
 
 /obj/item/screwdriver/attack(mob/living/carbon/M, mob/living/carbon/user)
@@ -89,15 +89,6 @@
 	playsound(loc, hitsound, 50, TRUE, -1)
 
 	return BRUTELOSS
-
-/obj/item/screwdriver/abductor
-	name = "alien screwdriver"
-	desc = "An ultrasonic screwdriver."
-	icon = 'icons/obj/abductor.dmi'
-	icon_state = "screwdriver"
-	usesound = 'sound/items/pshoom.ogg'
-	toolspeed = 0.1
-	random_color = FALSE
 
 /obj/item/screwdriver/power
 	name = "hand drill"

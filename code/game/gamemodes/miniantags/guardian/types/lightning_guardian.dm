@@ -8,7 +8,7 @@
 	attacktext = "shocks"
 	melee_damage_type = BURN
 	attack_sound = 'sound/machines/defib_zap.ogg'
-	damage_transfer = 0.6
+	damage_transfer = 0.5
 	range = 7
 	playstyle_string = "As a <b>Lightning</b> type, you will apply lightning chains to targets on attack and have a lightning chain to your summoner. Lightning chains will shock anyone near them."
 	magic_fluff_string = "..And draw the Tesla, a shocking, lethal source of power."
@@ -35,7 +35,7 @@
 			var/datum/beam/B = chain
 			if(B.target == target)
 				return //oh this guy already HAS a chain, let's not chain again
-		if(enemychains.len > 2)
+		if(length(enemychains) > 2)
 			var/datum/beam/C = pick(enemychains)
 			qdel(C)
 			enemychains -= C
@@ -64,7 +64,7 @@
 /mob/living/simple_animal/hostile/guardian/beam/proc/cleardeletedchains()
 	if(summonerchain && QDELETED(summonerchain))
 		summonerchain = null
-	if(enemychains.len)
+	if(length(enemychains))
 		for(var/chain in enemychains)
 			var/datum/cd = chain
 			if(!chain || QDELETED(cd))
@@ -77,14 +77,14 @@
 		if(!summonerchain)
 			summonerchain = Beam(summoner, "lightning[rand(1,12)]", 'icons/effects/effects.dmi', time=INFINITY, maxdistance=INFINITY, beam_type=/obj/effect/ebeam/chain)
 		. += chainshock(summonerchain)
-	if(enemychains.len)
+	if(length(enemychains))
 		for(var/chain in enemychains)
 			. += chainshock(chain)
 
 /mob/living/simple_animal/hostile/guardian/beam/proc/removechains()
 	if(summonerchain)
 		QDEL_NULL(summonerchain)
-	if(enemychains.len)
+	if(length(enemychains))
 		for(var/chain in enemychains)
 			qdel(chain)
 		enemychains = list()
@@ -113,7 +113,7 @@
 						"<span class='userdanger'>You are shocked by the lightning chain!</span>", \
 						"<span class='italics'>You hear a heavy electrical crack.</span>" \
 					)
-				L.adjustFireLoss(1.2) //adds up very rapidly
+				L.adjustFireLoss(2.4) //adds up very rapidly
 				. = 1
 
 /mob/living/simple_animal/hostile/guardian/beam/death(gibbed)

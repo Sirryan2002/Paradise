@@ -23,9 +23,9 @@
 		return
 	switch(severity)
 		if(1)
-			owner?.adjustStaminaLoss(20)
+			owner?.apply_damage(20, STAMINA)
 		if(2)
-			owner?.adjustStaminaLoss(10)
+			owner?.apply_damage(10, STAMINA)
 	to_chat(owner, "<span class='userdanger'>Your [name] malfunctions, causing fatigue!</span>")
 
 /obj/item/organ/external/groin
@@ -53,6 +53,7 @@
 	amputation_point = "left shoulder"
 	can_grasp = 1
 	convertable_children = list(/obj/item/organ/external/hand)
+	fragile = TRUE
 
 /obj/item/organ/external/arm/emp_act(severity)
 	..()
@@ -85,6 +86,7 @@
 	amputation_point = "left hip"
 	can_stand = 1
 	convertable_children = list(/obj/item/organ/external/foot)
+	fragile = TRUE
 
 /obj/item/organ/external/leg/emp_act(severity)
 	..()
@@ -123,6 +125,7 @@
 	parent_organ = "l_leg"
 	amputation_point = "left ankle"
 	can_stand = 1
+	fragile = TRUE
 
 /obj/item/organ/external/foot/emp_act(severity)
 	..()
@@ -164,6 +167,7 @@
 	parent_organ = "l_arm"
 	amputation_point = "left wrist"
 	can_grasp = 1
+	fragile = TRUE
 
 /obj/item/organ/external/hand/emp_act(severity)
 	..()
@@ -177,14 +181,37 @@
 
 /obj/item/organ/external/hand/remove()
 	if(owner)
+		update_hand_missing()
 		if(owner.gloves)
 			owner.unEquip(owner.gloves)
-		if(owner.l_hand)
+		if(owner.l_hand && (body_part == HAND_LEFT))
 			owner.unEquip(owner.l_hand, TRUE)
-		if(owner.r_hand)
+		if(owner.r_hand && (body_part == HAND_RIGHT))
 			owner.unEquip(owner.r_hand, TRUE)
 
 	. = ..()
+
+/obj/item/organ/external/hand/necrotize(update_sprite, ignore_vital_death = FALSE)
+	. = ..()
+	update_hand_missing()
+
+/obj/item/organ/external/hand/mutate()
+	. = ..()
+	update_hand_missing()
+
+/obj/item/organ/external/hand/receive_damage(brute, burn, sharp, used_weapon, list/forbidden_limbs, ignore_resists, updating_health)
+	. = ..()
+	update_hand_missing()
+
+/obj/item/organ/external/hand/droplimb(clean, disintegrate, ignore_children, nodamage)
+	. = ..()
+	update_hand_missing()
+
+/obj/item/organ/external/hand/proc/update_hand_missing()
+	// we need to come back to this once the hand is actually removed/dead
+	if(!owner) // Rather not have this trigger on already remove limbs
+		return
+	addtimer(CALLBACK(owner, TYPE_PROC_REF(/mob/living/carbon/human, update_hands_hud), 0))
 
 /obj/item/organ/external/hand/right
 	limb_name = "r_hand"
@@ -206,6 +233,7 @@
 	amputation_point = "neck"
 	gendered_icon = TRUE
 	encased = "skull"
+	fragile = TRUE
 	var/can_intake_reagents = 1
 	var/alt_head = "None"
 
@@ -255,6 +283,7 @@
 		owner.update_fhair()
 		owner.update_head_accessory()
 		owner.update_markings()
+	get_icon()
 	. = ..()
 
 /obj/item/organ/external/head/replaced()

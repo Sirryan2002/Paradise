@@ -30,6 +30,11 @@
 	. = ..()
 	. += "<span class='notice'>Click dragging someone to a bed will buckle them in. Functions just like a chair except you can walk over them.</span>"
 
+/obj/structure/bed/attack_hand(mob/user)
+	if(user.Move_Pulled(src))
+		return
+	return ..()
+
 /obj/structure/bed/psych
 	name = "psych bed"
 	desc = "For prime comfort during psychiatric evaluations."
@@ -136,7 +141,6 @@
 	resistance_flags = NONE
 	anchored = FALSE
 	comfort = 1
-	pull_speed = 0
 	var/icon_up = "up"
 	var/icon_down = "down"
 	var/folded = /obj/item/roller
@@ -144,7 +148,7 @@
 /obj/structure/bed/roller/attackby(obj/item/W, mob/user, params)
 	if(istype(W, /obj/item/roller_holder))
 		if(has_buckled_mobs())
-			if(buckled_mobs.len > 1)
+			if(length(buckled_mobs) > 1)
 				unbuckle_all_mobs()
 				user.visible_message("<span class='notice'>[user] unbuckles all creatures from [src].</span>")
 			else
@@ -240,7 +244,7 @@
 
 /obj/item/roller_holder/attack_self(mob/user as mob)
 	if(!held)
-		to_chat(user, "<span class='info'> The rack is empty.</span>")
+		to_chat(user, "<span class='notice'>The rack is empty.</span>")
 		return
 
 	to_chat(user, "<span class='notice'>You deploy the roller bed.</span>")
@@ -275,4 +279,9 @@
 /obj/structure/bed/dogbed/runtime
 	desc = "A comfy-looking cat bed. You can even strap your pet in, in case the gravity turns off."
 	name = "Runtime's bed"
+	anchored = TRUE
+
+/obj/structure/bed/dogbed/brad
+	name = "Brad's bed"
+	desc = "Brad's bed! Why does a cockroach get this amount of love?"
 	anchored = TRUE

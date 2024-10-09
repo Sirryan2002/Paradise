@@ -11,6 +11,7 @@
 	plane = FLOOR_PLANE
 	///for blood n vomit in zero G --- IN GRAVITY=TRUE; NO GRAVITY=FALSE
 	var/gravity_check = TRUE
+	hud_possible = list(JANI_HUD)
 
 /obj/effect/decal/cleanable/proc/replace_decal(obj/effect/decal/cleanable/C) // Returns true if we should give up in favor of the pre-existing decal
 	if(mergeable_decal)
@@ -55,7 +56,7 @@
 			bloodiness -= add_blood
 			S.bloody_shoes[blood_state] = min(MAX_SHOE_BLOODINESS, S.bloody_shoes[blood_state] + add_blood)
 			S.bloody_shoes[BLOOD_BASE_ALPHA] = BLOODY_FOOTPRINT_BASE_ALPHA * (alpha/255)
-			if(blood_DNA && blood_DNA.len)
+			if(blood_DNA && length(blood_DNA))
 				S.add_blood(H.blood_DNA, basecolor)
 			S.blood_state = blood_state
 			S.blood_color = basecolor
@@ -86,8 +87,12 @@
 
 /obj/effect/decal/cleanable/Initialize(mapload)
 	. = ..()
-	if(try_merging_decal())
-		return TRUE
+	if(should_merge_decal(loc))
+		return INITIALIZE_HINT_QDEL
+	var/datum/atom_hud/data/janitor/jani_hud = GLOB.huds[DATA_HUD_JANITOR]
+	prepare_huds()
+	jani_hud.add_to_hud(src)
+	jani_hud_set_sign()
 	if(random_icon_states && length(src.random_icon_states) > 0)
 		src.icon_state = pick(src.random_icon_states)
 	if(smoothing_flags)
@@ -99,16 +104,17 @@
 /obj/effect/decal/cleanable/Destroy()
 	if(smoothing_flags)
 		QUEUE_SMOOTH_NEIGHBORS(src)
+	var/datum/atom_hud/data/janitor/jani_hud = GLOB.huds[DATA_HUD_JANITOR]
+	jani_hud.remove_from_hud(src)
 	return ..()
 
-/obj/effect/decal/cleanable/proc/try_merging_decal(turf/T)
+/obj/effect/decal/cleanable/proc/should_merge_decal(turf/T)
 	if(!T)
 		T = loc
 	if(isturf(T))
 		for(var/obj/effect/decal/cleanable/C in T)
 			if(C != src && C.type == type && !QDELETED(C))
 				if(C.gravity_check && replace_decal(C))
-					qdel(src)
 					return TRUE
 	return FALSE
 

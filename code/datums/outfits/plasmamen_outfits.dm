@@ -51,7 +51,6 @@
 
 	head = /obj/item/clothing/head/helmet/space/plasmaman/white
 	uniform = /obj/item/clothing/under/plasmaman/enviroslacks
-	l_ear = /obj/item/radio/headset/headset_sec
 
 /datum/outfit/plasmaman/warden
 	name = "Plasmaman Warden"
@@ -70,6 +69,12 @@
 
 	head = /obj/item/clothing/head/helmet/space/plasmaman/cargo
 	uniform = /obj/item/clothing/under/plasmaman/cargo
+
+/datum/outfit/plasmaman/expedition
+	name = "Plasmaman Expedition"
+
+	head = /obj/item/clothing/head/helmet/space/plasmaman/expedition
+	uniform = /obj/item/clothing/under/plasmaman/expedition
 
 /datum/outfit/plasmaman/mining
 	name = "Plasmaman Mining"

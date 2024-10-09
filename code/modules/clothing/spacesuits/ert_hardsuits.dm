@@ -26,7 +26,7 @@
 		var/mob/living/carbon/human/wearer = loc.loc	//loc is the hardsuit, so its loc is the wearer
 		if(ishuman(wearer))
 			register_camera(wearer)
-	..()
+	return ..()
 
 /obj/item/clothing/head/helmet/space/hardsuit/ert/attack_self(mob/user)
 	if(camera || !has_camera)
@@ -57,12 +57,11 @@
 	icon_state = "ert_commander"
 	item_state = "suit-command"
 	w_class = WEIGHT_CLASS_NORMAL
-	allowed = list(/obj/item/gun,/obj/item/ammo_box,/obj/item/ammo_casing,/obj/item/melee/baton,/obj/item/melee/energy/sword/saber,/obj/item/restraints/handcuffs,/obj/item/tank/internals)
 	armor = list(MELEE = 40, BULLET = 15, LASER = 20, ENERGY = 5, BOMB = 15, RAD = 50, FIRE = 200, ACID = 200)
 	allowed = list(/obj/item/flashlight, /obj/item/tank/internals, /obj/item/t_scanner, /obj/item/rcd, /obj/item/crowbar, \
-	/obj/item/screwdriver, /obj/item/weldingtool, /obj/item/wirecutters, /obj/item/wrench, /obj/item/multitool, \
-	/obj/item/radio, /obj/item/analyzer, /obj/item/gun, /obj/item/melee/baton, /obj/item/reagent_containers/spray/pepper, \
-	/obj/item/ammo_box, /obj/item/ammo_casing, /obj/item/restraints/handcuffs)
+					/obj/item/screwdriver, /obj/item/weldingtool, /obj/item/wirecutters, /obj/item/wrench, /obj/item/multitool, \
+					/obj/item/radio, /obj/item/analyzer, /obj/item/gun, /obj/item/melee/baton, /obj/item/reagent_containers/spray/pepper, \
+					/obj/item/ammo_box, /obj/item/ammo_casing, /obj/item/restraints/handcuffs)
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/ert
 	strip_delay = 130
 	resistance_flags = FIRE_PROOF
@@ -82,25 +81,12 @@
 	item_state = "helm-command"
 	item_color = "ert_commander"
 
-/obj/item/clothing/head/helmet/space/hardsuit/ert/commander/gamma
-	name = "elite emergency response team commander helmet"
-	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
-	icon_state = "hardsuit0-gammacommander"
-	item_color = "gammacommander"
-
 /obj/item/clothing/suit/space/hardsuit/ert/commander
 	name = "emergency response team commander suit"
 	desc = "A suit worn by the commander of a Nanotrasen Emergency Response Team. Has blue highlights. Armoured, space ready, and fire resistant."
 	icon_state = "ert_commander"
 	item_state = "suit-command"
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/ert/commander
-
-/obj/item/clothing/suit/space/hardsuit/ert/commander/gamma
-	name = "elite emergency response team commander suit"
-	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
-	icon_state = "ert_gcommander"
-	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/ert/commander/gamma
-	slowdown = 0
 
 //Security
 /obj/item/clothing/head/helmet/space/hardsuit/ert/security
@@ -110,12 +96,6 @@
 	item_state = "syndicate-helm-black-red"
 	item_color = "ert_security"
 
-/obj/item/clothing/head/helmet/space/hardsuit/ert/security/gamma
-	name = "elite emergency response team security helmet"
-	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
-	icon_state = "hardsuit0-gammasecurity"
-	item_color = "gammasecurity"
-
 /obj/item/clothing/suit/space/hardsuit/ert/security
 	name = "emergency response team security suit"
 	desc = "A suit worn by security members of a Nanotrasen Emergency Response Team. Has red highlights. Armoured, space ready, and fire resistant."
@@ -123,12 +103,10 @@
 	item_state = "syndicate-black-red"
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/ert/security
 
-/obj/item/clothing/suit/space/hardsuit/ert/security/gamma
-	name = "elite emergency response team security suit"
-	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
-	icon_state = "ert_gsecurity"
-	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/ert/security/gamma
-	slowdown = 0
+/obj/item/clothing/suit/space/hardsuit/ert/security/Initialize(mapload)
+	. = ..()
+	ADD_TRAIT(src, TRAIT_HYPOSPRAY_IMMUNE, ROUNDSTART_TRAIT)
+	ADD_TRAIT(src, TRAIT_RSG_IMMUNE, ROUNDSTART_TRAIT)
 
 //Engineer
 /obj/item/clothing/head/helmet/space/hardsuit/ert/engineer
@@ -143,6 +121,7 @@
 	name = "elite emergency response team engineer helmet"
 	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
 	armor = list(MELEE = 40, BULLET = 15, LASER = 20, ENERGY = 5, BOMB = 15, RAD = INFINITY, FIRE = 200, ACID = 200)
+	flags_2 = RAD_PROTECT_CONTENTS_2
 	icon_state = "hardsuit0-gammaengineer"
 	item_color = "gammaengineer"
 
@@ -159,6 +138,7 @@
 	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
 	icon_state = "ert_gengineer"
 	armor = list(MELEE = 40, BULLET = 15, LASER = 20, ENERGY = 5, BOMB = 15, RAD = INFINITY, FIRE = 200, ACID = 200)
+	flags_2 = RAD_PROTECT_CONTENTS_2
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/ert/engineer/gamma
 	slowdown = 0
 
@@ -169,24 +149,16 @@
 	icon_state = "hardsuit0-ert_medical"
 	item_color = "ert_medical"
 
-/obj/item/clothing/head/helmet/space/hardsuit/ert/medical/gamma
-	name = "elite emergency response team medical helmet"
-	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
-	icon_state = "hardsuit0-gammamedical"
-	item_color = "gammamedical"
-
 /obj/item/clothing/suit/space/hardsuit/ert/medical
 	name = "emergency response team medical suit"
 	desc = "A suit worn by medical members of a Nanotrasen Emergency Response Team. Has white highlights. Armoured and space ready."
 	icon_state = "ert_medical"
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/ert/medical
 
-/obj/item/clothing/suit/space/hardsuit/ert/medical/gamma
-	name = "elite emergency response team medical suit"
-	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
-	icon_state = "ert_gmedical"
-	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/ert/medical/gamma
-	slowdown = 0
+/obj/item/clothing/suit/space/hardsuit/ert/medical/Initialize(mapload)
+	. = ..()
+	ADD_TRAIT(src, TRAIT_HYPOSPRAY_IMMUNE, ROUNDSTART_TRAIT)
+	ADD_TRAIT(src, TRAIT_RSG_IMMUNE, ROUNDSTART_TRAIT)
 
 //Janitor
 /obj/item/clothing/head/helmet/space/hardsuit/ert/janitor
@@ -195,24 +167,11 @@
 	icon_state = "hardsuit0-ert_janitor"
 	item_color = "ert_janitor"
 
-/obj/item/clothing/head/helmet/space/hardsuit/ert/janitor/gamma
-	name = "elite emergency response team janitor helmet"
-	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
-	icon_state = "hardsuit0-gammajanitor"
-	item_color = "gammajanitor"
-
 /obj/item/clothing/suit/space/hardsuit/ert/janitor
 	name = "emergency response team janitor suit"
 	desc = "A suit worn by the janitorial of a Nanotrasen Emergency Response Team. Has purple highlights. Armoured, space ready, and fire resistant."
 	icon_state = "ert_janitor"
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/ert/janitor
-
-/obj/item/clothing/suit/space/hardsuit/ert/janitor/gamma
-	name = "elite emergency response team janitor suit"
-	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
-	icon_state = "ert_gjanitor"
-	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/ert/janitor/gamma
-	slowdown = 0
 
 //Paranormal
 /obj/item/clothing/head/helmet/space/hardsuit/ert/paranormal
@@ -243,41 +202,27 @@
 		"Vox" = 'icons/mob/clothing/species/vox/suit.dmi',
 		"Vulpkanin" = 'icons/mob/clothing/species/vulpkanin/suit.dmi'
 		)
-	hide_tail_by_species = list("Unathi, Tajaran, Vox, Vulpkanin")
+	hide_tail_by_species = list("Unathi", "Tajaran", "Vox", "Vulpkanin")
 
 /obj/item/clothing/suit/space/hardsuit/ert/paranormal/Initialize(mapload)
 	. = ..()
 	new /obj/item/nullrod(src)
 
-/obj/item/clothing/head/helmet/space/hardsuit/ert/paranormal/inquisitor
-	name = "inquisitor's helmet"
-	icon_state = "hardsuit0-inquisitor"
-	item_color = "inquisitor"
-	armor = list(MELEE = 95, BULLET = 50, LASER = 50, ENERGY = 50, BOMB = 50, RAD = INFINITY, FIRE = 200, ACID = 200)
-
-/obj/item/clothing/suit/space/hardsuit/ert/paranormal/inquisitor
-	name = "inquisitor's hardsuit"
-	icon_state = "hardsuit-inquisitor"
-	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/ert/paranormal/inquisitor
-	armor = list(MELEE = 95, BULLET = 50, LASER = 50, ENERGY = 50, BOMB = 50, RAD = INFINITY, FIRE = 200, ACID = 200)
-	slowdown = 0
-
-
 // Solgov
 
 /obj/item/clothing/head/helmet/space/hardsuit/ert/solgov
-	name = "\improper Trans-Solar Federation Specops Marine helmet"
+	name = "\improper MARSOC helmet"
 	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
-	desc = "A helmet worn by marines of the Trans-Solar Federation. Armored, space ready, and fireproof."
+	desc = "A helmet worn by marines of the Trans-Solar Federation's Marine Special Operations Command. Armored, space ready, and fireproof."
 	icon_state = "hardsuit0-solgovmarine"
 	item_state = "hardsuit0-solgovmarine"
 	item_color = "solgovmarine"
 	armor = list(MELEE = 25, BULLET = 75, LASER = 10, ENERGY = 5, BOMB = 15, RAD = 50, FIRE = INFINITY, ACID = INFINITY)
 
 /obj/item/clothing/suit/space/hardsuit/ert/solgov
-	name = "\improper Trans-Solar Federation Specops Marine hardsuit"
+	name = "\improper MARSOC hardsuit"
 	max_heat_protection_temperature = FIRE_IMMUNITY_MAX_TEMP_PROTECT
-	desc = "A suit worn by marines of the Trans-Solar Federation. Armored, space ready, and fireproof."
+	desc = "A suit worn by marines of the Trans-Solar Federation's Marine Special Operations Command. Armored, space ready, and fireproof."
 	icon_state = "ert_solgov_marine"
 	item_state = "ert_solgov_marine"
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/ert/solgov
@@ -285,15 +230,15 @@
 	armor = list(MELEE = 25, BULLET = 75, LASER = 10, ENERGY = 5, BOMB = 15, RAD = 50, FIRE = INFINITY, ACID = INFINITY)
 
 /obj/item/clothing/head/helmet/space/hardsuit/ert/solgov/command
-	name = "\improper Trans-Solar Federation Specops Lieutenant helmet"
-	desc = "A helmet worn by Lieutenants of the Trans-Solar Federation Marines. Has gold highlights to denote the wearer's rank. Armored, space ready, and fireproof."
+	name = "\improper MARSOC officer's helmet"
+	desc = "A helmet worn by junior officers of the Trans-Solar Federation's Marine Special Operations Command. Has gold highlights to denote the wearer's rank. Armored, space ready, and fireproof."
 	icon_state = "hardsuit0-solgovcommand"
 	item_state = "hardsuit0-solgovcommand"
 	item_color = "solgovcommand"
 
 /obj/item/clothing/suit/space/hardsuit/ert/solgov/command
-	name = "\improper Trans-Solar Federation Specops Lieutenant hardsuit"
-	desc = "A suit worn by Lieutenants of the Trans-Solar Federation Marines. Has gold highlights to denote the wearer's rank. Armored, space ready, and fireproof."
+	name = "\improper MARSOC officer's hardsuit"
+	desc = "A suit worn by junior officers of the Trans-Solar Federation's Marine Special Operations Command. Has gold highlights to denote the wearer's rank. Armored, space ready, and fireproof."
 	icon_state = "ert_solgov_command"
 	item_state = "ert_solgov_command"
 	helmettype = /obj/item/clothing/head/helmet/space/hardsuit/ert/solgov/command

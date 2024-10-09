@@ -7,7 +7,7 @@ LINEN BINS
 /obj/item/bedsheet
 	name = "bedsheet"
 	desc = "A surprisingly soft linen bedsheet."
-	icon = 'icons/obj/items.dmi'
+	icon = 'icons/obj/bedsheet.dmi'
 	icon_state = "sheet"
 	item_state = "bedsheet"
 	lefthand_file = 'icons/mob/inhands/bedsheet_lefthand.dmi'
@@ -19,12 +19,22 @@ LINEN BINS
 	w_class = WEIGHT_CLASS_TINY
 	item_color = "white"
 	resistance_flags = FLAMMABLE
-	slot_flags = SLOT_BACK
-
+	slot_flags = SLOT_FLAG_BACK
 	dog_fashion = /datum/dog_fashion/head/ghost
+	dyeing_key = DYE_REGISTRY_BEDSHEET
+
 	var/list/dream_messages = list("white")
 	var/list/nightmare_messages = list("black")
 	var/comfort = 0.5
+
+/obj/item/bedsheet/Initialize(mapload)
+	. = ..()
+	AddComponent(/datum/component/surgery_initiator/cloth, null, 0.45)  // honestly, not bad.
+
+/obj/item/bedsheet/attack_hand(mob/user)
+	if(isturf(loc) && user.Move_Pulled(src)) // make sure its on the ground first, prevents a speed exploit
+		return
+	return ..()
 
 /obj/item/bedsheet/attack_self(mob/user as mob)
 	user.drop_item()
@@ -40,8 +50,8 @@ LINEN BINS
 		var/obj/item/stack/sheet/cloth/C = new (get_turf(src), 3)
 		transfer_fingerprints_to(C)
 		C.add_fingerprint(user)
-		qdel(src)
 		to_chat(user, "<span class='notice'>You tear [src] up.</span>")
+		qdel(src)
 	else
 		return ..()
 
@@ -252,7 +262,7 @@ LINEN BINS
 
 /obj/structure/bedsheetbin
 	name = "linen bin"
-	desc = "A linen bin. It looks rather cosy."
+	desc = "A linen bin. It looks rather cozy."
 	icon = 'icons/obj/structures.dmi'
 	icon_state = "linenbin-full"
 	anchored = TRUE
@@ -334,8 +344,8 @@ LINEN BINS
 		amount--
 
 		var/obj/item/bedsheet/B
-		if(sheets.len > 0)
-			B = sheets[sheets.len]
+		if(length(sheets) > 0)
+			B = sheets[length(sheets)]
 			sheets.Remove(B)
 
 		else
@@ -359,8 +369,8 @@ LINEN BINS
 		amount--
 
 		var/obj/item/bedsheet/B
-		if(sheets.len > 0)
-			B = sheets[sheets.len]
+		if(length(sheets) > 0)
+			B = sheets[length(sheets)]
 			sheets.Remove(B)
 
 		else

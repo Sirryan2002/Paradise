@@ -21,6 +21,14 @@
 	icon_state = "syndicate_combat"
 	item_color = "syndicate_combat"
 
+
+/obj/item/clothing/under/syndicate/greyman
+	name = "greyman henley"
+	desc = "Attire for someone who finds it hard to survive in the safest place known to man - urban environment "
+	icon_state = "greyman"
+	item_color = "greyman"
+	armor = list(MELEE = 0, BULLET = 0, LASER = 0, ENERGY = 0, BOMB = 0, RAD = 5, FIRE = 40, ACID = 35)
+
 /obj/item/clothing/under/syndicate/tacticool
 	name = "tacticool turtleneck"
 	desc = "Just looking at it makes you want to buy an SKS, go into the woods, and -operate-."
@@ -35,3 +43,22 @@
 	icon_state = "tactical_suit"
 	item_state = "bl_suit"
 	item_color = "tactical_suit"
+
+/obj/item/clothing/under/syndicate/silicon_cham
+	name = "tactical turtleneck"
+	desc = "A non-descript and slightly suspicious looking turtleneck with digital camouflage cargo pants. <b>This one has extra cybernetic modifications.</b>"
+	blockTracking = TRUE
+
+/obj/item/clothing/under/syndicate/silicon_cham/equipped(mob/user, slot, initial)
+	. = ..()
+	if(slot == SLOT_HUD_JUMPSUIT)
+		ADD_TRAIT(user, TRAIT_AI_UNTRACKABLE, "silicon_cham[UID()]")
+		user.set_invisible(SEE_INVISIBLE_LIVING)
+		to_chat(user, "<span class='notice'>You feel a slight shiver as the cybernetic obfuscators activate.</span>")
+
+/obj/item/clothing/under/syndicate/silicon_cham/dropped(mob/user)
+	. = ..()
+	if(user)
+		REMOVE_TRAIT(user, TRAIT_AI_UNTRACKABLE, "silicon_cham[UID()]")
+		user.set_invisible(INVISIBILITY_MINIMUM)
+		to_chat(user, "<span class='notice'>You feel a slight shiver as the cybernetic obfuscators deactivate.</span>")
